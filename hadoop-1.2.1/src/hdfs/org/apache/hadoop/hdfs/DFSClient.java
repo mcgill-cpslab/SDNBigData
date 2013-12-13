@@ -1998,6 +1998,15 @@ public class DFSClient implements FSConstants, java.io.Closeable {
       }
     }
 
+    /**
+     * get the remote channel connecting to the datanode
+     * can return null, if it only performs local read
+     * @return  the socket connecting to the datanode
+     */
+    public Socket getRemoteChannel() {
+      return s;
+    }
+
     private boolean fetchLocatedBlocks() throws IOException,
         FileNotFoundException {
       LocatedBlocks newInfo = callGetBlockLocations(namenode, src, 0,
@@ -2230,7 +2239,10 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         blockReader.close(); 
         blockReader = null;
       }
-      
+
+      /**
+       * s can be connecting the datanode which stores the remote block
+       */
       if (s != null) {
         s.close();
         s = null;
