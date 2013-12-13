@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Vendor: org.zeromq
+Implementation-Title: zeromq-scala-binding
+Implementation-Version: 0.0.6
+Implementation-Vendor-Id: org.zeromq
+Specification-Vendor: org.zeromq
+Specification-Title: zeromq-scala-binding
+Implementation-URL: http://jsuereth.com/scala-arm
+Specification-Version: 0.0.6
+

@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="SBT: com.esotericsoftware.reflectasm:reflectasm:1.07">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/reflectasm-1.07.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/reflectasm-1.07-shaded.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/reflectasm-1.07-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

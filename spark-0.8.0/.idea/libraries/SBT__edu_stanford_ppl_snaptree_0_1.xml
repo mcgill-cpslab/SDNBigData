@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: edu.stanford.ppl:snaptree:0.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/snaptree-0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/snaptree-0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,11 @@
+[0m[[0mdebug[0m] [0mCopy resource mappings: [0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache/spark,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache/spark)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache/spark/ui,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache/spark/ui)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache/spark/ui/static,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache/spark/ui/static)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache/spark/ui/static/bootstrap.min.css,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache/spark/ui/static/bootstrap.min.css)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache/spark/ui/static/webui.css,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache/spark/ui/static/webui.css)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache/spark/ui/static/spark_logo.png,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache/spark/ui/static/spark_logo.png)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache/spark/ui/static/sorttable.js,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache/spark/ui/static/sorttable.js)[0m
+[0m[[0mdebug[0m] [0m	(/home/zhunan/code/spark-0.8.0/core/src/main/resources/org/apache/spark/ui/static/spark-logo-77x50px-hd.png,/home/zhunan/code/spark-0.8.0/core/target/scala-2.9.3/classes/org/apache/spark/ui/static/spark-logo-77x50px-hd.png)[0m

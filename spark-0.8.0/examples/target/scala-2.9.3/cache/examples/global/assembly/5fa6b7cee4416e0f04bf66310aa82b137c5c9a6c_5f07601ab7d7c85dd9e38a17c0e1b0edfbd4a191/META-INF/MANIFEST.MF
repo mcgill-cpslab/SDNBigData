@@ -1,0 +1,29 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: 1.5.0_16 (Apple Inc.)
+Built-By: jesse
+Build-Jdk: 1.5.0_16
+implementation-version: 6.1.14
+mode: development
+package: org.mortbay
+url: http://jetty.mortbay.org/project/modules/servlet-api-2.5
+Bundle-License: https://glassfish.dev.java.net/public/CDDLv1.0.html
+Bundle-RequiredExecutionEnvironment: J2SE-1.4
+Specification-Version: 2.5
+Bnd-LastModified: 1226623739847
+Export-Package: javax.servlet.http;uses:="javax.servlet";version="2.5"
+ ,javax.servlet;version="2.5",javax.servlet.resources;version="2.5",ja
+ vax.servlet.jsp.resources;version="2.5"
+Bundle-Version: 2.5
+Ignore-Package: javax.servlet.http,javax.servlet,javax.servlet.resourc
+ es,javax.servlet.jsp.resources
+Bundle-Name: Servlet Specification 2.5 API
+Bundle-Description: Servlet Specification 2.5 API
+Bundle-DocURL: http://www.mortbay.com
+Originally-Created-By: 1.5.0_16 (Apple Inc.)
+Bundle-Vendor: Mort Bay Consulting
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.mortbay.jetty.servlet-api-2.5
+Tool: Bnd-0.0.238
+Implementation-Vendor: JCP
+

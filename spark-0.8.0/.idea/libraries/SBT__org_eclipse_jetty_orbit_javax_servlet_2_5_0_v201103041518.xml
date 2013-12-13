@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="SBT: org.eclipse.jetty.orbit:javax.servlet:2.5.0.v201103041518">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/javax.servlet-2.5.0.v201103041518.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib_managed/orbits/javax.servlet-2.5.0.v201103041518.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/javax.servlet-2.5.0.v201103041518-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

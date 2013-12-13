@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.scala-lang:scalap:2.9.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/scalap-2.9.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/scalap-2.9.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

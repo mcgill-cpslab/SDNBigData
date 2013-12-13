@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: net.databinder:dispatch-json_2.9.1:0.8.5">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/dispatch-json_2.9.1-0.8.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/dispatch-json_2.9.1-0.8.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

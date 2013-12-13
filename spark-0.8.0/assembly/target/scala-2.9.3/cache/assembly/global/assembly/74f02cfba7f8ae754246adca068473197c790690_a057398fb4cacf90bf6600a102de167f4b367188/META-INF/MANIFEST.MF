@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: mikio
+Build-Jdk: 1.7.0_06
+Main-Class: org.jblas.benchmark.Main
+

@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.5.3 
+Created-By: Apache Jakarta Maven
+Built-By: scohen
+Package: org.apache.commons.net
+Build-Jdk: 1.4.2_07
+Extension-Name: commons-net
+Specification-Title: Jakarta Commons Net
+Specification-Vendor: The Apache Software Foundation
+Specification-Version: 1.4.1
+Implementation-Title: org.apache.commons.net
+Implementation-Vendor: The Apache Software Foundation
+Implementation-Version: 1.4.1
+

@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.acplt:oncrpc:1.0.7">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/oncrpc-1.0.7.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/oncrpc-1.0.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

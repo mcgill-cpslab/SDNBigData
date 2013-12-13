@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: it.unimi.dsi:fastutil:6.4.4">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/jars/fastutil-6.4.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib_managed/srcs/fastutil-6.4.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

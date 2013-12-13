@@ -1,0 +1,76 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven Bundle Plugin
+Built-By: jesse
+Build-Jdk: 1.7.0_03
+Implementation-Vendor: Eclipse.org - Jetty
+Implementation-Version: 7.6.8.v20121106
+url: http://www.eclipse.org/jetty
+Export-Package: org.eclipse.jetty.server;uses:="org.eclipse.jetty.io,o
+ rg.eclipse.jetty.util.log,org.eclipse.jetty.util.statistic,org.eclips
+ e.jetty.http,org.eclipse.jetty.util.thread,org.eclipse.jetty.util.com
+ ponent,org.eclipse.jetty.server.ssl,org.eclipse.jetty.server.nio,org.
+ eclipse.jetty.util.resource,org.eclipse.jetty.util,javax.servlet,org.
+ eclipse.jetty.continuation,org.eclipse.jetty.server.handler,javax.ser
+ vlet.http,org.eclipse.jetty.io.nio,org.eclipse.jetty.server.session,j
+ avax.security.auth";version="7.6.8",org.eclipse.jetty.server.nio;uses
+ :="org.eclipse.jetty.server,org.eclipse.jetty.io,org.eclipse.jetty.ht
+ tp,org.eclipse.jetty.util.log,org.eclipse.jetty.io.nio,org.eclipse.je
+ tty.util.thread,org.eclipse.jetty.util";version="7.6.8",org.eclipse.j
+ etty.server.handler;uses:="org.eclipse.jetty.server,org.eclipse.jetty
+ .util.component,org.eclipse.jetty.util.log,org.eclipse.jetty.util,org
+ .eclipse.jetty.io.nio,org.eclipse.jetty.io,org.eclipse.jetty.util.thr
+ ead,org.eclipse.jetty.http,javax.servlet,javax.servlet.http,org.eclip
+ se.jetty.util.resource,org.eclipse.jetty.http.gzip,org.eclipse.jetty.
+ continuation,org.eclipse.jetty.util.statistic";version="7.6.8",org.ec
+ lipse.jetty.server.nio.jmx;version="7.6.8",org.eclipse.jetty.server.s
+ ession.jmx;uses:="org.eclipse.jetty.server,org.eclipse.jetty.server.h
+ andler.jmx,org.eclipse.jetty.server.handler,org.eclipse.jetty.server.
+ session";version="7.6.8",org.eclipse.jetty.server.jmx;uses:="org.ecli
+ pse.jetty.server,org.eclipse.jetty.server.handler,org.eclipse.jetty.j
+ mx";version="7.6.8",org.eclipse.jetty.server.ssl;uses:="org.eclipse.j
+ etty.server,org.eclipse.jetty.io,javax.security.cert,javax.net.ssl,or
+ g.eclipse.jetty.util.log,org.eclipse.jetty.util,org.eclipse.jetty.uti
+ l.ssl,org.eclipse.jetty.io.nio,org.eclipse.jetty.server.nio,org.eclip
+ se.jetty.server.bio,org.eclipse.jetty.io.bio";version="7.6.8",org.ecl
+ ipse.jetty.server.handler.jmx;uses:="org.eclipse.jetty.server,org.ecl
+ ipse.jetty.server.handler,org.eclipse.jetty.jmx,org.eclipse.jetty.uti
+ l.resource,org.eclipse.jetty.util.log,org.eclipse.jetty.util";version
+ ="7.6.8",org.eclipse.jetty.server.session;uses:="javax.servlet,org.ec
+ lipse.jetty.server,org.eclipse.jetty.server.handler,org.eclipse.jetty
+ .util.log,javax.servlet.http,org.eclipse.jetty.util.component,org.ecl
+ ipse.jetty.util.statistic,org.eclipse.jetty.http,org.eclipse.jetty.ut
+ il,javax.naming,javax.sql";version="7.6.8",org.eclipse.jetty.server.b
+ io;uses:="org.eclipse.jetty.server,org.eclipse.jetty.io.bio,org.eclip
+ se.jetty.io,org.eclipse.jetty.http,org.eclipse.jetty.util.thread,org.
+ eclipse.jetty.util.log,org.eclipse.jetty.util.component";version="7.6
+ .8"
+Bundle-Classpath: .
+Tool: Bnd-1.15.0
+Bundle-Name: Jetty :: Server Core
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-Copyright: Copyright (c) 2008-2012 Mort Bay Consulting Pty. Ltd.
+Bundle-Vendor: Eclipse Jetty Project
+Bundle-Version: 7.6.8.v20121106
+Bnd-LastModified: 1352211389305
+Bundle-ManifestVersion: 2
+Bundle-Description: The core jetty server artifact.
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0, http://www
+ .eclipse.org/org/documents/epl-v10.php
+Import-Package: javax.naming,javax.net.ssl,javax.security.auth,javax.s
+ ecurity.cert,javax.servlet;version="[2.5,3.0)",javax.servlet.http;ver
+ sion="[2.5,3.0)",javax.sql,org.eclipse.jetty.continuation;version="[7
+ .6,8)",org.eclipse.jetty.http;version="[7.6,8)",org.eclipse.jetty.htt
+ p.gzip;version="[7.6,8)",org.eclipse.jetty.io;version="[7.6,8)",org.e
+ clipse.jetty.io.bio;version="[7.6,8)",org.eclipse.jetty.io.nio;versio
+ n="[7.6,8)",org.eclipse.jetty.jmx;resolution:=optional;version="[7.3,
+ 8)",org.eclipse.jetty.util;version="[7.6,8)";resolution:=optional,org
+ .eclipse.jetty.util.component;version="[7.6,8)";resolution:=optional,
+ org.eclipse.jetty.util.log;version="[7.6,8)";resolution:=optional,org
+ .eclipse.jetty.util.resource;version="[7.6,8)";resolution:=optional,o
+ rg.eclipse.jetty.util.ssl;version="[7.6,8)";resolution:=optional,org.
+ eclipse.jetty.util.statistic;version="[7.6,8)";resolution:=optional,o
+ rg.eclipse.jetty.util.thread;version="[7.6,8)";resolution:=optional
+Bundle-SymbolicName: org.eclipse.jetty.server
+Bundle-DocURL: http://www.eclipse.org/jetty
+
