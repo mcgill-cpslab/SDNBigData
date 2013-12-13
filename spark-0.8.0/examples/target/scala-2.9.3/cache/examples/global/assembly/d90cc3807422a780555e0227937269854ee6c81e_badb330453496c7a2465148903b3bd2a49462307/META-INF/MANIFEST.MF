@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-Boot-Class-Path: oncrpc-1.0.7.jar
-Built-By: daniel
-Build-Jdk: 1.6.0_26
-Created-By: Apache Maven 3.0.5
-Can-Redefine-Classes: false
-Archiver-Version: Plexus Archiver
-

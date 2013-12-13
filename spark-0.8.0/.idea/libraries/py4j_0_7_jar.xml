@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="py4j-0.7.jar">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/assembly/lib/net/sf/py4j/py4j/0.7/py4j-0.7.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

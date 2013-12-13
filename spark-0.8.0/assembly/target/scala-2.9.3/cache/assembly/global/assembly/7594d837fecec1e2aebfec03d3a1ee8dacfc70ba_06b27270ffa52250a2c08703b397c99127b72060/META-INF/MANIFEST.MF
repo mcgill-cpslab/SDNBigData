@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: libs/jopt-simple-3.2.jar libs/zookeeper-3.3.4.jar libs/sca
- la-library.jar libs/zkclient-0.1.jar libs/log4j-1.2.15.jar libs/snapp
- y-java-1.0.4.1.jar
-

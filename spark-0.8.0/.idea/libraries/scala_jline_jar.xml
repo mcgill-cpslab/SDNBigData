@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="scala-jline.jar">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/repl/lib/scala-jline.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
