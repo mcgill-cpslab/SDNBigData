@@ -174,6 +174,24 @@ public class LineReader {
   }
 
   /**
+   * readline with deadline information
+   * @param str
+   * @param maxLineLength
+   * @param maxBytesToConsume
+   * @param deadline
+   * @return
+   * @throws IOException
+   */
+  public int readLine(Text str, int maxLineLength,
+                      int maxBytesToConsume, long deadline) throws IOException {
+    if (this.recordDelimiterBytes != null) {
+      return readCustomLine(str, maxLineLength, maxBytesToConsume);
+    } else {
+      return readDefaultLine(str, maxLineLength, maxBytesToConsume);
+    }
+  }
+
+  /**
    * return the remote channel connecting to the datanode
    * if the the wrappedStream is DFSInputStream it must be connecting to the remote side
    * otherwise,

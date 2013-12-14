@@ -19,6 +19,7 @@ package org.apache.hadoop.hdfs.protocol;
 
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.protocol.FSConstants.UpgradeAction;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
@@ -593,4 +594,10 @@ public interface ClientProtocol extends VersionedProtocol {
    */
   public void cancelDelegationToken(Token<DelegationTokenIdentifier> token)
       throws IOException;
+
+  /**
+   * called by the client to send the connection information, including
+   * remote/local address, ports, flow size and the deadline
+   */
+  public boolean sendConnectionInfo(DFSClient.ClientConnectionInfo coninfo);
 }

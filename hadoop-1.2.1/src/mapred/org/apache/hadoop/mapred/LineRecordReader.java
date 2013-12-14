@@ -66,7 +66,57 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
     }
   }
 
-  public LineRecordReader(Configuration job, 
+  /**
+   * get the recordreader with the deadline information
+   * @param job
+   * @param split
+   * @param deadline
+   * @throws IOException
+   */
+  public LineRecordReader(Configuration job,
+                          FileSplit split, long deadline) throws IOException {
+    this.maxLineLength = job.getInt("mapred.linerecordreader.maxlength",
+            Integer.MAX_VALUE);
+    start = split.getStart();
+    end = start + split.getLength();
+    final Path file = split.getPath();
+    compressionCodecs = new CompressionCodecFactory(job);
+    codec = compressionCodecs.getCodec(file);
+
+    // open the file and seek to the start of the split
+    FileSystem fs = file.getFileSystem(job);
+    FSDataInputStream fileIn = fs.open(split.getPath());
+
+    if (isCompressedInput()) {
+      decompressor = CodecPool.getDecompressor(codec);
+      if (codec instanceof SplittableCompressionCodec) {
+        final SplitCompressionInputStream cIn =
+                ((SplittableCompressionCodec)codec).createInputStream(
+                        fileIn, decompressor, start, end,
+                        SplittableCompressionCodec.READ_MODE.BYBLOCK);
+        in = new LineReader(cIn, job);
+        start = cIn.getAdjustedStart();
+        end = cIn.getAdjustedEnd();
+        filePosition = cIn; // take pos from compressed stream
+      } else {
+        in = new LineReader(codec.createInputStream(fileIn, decompressor), job);
+        filePosition = fileIn;
+      }
+    } else {
+      fileIn.seek(start);
+      in = new LineReader(fileIn, job);
+      filePosition = fileIn;
+    }
+    // If this is not the first split, we always throw away first record
+    // because we always (except the last split) read one extra line in
+    // next() method.
+    if (start != 0) {
+      start += in.readLine(new Text(), 0, maxBytesToConsume(start), deadline);
+    }
+    this.pos = start;
+  }
+
+  public LineRecordReader(Configuration job,
                           FileSplit split) throws IOException {
     this.maxLineLength = job.getInt("mapred.linerecordreader.maxlength",
                                     Integer.MAX_VALUE);

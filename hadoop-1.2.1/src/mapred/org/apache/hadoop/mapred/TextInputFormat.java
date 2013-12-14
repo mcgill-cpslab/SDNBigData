@@ -18,12 +18,15 @@
 
 package org.apache.hadoop.mapred;
 
-import java.io.*;
-
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.compress.*;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.io.compress.SplittableCompressionCodec;
+
+import java.io.IOException;
 
 /** An {@link InputFormat} for plain text files.  Files are broken into lines.
  * Either linefeed or carriage-return are used to signal end of line.  Keys are
@@ -51,6 +54,15 @@ public class TextInputFormat extends FileInputFormat<LongWritable, Text>
                                           Reporter reporter)
     throws IOException {
     
+    reporter.setStatus(genericSplit.toString());
+    return new LineRecordReader(job, (FileSplit) genericSplit);
+  }
+
+  public RecordReader<LongWritable, Text> getTimeAwareRecordReader(
+          InputSplit genericSplit, JobConf job,
+          Reporter reporter, long deadline)
+          throws IOException {
+
     reporter.setStatus(genericSplit.toString());
     return new LineRecordReader(job, (FileSplit) genericSplit);
   }

@@ -2225,7 +2225,119 @@ public class DFSClient implements FSConstants, java.io.Closeable {
       return shortCircuitLocalReads && !blockUnderConstruction()
         && isLocalAddress(targetAddr);
     }
-    
+
+    /**
+     * Open a DataInputStream to a DataNode so that it can be read from.
+     * We get block ID and the IDs of the destinations at startup, from the namenode.
+     * deadline aware
+     */
+    private synchronized DatanodeInfo blockSeekTo(long target, long deadline) throws IOException {
+      if (target >= getFileLength()) {
+        throw new IOException("Attempted to read past end of file");
+      }
+
+      if ( blockReader != null ) {
+        blockReader.close();
+        blockReader = null;
+      }
+
+      /**
+       * s may has been connecting the datanode which stores the remote block
+       */
+      if (s != null) {
+        s.close();
+        s = null;
+      }
+
+      //
+      // Connect to best DataNode for desired Block, with potential offset
+      //
+      DatanodeInfo chosenNode = null;
+      int refetchToken = 1; // only need to get a new access token once
+      while (true) {
+        //
+        // Compute desired block
+        //
+        LocatedBlock targetBlock = getBlockAt(target, true);
+        assert (target==this.pos) : "Wrong postion " + pos + " expect " + target;
+        long offsetIntoBlock = target - targetBlock.getStartOffset();
+
+        DNAddrPair retval = chooseDataNode(targetBlock);
+        chosenNode = retval.info;
+        InetSocketAddress targetAddr = retval.addr;
+
+        // try reading the block locally. if this fails, then go via
+        // the datanode
+        Block blk = targetBlock.getBlock();
+        Token<BlockTokenIdentifier> accessToken = targetBlock.getBlockToken();
+        if (shouldTryShortCircuitRead(targetAddr)) {
+          try {
+            blockReader = getLocalBlockReader(conf, src, blk, accessToken,
+                    chosenNode, DFSClient.this.socketTimeout, offsetIntoBlock);
+            return chosenNode;
+          } catch (AccessControlException ex) {
+            LOG.warn("Short circuit access failed ", ex);
+            //Disable short circuit reads
+            shortCircuitLocalReads = false;
+          } catch (IOException ex) {
+            if (refetchToken > 0 && tokenRefetchNeeded(ex, targetAddr)) {
+              /* Get a new access token and retry. */
+              refetchToken--;
+              fetchBlockAt(target);
+              continue;
+            } else {
+              LOG.info("Failed to read " + targetBlock.getBlock()
+                      + " on local machine" + StringUtils.stringifyException(ex));
+              LOG.info("Try reading via the datanode on " + targetAddr);
+            }
+          }
+        }
+
+        try {
+          s = socketFactory.createSocket();
+          LOG.debug("Connecting to " + targetAddr);
+          NetUtils.connect(s, targetAddr, getRandomLocalInterfaceAddr(),
+                  socketTimeout);
+          s.setSoTimeout(socketTimeout);
+          //make namenode known about the deadline
+          //NOTICE: it should be a sync call
+          namenode.sendConnectionInfo(new ClientConnectionInfo(
+                  s.getLocalAddress().toString(),
+                  s.getLocalPort(),
+                  s.getRemoteSocketAddress().toString(),
+                  s.getPort(),
+                  blk.getNumBytes() - offsetIntoBlock,
+                  deadline));
+          blockReader = RemoteBlockReader.newBlockReader(s, src, blk.getBlockId(),
+                  accessToken,
+                  blk.getGenerationStamp(),
+                  offsetIntoBlock, blk.getNumBytes() - offsetIntoBlock,
+                  buffersize, verifyChecksum, clientName);
+          return chosenNode;
+        } catch (IOException ex) {
+          if (refetchToken > 0 && tokenRefetchNeeded(ex, targetAddr)) {
+            refetchToken--;
+            fetchBlockAt(target);
+          } else {
+            LOG.warn("Failed to connect to " + targetAddr
+                    + ", add to deadNodes and continue" + ex);
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Connection failure", ex);
+            }
+            // Put chosen node into dead list, continue
+            addToDeadNodes(chosenNode);
+          }
+          if (s != null) {
+            try {
+              s.close();
+            } catch (IOException iex) { }
+          }
+          s = null;
+        }
+      }
+    }
+
+
     /**
      * Open a DataInputStream to a DataNode so that it can be read from.
      * We get block ID and the IDs of the destinations at startup, from the namenode.
@@ -2530,6 +2642,8 @@ public class DFSClient implements FSConstants, java.io.Closeable {
             LOG.debug("Connecting to " + targetAddr);
             NetUtils.connect(dn, targetAddr, getRandomLocalInterfaceAddr(),
                 socketTimeout);
+
+
             dn.setSoTimeout(socketTimeout);
             reader = RemoteBlockReader.newBlockReader(dn, src, 
                 block.getBlock().getBlockId(), accessToken,
@@ -2555,6 +2669,92 @@ public class DFSClient implements FSConstants, java.io.Closeable {
           } else {
             LOG.warn("Failed to connect to " + targetAddr + " for file " + src
                 + " for block " + block.getBlock() + ":" + e);
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Connection failure ", e);
+            }
+          }
+        } finally {
+          IOUtils.closeStream(reader);
+          IOUtils.closeSocket(dn);
+        }
+        // Put chosen node into dead list, continue
+        addToDeadNodes(chosenNode);
+      }
+    }
+
+    private void fetchBlockByteRange(LocatedBlock block, long start,
+                                     long end, byte[] buf, int offset, long deadline) throws IOException {
+      //
+      // Connect to best DataNode for desired Block, with potential offset
+      //
+      Socket dn = null;
+      int refetchToken = 1; // only need to get a new access token once
+
+      while (true) {
+        // cached block locations may have been updated by chooseDataNode()
+        // or fetchBlockAt(). Always get the latest list of locations at the
+        // start of the loop.
+        block = getBlockAt(block.getStartOffset(), false);
+        DNAddrPair retval = chooseDataNode(block);
+        DatanodeInfo chosenNode = retval.info;
+        InetSocketAddress targetAddr = retval.addr;
+        BlockReader reader = null;
+
+        try {
+          Token<BlockTokenIdentifier> accessToken = block.getBlockToken();
+          int len = (int) (end - start + 1);
+
+          // first try reading the block locally.
+          if (shouldTryShortCircuitRead(targetAddr)) {
+            try {
+              reader = getLocalBlockReader(conf, src, block.getBlock(),
+                      accessToken, chosenNode, DFSClient.this.socketTimeout, start);
+            } catch (AccessControlException ex) {
+              LOG.warn("Short circuit access failed ", ex);
+              //Disable short circuit reads
+              shortCircuitLocalReads = false;
+              continue;
+            }
+          } else {
+            // go to the datanode
+            dn = socketFactory.createSocket();
+            LOG.debug("Connecting to " + targetAddr);
+            NetUtils.connect(dn, targetAddr, getRandomLocalInterfaceAddr(),
+                    socketTimeout);
+            //make namenode known about the deadline
+            //NOTICE: it should be a sync call
+            namenode.sendConnectionInfo(new ClientConnectionInfo(
+                    s.getLocalAddress().toString(),
+                    s.getLocalPort(),
+                    s.getRemoteSocketAddress().toString(),
+                    s.getPort(),
+                    len,
+                    deadline));
+            dn.setSoTimeout(socketTimeout);
+            reader = RemoteBlockReader.newBlockReader(dn, src,
+                    block.getBlock().getBlockId(), accessToken,
+                    block.getBlock().getGenerationStamp(), start, len, buffersize,
+                    verifyChecksum, clientName);
+          }
+          int nread = reader.readAll(buf, offset, len);
+          if (nread != len) {
+            throw new IOException("truncated return from reader.read(): " +
+                    "excpected " + len + ", got " + nread);
+          }
+          return;
+        } catch (ChecksumException e) {
+          LOG.warn("fetchBlockByteRange(). Got a checksum exception for " +
+                  src + " at " + block.getBlock() + ":" +
+                  e.getPos() + " from " + chosenNode.getName());
+          reportChecksumFailure(src, block.getBlock(), chosenNode);
+        } catch (IOException e) {
+          if (refetchToken > 0 && tokenRefetchNeeded(e, targetAddr)) {
+            refetchToken--;
+            fetchBlockAt(block.getStartOffset());
+            continue;
+          } else {
+            LOG.warn("Failed to connect to " + targetAddr + " for file " + src
+                    + " for block " + block.getBlock() + ":" + e);
             if (LOG.isDebugEnabled()) {
               LOG.debug("Connection failure ", e);
             }
@@ -2729,6 +2929,30 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     @Override
     public void reset() throws IOException {
       throw new IOException("Mark/reset not supported");
+    }
+  }
+
+  public class ClientConnectionInfo implements Serializable {
+    public String remoteIP;
+    public String localIP;
+    public int remoteport;
+    public int localport;
+    public long flowsize;//inbytes
+    public long deadline;
+    public ClientConnectionInfo(String rIP, int rport, String lIP,
+                                int lport, long fsize, long dline) {
+      remoteIP = rIP;
+      remoteport = rport;
+      localIP = lIP;
+      localport = lport;
+      flowsize = fsize;
+      deadline = dline;
+    }
+
+    @Override
+    public String toString() {
+      return "<" + localIP + "," + localport + "," + remoteIP + "," +
+              remoteport + "," + flowsize + " bytes," + deadline + "ms";
     }
   }
 
