@@ -2241,7 +2241,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
       }
 
       /**
-       * s can be connecting the datanode which stores the remote block
+       * s may has been connecting the datanode which stores the remote block
        */
       if (s != null) {
         s.close();

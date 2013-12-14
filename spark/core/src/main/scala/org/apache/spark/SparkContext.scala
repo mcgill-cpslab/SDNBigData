@@ -314,6 +314,8 @@ class SparkContext(
   /**
    * Read a text file from HDFS, a local file system (available on all nodes), or any
    * Hadoop-supported file system URI, and return it as an RDD of Strings.
+   *
+   * in hadoopFile, it creates a instance of TextInputFomat with ReflectionUtil
    */
   def textFile(path: String, minSplits: Int = defaultMinSplits): RDD[String] = {
     hadoopFile(path, classOf[TextInputFormat], classOf[LongWritable], classOf[Text], minSplits)
@@ -345,6 +347,11 @@ class SparkContext(
       ) : RDD[(K, V)] = {
     val conf = new JobConf(hadoopConfiguration)
     FileInputFormat.setInputPaths(conf, path)
+
+    /**
+     * in HadoopRDD, it overrides the compute by returning a NexIterator,
+     * in NextIterator, it overrides the next(), etc. to read Hadoop files
+     */
     new HadoopRDD(this, conf, inputFormatClass, keyClass, valueClass, minSplits)
   }
 

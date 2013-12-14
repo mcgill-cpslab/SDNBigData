@@ -18,11 +18,14 @@
 
 package org.apache.hadoop.util;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.io.Text;
+
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.Text;
+import java.net.Socket;
 
 /**
  * A class that provides a line reader from an input stream.
@@ -169,6 +172,22 @@ public class LineReader {
       return readDefaultLine(str, maxLineLength, maxBytesToConsume);
     }
   }
+
+  /**
+   * return the remote channel connecting to the datanode
+   * if the the wrappedStream is DFSInputStream it must be connecting to the remote side
+   * otherwise,
+   * @return the socket connecting to the remote datanodes
+   */
+  public Socket getRemoteChannel() {
+    if (in instanceof FSDataInputStream) {
+      InputStream wrappedStream = ((FSDataInputStream) in).getInStream();
+      if (wrappedStream instanceof DFSClient.DFSInputStream)
+        return ((DFSClient.DFSInputStream) wrappedStream).getRemoteChannel();
+    }
+    return null;
+  }
+
 
   /**
    * Read a line terminated by one of CR, LF, or CRLF.

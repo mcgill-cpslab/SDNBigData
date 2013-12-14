@@ -60,6 +60,10 @@ public class FSDataInputStream extends DataInputStream
     return ((Seekable)in).seekToNewSource(targetPos); 
   }
 
+  public InputStream getInStream() {
+    return in;
+  }
+
   @Override
   public FileDescriptor getFileDescriptor() throws IOException {
     if (in instanceof HasFileDescriptor) {

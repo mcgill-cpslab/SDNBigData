@@ -100,6 +100,8 @@ class HadoopRDD[K, V](
 
     override def getNext() = {
       try {
+        //when it calls next, the reader would built a socket with
+        //datanode (in DFSInputStream's blockSeekTo)
         finished = !reader.next(key, value)
       } catch {
         case eof: EOFException =>
