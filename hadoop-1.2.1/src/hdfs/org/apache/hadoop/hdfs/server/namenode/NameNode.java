@@ -645,11 +645,12 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
    * @param coninfo
    */
   @Override
-  public void sendConnectionInfo(DFSClient.ClientConnectionInfo coninfo) {
+  public boolean sendConnectionInfo(DFSClient.ClientConnectionInfo coninfo) {
     //add to the list
     connectionLists.add(coninfo);
     LOG.info("get the connection info:" + coninfo.toString());
     //TODO: send the connection information to the openflow controller
+    return true;
   }
 
   /** {@inheritDoc} */
