@@ -2003,6 +2003,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
      * can return null, if it only performs local read
      * @return  the socket connecting to the datanode
      */
+    @Override
     public Socket getRemoteChannel() {
       return s;
     }
@@ -2518,6 +2519,94 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         }
         retryCurrentNode = false;
       }
+    }
+
+    @Override
+    public int readwithdeadline(long position, byte[] buffer, int offset, int length, long deadline)
+            throws IOException {
+      // sanity checks
+      checkOpen();
+      if (closed) {
+        throw new IOException("Stream closed");
+      }
+      failures = 0;
+      long filelen = getFileLength();
+      if ((position < 0) || (position >= filelen)) {
+        return -1;
+      }
+      int realLen = length;
+      if ((position + length) > filelen) {
+        realLen = (int)(filelen - position);
+      }
+
+      // determine the block and byte range within the block
+      // corresponding to position and realLen
+      List<LocatedBlock> blockRange = getBlockRange(position, realLen);
+      int remaining = realLen;
+      for (LocatedBlock blk : blockRange) {
+        long targetStart = position - blk.getStartOffset();
+        long bytesToRead = Math.min(remaining, blk.getBlockSize() - targetStart);
+        //fetchBlockByRange with deadline requirement
+        //within fetchBlockByRange, the socket to datanode would be established
+        fetchBlockByteRange(blk, targetStart,
+                targetStart + bytesToRead - 1, buffer, offset, deadline);
+        remaining -= bytesToRead;
+        position += bytesToRead;
+        offset += bytesToRead;
+      }
+      assert remaining == 0 : "Wrong number of bytes read.";
+      if (stats != null) {
+        stats.incrementBytesRead(realLen);
+      }
+      return realLen;
+    }
+
+    @Override
+    public synchronized int readwithdeadline(byte buf[], int off, int len, long deadline)
+            throws IOException {
+      checkOpen();
+      if (closed) {
+        throw new IOException("Stream closed");
+      }
+      failures = 0;
+
+      if (pos < getFileLength()) {
+        int retries = 2;
+        while (retries > 0) {
+          try {
+            if (pos > blockEnd) {
+              //blockSeekTo with deadline
+              //within blockSeekTo, the socket to datanode would be built
+              currentNode = blockSeekTo(pos, deadline);
+            }
+            int realLen = (int) Math.min((long) len, (blockEnd - pos + 1L));
+            int result = readBuffer(buf, off, realLen);
+
+            if (result >= 0) {
+              pos += result;
+            } else {
+              // got a EOS from reader though we expect more data on it.
+              throw new IOException("Unexpected EOS from the reader");
+            }
+            if (stats != null && result != -1) {
+              stats.incrementBytesRead(result);
+            }
+            return result;
+          } catch (ChecksumException ce) {
+            throw ce;
+          } catch (IOException e) {
+            if (retries == 1) {
+              LOG.warn("DFS Read: " + StringUtils.stringifyException(e));
+            }
+            blockEnd = -1;
+            if (currentNode != null) { addToDeadNodes(currentNode); }
+            if (--retries == 0) {
+              throw e;
+            }
+          }
+        }
+      }
+      return -1;
     }
 
     /**

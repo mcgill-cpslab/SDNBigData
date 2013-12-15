@@ -719,10 +719,10 @@
   </target>
 
   <target name="compile-contrib" depends="compile-core,tools-jar,compile-c++-libhdfs">
-     <subant target="compile">
+     <!--<subant target="compile">
         <property name="version" value="${version}"/>
         <fileset file="${contrib.dir}/build.xml"/>
-     </subant>  	
+     </subant>-->
   </target>
   
   <target name="compile" depends="compile-core, compile-contrib, compile-ant-tasks, compile-tools" description="Compile core, contrib">

@@ -20,7 +20,8 @@ package org.apache.hadoop.util;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.hdfs.DFSClient;
+//import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.fs.FSInputStream;
 import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
@@ -200,8 +201,8 @@ public class LineReader {
   public Socket getRemoteChannel() {
     if (in instanceof FSDataInputStream) {
       InputStream wrappedStream = ((FSDataInputStream) in).getInStream();
-      if (wrappedStream instanceof DFSClient.DFSInputStream)
-        return ((DFSClient.DFSInputStream) wrappedStream).getRemoteChannel();
+      if (wrappedStream instanceof FSInputStream)
+        return ((FSInputStream) wrappedStream).getRemoteChannel();
     }
     return null;
   }

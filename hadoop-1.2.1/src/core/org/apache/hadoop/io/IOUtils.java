@@ -18,14 +18,17 @@
 
 package org.apache.hadoop.io;
 
-import java.io.*;
+import org.apache.commons.logging.Log;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-
-import org.apache.commons.logging.Log;
-
-import org.apache.hadoop.conf.Configuration;
 
 /**
  * An utility class for I/O related functionality. 
@@ -45,6 +48,18 @@ public class IOUtils {
 
     try {
       copyBytes(in, out, buffSize);
+    } finally {
+      if(close) {
+        out.close();
+        in.close();
+      }
+    }
+  }
+
+  public static void copyBytes(InputStream in, OutputStream out, int buffSize, boolean close, long deadline)
+          throws IOException {
+    try {
+      copyBytes(in, out, buffSize, deadline);
     } finally {
       if(close) {
         out.close();
@@ -76,6 +91,28 @@ public class IOUtils {
   }
 
   /**
+   * Copies from one stream to another.
+   *
+   * @param in InputStrem to read from
+   * @param out OutputStream to write to
+   * @param buffSize the size of the buffer
+   */
+  public static void copyBytes(InputStream in, OutputStream out, int buffSize, long deadline)
+          throws IOException {
+
+    PrintStream ps = out instanceof PrintStream ? (PrintStream)out : null;
+    byte buf[] = new byte[buffSize];
+    int bytesRead = in.read(buf);
+    while (bytesRead >= 0) {
+      out.write(buf, 0, bytesRead);
+      if ((ps != null) && ps.checkError()) {
+        throw new IOException("Unable to write to output stream.");
+      }
+      bytesRead = ((FSDataInputStream) in).readWithDeadline(buf, deadline);
+    }
+  }
+
+  /**
    * Copies from one stream to another. <strong>closes the input and output streams 
    * at the end</strong>.
    * @param in InputStrem to read from
@@ -86,7 +123,20 @@ public class IOUtils {
     throws IOException {
     copyBytes(in, out, conf.getInt("io.file.buffer.size", 4096), true);
   }
-  
+
+  /**
+   * copy from one stream to another
+   * @param in InputStrem to read from
+   * @param out OutputStream to write to
+   * @param conf the Configuration object
+   * @param deadline the deadline requirement
+   */
+  public static void copyBytes(InputStream in, OutputStream out, Configuration conf, long deadline)
+    throws IOException {
+    copyBytes(in, out, conf.getInt("io.file.buffer.size", 4096), true, deadline);
+  }
+
+
   /**
    * Copies from one stream to another.
    * @param in InputStrem to read from

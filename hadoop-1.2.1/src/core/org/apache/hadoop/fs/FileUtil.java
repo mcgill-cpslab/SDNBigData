@@ -18,10 +18,6 @@
 
 package org.apache.hadoop.fs;
 
-import java.io.*;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -29,9 +25,14 @@ import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.nativeio.NativeIO;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Shell;
 import org.apache.hadoop.util.Shell.ShellCommandExecutor;
+import org.apache.hadoop.util.StringUtils;
+
+import java.io.*;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * A collection of file-processing util methods
@@ -317,6 +318,35 @@ public class FileUtil {
     }
     if (deleteSource) {
       return FileUtil.fullyDelete(src);
+    } else {
+      return true;
+    }
+  }
+
+  /** Copy FileSystem files to local files with
+   * the deadline requirement */
+  public static boolean copy(FileSystem srcFS, Path src,
+                             File dst, boolean deleteSource,
+                             Configuration conf, long deadline) throws IOException {
+    if (srcFS.getFileStatus(src).isDir()) {
+      if (!dst.mkdirs()) {
+        return false;
+      }
+      FileStatus contents[] = srcFS.listStatus(src);
+      for (int i = 0; i < contents.length; i++) {
+        copy(srcFS, contents[i].getPath(),
+                new File(dst, contents[i].getPath().getName()),
+                deleteSource, conf, deadline);
+      }
+    } else if (srcFS.isFile(src)) {
+      InputStream in = srcFS.open(src);
+      IOUtils.copyBytes(in, new FileOutputStream(dst), conf, deadline);
+    } else {
+      throw new IOException(src.toString() +
+              ": No such file or directory");
+    }
+    if (deleteSource) {
+      return srcFS.delete(src, true);
     } else {
       return true;
     }

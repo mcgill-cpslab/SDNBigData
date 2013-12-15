@@ -137,6 +137,16 @@ public class FsShell extends Configured implements Tool {
     else
       dstFs.copyFromLocalFile(false, false, srcs, dstPath);
   }
+
+  /**
+   * Add local files to the indicated FileSystem name. src is kept
+   * with the deadline requirement
+   */
+  void copyFromLocal(Path[] srcs, String dstf, long deadline) throws IOException {
+    Path dstPath = new Path(dstf);
+    FileSystem dstFs = dstPath.getFileSystem(getConf());
+    dstFs.copyFromLocalFile(false, false, srcs, dstPath);
+  }
   
   /**
    * Add local files to the indicated FileSystem name. src is removed.
@@ -169,10 +179,13 @@ public class FsShell extends Configured implements Tool {
     
     String srcstr = null;
     String dststr = null;
+    long deadline = -1;
     try {
       List<String> parameters = cf.parse(argv, pos);
       srcstr = parameters.get(0);
       dststr = parameters.get(1);
+      if (parameters.size() > 2)
+        deadline = Long.parseLong(parameters.get(2));
     }
     catch(IllegalArgumentException iae) {
       System.err.println("Usage: java FsShell " + GET_SHORT_USAGE);
@@ -189,6 +202,8 @@ public class FsShell extends Configured implements Tool {
     } else {
       File dst = new File(dststr);      
       Path srcpath = new Path(srcstr);
+      //it seems that srcPath's format determines the type of
+      //srcFS
       FileSystem srcFS = getSrcFileSystem(srcpath, verifyChecksum);
       if (copyCrc && !(srcFS instanceof ChecksumFileSystem)) {
         System.err.println("-crc option is not valid when source file system " +
@@ -204,7 +219,10 @@ public class FsShell extends Configured implements Tool {
       for (FileStatus status : srcs) {
         Path p = status.getPath();
         File f = dstIsDir? new File(dst, p.getName()): dst;
-        copyToLocal(srcFS, p, f, copyCrc);
+        if (deadline == -1)
+          copyToLocal(srcFS, p, f, copyCrc);
+        else
+          copyToLocal(srcFS, p, f, copyCrc, deadline);
       }
     }
   }
@@ -226,6 +244,63 @@ public class FsShell extends Configured implements Tool {
    * {@link java.io.File#createTempFile(String, String, File)}.
    */
   static final String COPYTOLOCAL_PREFIX = "_copyToLocal_";
+
+
+  /**
+   * Copy a source file from a given file system to local destination.
+   * @param srcFS source file system
+   * @param src source path
+   * @param dst destination
+   * @param copyCrc copy CRC files?
+   * @exception IOException If some IO failed
+   */
+  private void copyToLocal(final FileSystem srcFS, final Path src,
+                           final File dst, final boolean copyCrc, long deadline)
+          throws IOException {
+    /* Keep the structure similar to ChecksumFileSystem.copyToLocal().
+     * Ideal these two should just invoke FileUtil.copy() and not repeat
+     * recursion here. Of course, copy() should support two more options :
+     * copyCrc and useTmpFile (may be useTmpFile need not be an option).
+     */
+
+    if (!srcFS.getFileStatus(src).isDir()) {
+      if (dst.exists()) {
+        // match the error message in FileUtil.checkDest():
+        throw new IOException("Target " + dst + " already exists");
+      }
+
+      // use absolute name so that tmp file is always created under dest dir
+      File tmp = FileUtil.createLocalTempFile(dst.getAbsoluteFile(),
+              COPYTOLOCAL_PREFIX, true);
+      if (!FileUtil.copy(srcFS, src, tmp, false, srcFS.getConf(), deadline)) {
+        throw new IOException("Failed to copy " + src + " to " + dst);
+      }
+
+      if (!tmp.renameTo(dst)) {
+        throw new IOException("Failed to rename tmp file " + tmp +
+                " to local destination \"" + dst + "\".");
+      }
+
+      if (copyCrc) {
+        if (!(srcFS instanceof ChecksumFileSystem)) {
+          throw new IOException("Source file system does not have crc files");
+        }
+
+        ChecksumFileSystem csfs = (ChecksumFileSystem) srcFS;
+        File dstcs = FileSystem.getLocal(srcFS.getConf())
+                .pathToFile(csfs.getChecksumFile(new Path(dst.getCanonicalPath())));
+        copyToLocal(csfs.getRawFileSystem(), csfs.getChecksumFile(src),
+                dstcs, false, deadline);
+      }
+    } else {
+      // once FileUtil.copy() supports tmp file, we don't need to mkdirs().
+      dst.mkdirs();
+      for(FileStatus path : srcFS.listStatus(src)) {
+        copyToLocal(srcFS, path.getPath(),
+                new File(dst, path.getPath().getName()), copyCrc, deadline);
+      }
+    }
+  }
 
   /**
    * Copy a source file from a given file system to local destination.
@@ -1780,12 +1855,23 @@ public class FsShell extends Configured implements Tool {
         for (int j=0 ; i < argv.length-1 ;) 
           srcs[j++] = new Path(argv[i++]);
         copyFromLocal(srcs, argv[i++]);
+      } else if ("-puturgent".equals(cmd)) {
+        //test deadline aware
+        Path[] srcs = new Path[argv.length-2];
+        for (int j=0 ; i < argv.length-1 ;)
+          srcs[j++] = new Path(argv[i++]);
+        String dst = argv[i++];
+        //the third parameter is deadline
+        copyFromLocal(srcs, dst, Long.parseLong(argv[i++]));
       } else if ("-moveFromLocal".equals(cmd)) {
         Path[] srcs = new Path[argv.length-2];
         for (int j=0 ; i < argv.length-1 ;) 
           srcs[j++] = new Path(argv[i++]);
         moveFromLocal(srcs, argv[i++]);
       } else if ("-get".equals(cmd) || "-copyToLocal".equals(cmd)) {
+        copyToLocal(argv, i);
+      } else if ("-geturgent".equals(cmd)) {
+        //TODO: override copyToLocal
         copyToLocal(argv, i);
       } else if ("-getmerge".equals(cmd)) {
         if (argv.length>i+2)

@@ -17,7 +17,10 @@
  */
 package org.apache.hadoop.fs;
 
-import java.io.*;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Socket;
 
 /****************************************************************
  * FSInputStream is a generic old InputStream with a little bit
@@ -69,6 +72,27 @@ public abstract class FSInputStream extends InputStream
       }
       nread += nbytes;
     }
+  }
+
+  public synchronized int readwithdeadline(byte[] buffer, int offset, int length, long deadline)
+          throws IOException {
+    return 0;
+  }
+
+
+  /**
+   * SHOULD be implemented by the subclasses
+   * if the subclass is connecting to the remote server, it would return the
+   * socket
+   * @return the socket connecting to the server
+   */
+  public Socket getRemoteChannel() {
+    return null;
+  }
+
+  public int readwithdeadline(long position, byte[] buffer, int offset, int length, long deadline)
+          throws IOException {
+    return 0;
   }
     
   public void readFully(long position, byte[] buffer)

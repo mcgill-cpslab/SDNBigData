@@ -4,3 +4,8 @@
 target
 .idea_modules
 build
+*.xml
+*.swp
+out
+*~
+src/native/*

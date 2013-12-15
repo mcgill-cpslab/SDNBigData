@@ -32,7 +32,12 @@ public class FSDataInputStream extends DataInputStream
           "In is not an instance of Seekable or PositionedReadable");
     }
   }
-  
+
+  public int readWithDeadline(byte b[], long deadline) throws IOException {
+    FSInputStream fins = (FSInputStream) in;
+    return fins.readwithdeadline(b, 0, b.length, deadline);
+  }
+
   public synchronized void seek(long desired) throws IOException {
     ((Seekable)in).seek(desired);
   }
