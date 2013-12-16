@@ -2233,6 +2233,8 @@ public class DFSClient implements FSConstants, java.io.Closeable {
      * deadline aware
      */
     private synchronized DatanodeInfo blockSeekTo(long target, long deadline) throws IOException {
+      System.out.println("in blockSeekTo(long target, long deadline) ");
+
       if (target >= getFileLength()) {
         throw new IOException("Attempted to read past end of file");
       }
@@ -2249,7 +2251,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         s.close();
         s = null;
       }
-
+      System.out.println("in blockSeekTo(long target, long deadline)");
       //
       // Connect to best DataNode for desired Block, with potential offset
       //
@@ -2272,6 +2274,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         Block blk = targetBlock.getBlock();
         Token<BlockTokenIdentifier> accessToken = targetBlock.getBlockToken();
         if (shouldTryShortCircuitRead(targetAddr)) {
+          System.err.println("shouldTryShortCircuitRead");
           try {
             blockReader = getLocalBlockReader(conf, src, blk, accessToken,
                     chosenNode, DFSClient.this.socketTimeout, offsetIntoBlock);
@@ -2302,13 +2305,15 @@ public class DFSClient implements FSConstants, java.io.Closeable {
           s.setSoTimeout(socketTimeout);
           //make namenode known about the deadline
           //NOTICE: it should be a sync call
-          namenode.sendConnectionInfo(new ClientConnectionInfo(
-                  s.getLocalAddress().toString(),
+          System.out.println("sending connection information");
+          namenode.sendConnectionInfo(
+                  s.getLocalAddress().getHostAddress(),
                   s.getLocalPort(),
-                  s.getRemoteSocketAddress().toString(),
+                  s.getInetAddress().getHostAddress(),
                   s.getPort(),
-                  blk.getNumBytes() - offsetIntoBlock,
-                  deadline));
+                  deadline,
+                  blk.getNumBytes() - offsetIntoBlock);
+          System.out.println("sent connection information");
           blockReader = RemoteBlockReader.newBlockReader(s, src, blk.getBlockId(),
                   accessToken,
                   blk.getGenerationStamp(),
@@ -2564,6 +2569,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     @Override
     public synchronized int readwithdeadline(byte buf[], int off, int len, long deadline)
             throws IOException {
+      System.out.println("in DFSClient int readwithdeadline(byte buf[], int off, int len, long deadline)");
       checkOpen();
       if (closed) {
         throw new IOException("Stream closed");
@@ -2606,6 +2612,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
           }
         }
       }
+      System.out.println("return -1 at int readwithdeadline(byte buf[], int off, int len, long deadline)");
       return -1;
     }
 
@@ -2812,13 +2819,13 @@ public class DFSClient implements FSConstants, java.io.Closeable {
                     socketTimeout);
             //make namenode known about the deadline
             //NOTICE: it should be a sync call
-            namenode.sendConnectionInfo(new ClientConnectionInfo(
+            namenode.sendConnectionInfo(
                     s.getLocalAddress().toString(),
                     s.getLocalPort(),
-                    s.getRemoteSocketAddress().toString(),
+                    s.getInetAddress().getHostAddress(),
                     s.getPort(),
                     len,
-                    deadline));
+                    deadline);
             dn.setSoTimeout(socketTimeout);
             reader = RemoteBlockReader.newBlockReader(dn, src,
                     block.getBlock().getBlockId(), accessToken,
@@ -3021,29 +3028,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     }
   }
 
-  public class ClientConnectionInfo implements Serializable {
-    public String remoteIP;
-    public String localIP;
-    public int remoteport;
-    public int localport;
-    public long flowsize;//inbytes
-    public long deadline;
-    public ClientConnectionInfo(String rIP, int rport, String lIP,
-                                int lport, long fsize, long dline) {
-      remoteIP = rIP;
-      remoteport = rport;
-      localIP = lIP;
-      localport = lport;
-      flowsize = fsize;
-      deadline = dline;
-    }
 
-    @Override
-    public String toString() {
-      return "<" + localIP + "," + localport + "," + remoteIP + "," +
-              remoteport + "," + flowsize + " bytes," + deadline + "ms";
-    }
-  }
 
   /**
    * The Hdfs implementation of {@link FSDataInputStream}

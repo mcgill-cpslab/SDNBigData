@@ -26,7 +26,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Trash;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.permission.PermissionStatus;
-import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HDFSPolicyProvider;
 import org.apache.hadoop.hdfs.protocol.*;
@@ -114,6 +113,30 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     Configuration.addDefaultResource("hdfs-default.xml");
     Configuration.addDefaultResource("hdfs-site.xml");
   }
+
+  public class ClientConnectionInfo {
+    public String remoteIP;
+    public String localIP;
+    public int remoteport;
+    public int localport;
+    public long flowsize;//inbytes
+    public long deadline;
+    public ClientConnectionInfo(String lIP, int lport, String rIP,
+                                int rport, long dline, long fsize) {
+      remoteIP = rIP;
+      remoteport = rport;
+      localIP = lIP;
+      localport = lport;
+      flowsize = fsize;
+      deadline = dline;
+    }
+
+    @Override
+    public String toString() {
+      return "<" + localIP + "," + localport + "," + remoteIP + "," +
+              remoteport + "," + flowsize + " bytes," + deadline + "ms";
+    }
+  }
   
   public long getProtocolVersion(String protocol, 
                                  long clientVersion) throws IOException {
@@ -162,7 +185,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
   /** Activated plug-ins. */
   private List<ServicePlugin> plugins;
 
-  private LinkedList<DFSClient.ClientConnectionInfo> connectionLists;
+  private LinkedList<ClientConnectionInfo> connectionLists;
   
   /** Format a new filesystem.  Destroys any filesystem that may already
    * exist at this location.  **/
@@ -261,7 +284,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     int handlerCount = conf.getInt("dfs.namenode.handler.count", 10);
 
     //initialize connection list
-    connectionLists = new LinkedList<DFSClient.ClientConnectionInfo>();
+    connectionLists = new LinkedList<ClientConnectionInfo>();
 
     // set service-level authorization security policy
     if (serviceAuthEnabled = 
@@ -641,14 +664,17 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
   /**
    * called by the client to send the connection information, including
    * remote/local address, ports, flow size and the deadline
-   *
-   * @param coninfo
    */
   @Override
-  public boolean sendConnectionInfo(DFSClient.ClientConnectionInfo coninfo) {
+  public boolean sendConnectionInfo(String senderip, int senderport,
+                                    String receiverip, int receiverport,
+                                    long deadline, long flowsize)
+          throws IOException {
     //add to the list
-    connectionLists.add(coninfo);
-    LOG.info("get the connection info:" + coninfo.toString());
+    ClientConnectionInfo cci = new ClientConnectionInfo(senderip, senderport, receiverip,
+            receiverport, deadline, flowsize);
+    connectionLists.add(cci);
+    LOG.info("get the connection info:" + cci.toString());
     //TODO: send the connection information to the openflow controller
     return true;
   }

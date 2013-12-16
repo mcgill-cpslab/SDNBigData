@@ -19,7 +19,6 @@ package org.apache.hadoop.hdfs.protocol;
 
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.protocol.FSConstants.UpgradeAction;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
@@ -599,5 +598,7 @@ public interface ClientProtocol extends VersionedProtocol {
    * called by the client to send the connection information, including
    * remote/local address, ports, flow size and the deadline
    */
-  public boolean sendConnectionInfo(DFSClient.ClientConnectionInfo coninfo);
+  public boolean sendConnectionInfo(String localip, int localport, String remoteip,
+                                    int remoteport, long deadline, long flowsize)
+          throws IOException;
 }
