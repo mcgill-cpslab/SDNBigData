@@ -108,6 +108,7 @@ public class IOUtils {
       if ((ps != null) && ps.checkError()) {
         throw new IOException("Unable to write to output stream.");
       }
+      System.err.println("in copyBytes(InputStream in, OutputStream out, int buffSize, long deadline)");
       bytesRead = ((FSDataInputStream) in).readWithDeadline(buf, deadline);
     }
   }

@@ -175,7 +175,7 @@ public class FsShell extends Configured implements Tool {
    * @see org.apache.hadoop.fs.FileSystem.globStatus 
    */
   void copyToLocal(String[]argv, int pos) throws IOException {
-    CommandFormat cf = new CommandFormat("copyToLocal", 2,2,"crc","ignoreCrc");
+    CommandFormat cf = new CommandFormat("copyToLocal", 2,3,"crc","ignoreCrc");
     
     String srcstr = null;
     String dststr = null;

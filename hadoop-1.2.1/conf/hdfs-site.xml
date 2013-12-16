@@ -4,5 +4,10 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-
+	<configuration>
+		<property>
+			<name>dfs.replication</name>
+			<value>1</value>
+		</property>
+	</configuration>
 </configuration>
