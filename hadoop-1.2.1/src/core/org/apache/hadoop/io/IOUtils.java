@@ -21,6 +21,7 @@ package org.apache.hadoop.io;
 import org.apache.commons.logging.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -104,11 +105,12 @@ public class IOUtils {
     byte buf[] = new byte[buffSize];
     int bytesRead = ((FSDataInputStream) in).readWithDeadline(buf, deadline);
     while (bytesRead >= 0) {
-      out.write(buf, 0, bytesRead);
+      //the write(buf, 0, bytesRead) was implemented in DataOutputStream
+      ((FSDataOutputStream) out).write(buf, 0, bytesRead, deadline);
       if ((ps != null) && ps.checkError()) {
         throw new IOException("Unable to write to output stream.");
       }
-      System.err.println("in copyBytes(InputStream in, OutputStream out, int buffSize, long deadline)");
+      System.out.println("in copyBytes(InputStream in, OutputStream out, int buffSize, long deadline)");
       bytesRead = ((FSDataInputStream) in).readWithDeadline(buf, deadline);
     }
   }
@@ -126,7 +128,7 @@ public class IOUtils {
   }
 
   /**
-   * copy from one stream to another
+   * copy from one stream to another with the deadline requirement
    * @param in InputStrem to read from
    * @param out OutputStream to write to
    * @param conf the Configuration object
@@ -149,6 +151,19 @@ public class IOUtils {
   public static void copyBytes(InputStream in, OutputStream out, Configuration conf, boolean close)
     throws IOException {
     copyBytes(in, out, conf.getInt("io.file.buffer.size", 4096),  close);
+  }
+
+  /**
+   * Copies from one stream to another with deadline requirement
+   * @param in InputStrem to read from
+   * @param out OutputStream to write to
+   * @param conf the Configuration object
+   * @param close whether or not close the InputStream and
+   * OutputStream at the end. The streams are closed in the finally clause.
+   */
+  public static void copyBytes(InputStream in, OutputStream out, Configuration conf, boolean close, long deadline)
+          throws IOException {
+    copyBytes(in, out, conf.getInt("io.file.buffer.size", 4096),  close, deadline);
   }
   
   /**

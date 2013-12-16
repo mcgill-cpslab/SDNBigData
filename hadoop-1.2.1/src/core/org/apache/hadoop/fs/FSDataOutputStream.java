@@ -75,7 +75,7 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
   public FSDataOutputStream(OutputStream out, FileSystem.Statistics stats,
                             long startPosition) throws IOException {
     super(new PositionCache(out, stats, startPosition));
-    wrappedStream = out;
+    wrappedStream = out;    //wrapped stream would be the DFSOutputStream
   }
   
   public long getPos() throws IOException {
@@ -90,6 +90,18 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
   public OutputStream getWrappedStream() {
     return wrappedStream;
   }
+
+  public void write(byte b[], int off, int len, long deadline) throws IOException {
+    //FSOutputSummer overrides it
+    ((FSOutputSummer) out).write(b, off, len, deadline);
+    //re-implement incCount here
+    int temp = written + len;
+    if (temp < 0) {
+      temp = Integer.MAX_VALUE;
+    }
+    written = temp;
+  }
+
 
   /** {@inheritDoc} */
   public void sync() throws IOException {

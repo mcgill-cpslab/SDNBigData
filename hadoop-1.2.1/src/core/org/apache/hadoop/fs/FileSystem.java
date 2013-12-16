@@ -1184,7 +1184,7 @@ public abstract class FileSystem extends Configured implements Closeable {
    */
   public void moveFromLocalFile(Path[] srcs, Path dst)
     throws IOException {
-    copyFromLocalFile(true, true, srcs, dst);
+    copyFromLocalFile(true, true, srcs, dst, -1);
   }
 
   /**
@@ -1210,12 +1210,13 @@ public abstract class FileSystem extends Configured implements Closeable {
    * The src files are on the local disk.  Add it to FS at
    * the given dst name.
    * delSrc indicates if the source should be removed
+   * copy file from local file system with the deadline requirement
    */
   public void copyFromLocalFile(boolean delSrc, boolean overwrite, 
-                                Path[] srcs, Path dst)
+                                Path[] srcs, Path dst, long deadline)
     throws IOException {
     Configuration conf = getConf();
-    FileUtil.copy(getLocal(conf), srcs, this, dst, delSrc, overwrite, conf);
+    FileUtil.copy(getLocal(conf), srcs, this, dst, delSrc, overwrite, conf, deadline);
   }
   
   /**

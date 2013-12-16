@@ -3274,6 +3274,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     private class DataStreamer extends Daemon {
 
       private volatile boolean closed = false;
+      private long deadline = -1;
   
       public void run() {
         long lastPacket = 0;
@@ -3330,7 +3331,14 @@ public class DFSClient implements FSConstants, java.io.Closeable {
               // get new block from namenode.
               if (blockStream == null) {
                 LOG.debug("Allocating new block");
-                nodes = nextBlockOutputStream();
+                /**
+                 * deadline should be set out of box if you want to call
+                 * deadline related functions
+                 */
+                if (deadline == -1)
+                  nodes = nextBlockOutputStream();
+                else
+                  nodes = nextBlockOutputStream(deadline);
                 this.setName("DataStreamer for file " + src +
                              " block " + block);
                 response = new ResponseProcessor(nodes);
@@ -3356,7 +3364,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
                   ackQueue.notifyAll();
                 }
               }
-              
+
               // write out data to remote datanode
               blockStream.write(buf.array(), buf.position(), buf.remaining());
               
@@ -3858,9 +3866,9 @@ public class DFSClient implements FSConstants, java.io.Closeable {
       packetSize = n + chunkSize*chunksPerPacket;
       if (LOG.isDebugEnabled()) {
         LOG.debug("computePacketChunkSize: src=" + src +
-                  ", chunkSize=" + chunkSize +
-                  ", chunksPerPacket=" + chunksPerPacket +
-                  ", packetSize=" + packetSize);
+                ", chunkSize=" + chunkSize +
+                ", chunksPerPacket=" + chunksPerPacket +
+                ", packetSize=" + packetSize);
       }
     }
 
@@ -3883,15 +3891,14 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         retry = false;
         nodes = null;
         success = false;
-                
-        long startTime = System.currentTimeMillis();
+         long startTime = System.currentTimeMillis();
 
         DatanodeInfo[] excluded = excludedNodes.toArray(new DatanodeInfo[0]);
         lb = locateFollowingBlock(startTime, excluded.length > 0 ? excluded : null);
         block = lb.getBlock();
         accessToken = lb.getBlockToken();
         nodes = lb.getLocations();
-  
+
         //
         // Connect to first DataNode in the list.
         //
@@ -3916,6 +3923,171 @@ public class DFSClient implements FSConstants, java.io.Closeable {
       }
       return nodes;
     }
+
+    /**
+     * get the nextBlockOutputStream with the deadline requirement
+     * @param deadline
+     * @return
+     * @throws IOException
+     */
+    private DatanodeInfo[] nextBlockOutputStream(long deadline) throws IOException {
+      LocatedBlock lb = null;
+      boolean retry = false;
+      DatanodeInfo[] nodes;
+      int count = conf.getInt("dfs.client.block.write.retries", 3);
+      boolean success;
+      do {
+        hasError = false;
+        lastException = null;
+        errorIndex = 0;
+        retry = false;
+        nodes = null;
+        success = false;
+
+        long startTime = System.currentTimeMillis();
+
+        DatanodeInfo[] excluded = excludedNodes.toArray(new DatanodeInfo[0]);
+        lb = locateFollowingBlock(startTime, excluded.length > 0 ? excluded : null);
+        block = lb.getBlock();
+        accessToken = lb.getBlockToken();
+        nodes = lb.getLocations();
+
+        //
+        // Connect to first DataNode in the list.
+        //
+        success = createBlockOutputStream(nodes, clientName, false, deadline);
+
+        if (!success) {
+          LOG.info("Abandoning " + block);
+          namenode.abandonBlock(block, src, clientName);
+
+          if (errorIndex < nodes.length) {
+            LOG.info("Excluding datanode " + nodes[errorIndex]);
+            excludedNodes.add(nodes[errorIndex]);
+          }
+
+          // Connection failed.  Let's wait a little bit and retry
+          retry = true;
+        }
+      } while (retry && --count >= 0);
+
+      if (!success) {
+        throw new IOException("Unable to create new block.");
+      }
+      return nodes;
+    }
+
+
+    // connects to the first datanode in the pipeline
+    // Returns true if success, otherwise return failure.
+    //
+    private boolean createBlockOutputStream(DatanodeInfo[] nodes, String client,
+                                            boolean recoveryFlag, long deadline) {
+      short pipelineStatus = (short)DataTransferProtocol.OP_STATUS_SUCCESS;
+      String firstBadLink = "";
+      if (LOG.isDebugEnabled()) {
+        for (int i = 0; i < nodes.length; i++) {
+          LOG.debug("pipeline = " + nodes[i].getName());
+        }
+      }
+
+      // persist blocks on namenode on next flush
+      persistBlocks = true;
+
+      boolean result = false;
+      try {
+        final String dnName = nodes[0].getName(connectToDnViaHostname);
+        InetSocketAddress target = NetUtils.createSocketAddr(dnName);
+        s = socketFactory.createSocket();
+        timeoutValue = (socketTimeout > 0) ?
+                (3000 * nodes.length + socketTimeout) : 0;
+        LOG.debug("Connecting to " + dnName);
+        NetUtils.connect(s, target, getRandomLocalInterfaceAddr(), timeoutValue);
+        System.out.println("sending connection information");
+        s.setSoTimeout(timeoutValue);
+        s.setSendBufferSize(DEFAULT_DATA_SOCKET_SIZE);
+        LOG.debug("Send buf size " + s.getSendBufferSize());
+        //yes, here should be a sync call
+        namenode.sendConnectionInfo(
+                s.getLocalAddress().getHostAddress(),
+                s.getLocalPort(),
+                s.getInetAddress().getHostAddress(),
+                s.getPort(),
+                deadline,
+                Math.min(blockSize, getDataQueueSize()));
+        System.out.println("sent connection information");
+        long writeTimeout = (datanodeWriteTimeout > 0) ?
+                (HdfsConstants.WRITE_TIMEOUT_EXTENSION * nodes.length +
+                        datanodeWriteTimeout) : 0;
+
+        //
+        // Xmit header info to datanode
+        //
+        DataOutputStream out = new DataOutputStream(
+                new BufferedOutputStream(NetUtils.getOutputStream(s, writeTimeout),
+                        DataNode.SMALL_BUFFER_SIZE));
+        blockReplyStream = new DataInputStream(NetUtils.getInputStream(s));
+
+        out.writeShort( DataTransferProtocol.DATA_TRANSFER_VERSION );
+        out.write( DataTransferProtocol.OP_WRITE_BLOCK );
+        out.writeLong( block.getBlockId() );
+        out.writeLong( block.getGenerationStamp() );
+        out.writeInt( nodes.length );
+        out.writeBoolean( recoveryFlag );       // recovery flag
+        Text.writeString( out, client );
+        out.writeBoolean(false); // Not sending src node information
+        out.writeInt( nodes.length - 1 );
+        for (int i = 1; i < nodes.length; i++) {
+          nodes[i].write(out);
+        }
+        accessToken.write(out);
+        checksum.writeHeader( out );
+        out.flush();
+
+        // receive ack for connect
+        pipelineStatus = blockReplyStream.readShort();
+        firstBadLink = Text.readString(blockReplyStream);
+        if (pipelineStatus != DataTransferProtocol.OP_STATUS_SUCCESS) {
+          if (pipelineStatus == DataTransferProtocol.OP_STATUS_ERROR_ACCESS_TOKEN) {
+            throw new InvalidBlockTokenException(
+                    "Got access token error for connect ack with firstBadLink as "
+                            + firstBadLink);
+          } else {
+            throw new IOException("Bad connect ack with firstBadLink as "
+                    + firstBadLink);
+          }
+        }
+
+        blockStream = out;
+        result = true;     // success
+
+      } catch (IOException ie) {
+
+        LOG.info("Exception in createBlockOutputStream " + nodes[0].getName() +
+                " " + ie);
+
+        // find the datanode that matches
+        if (firstBadLink.length() != 0) {
+          for (int i = 0; i < nodes.length; i++) {
+            if (nodes[i].getName().equals(firstBadLink)) {
+              errorIndex = i;
+              break;
+            }
+          }
+        }
+        hasError = true;
+        setLastException(ie);
+        blockReplyStream = null;
+        result = false;
+      } finally {
+        if (!result) {
+          IOUtils.closeSocket(s);
+          s = null;
+        }
+      }
+      return result;
+    }
+
 
     // connects to the first datanode in the pipeline
     // Returns true if success, otherwise return failure.
@@ -4176,6 +4348,16 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         lastQueuedSeqno = currentPacket.seqno;
         currentPacket = null;
       }
+    }
+
+    /**
+     * get the number of bytes in dataQueue
+     * @return
+     */
+    private long getDataQueueSize() {
+      long ret = 0;
+      for (Packet p : dataQueue) ret += p.buf.length;
+      return ret;
     }
 
     /**

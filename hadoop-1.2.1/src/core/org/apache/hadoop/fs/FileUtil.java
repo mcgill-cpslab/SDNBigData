@@ -203,6 +203,102 @@ public class FileUtil {
     return returnVal;
   }
 
+  /**
+   * copy file with the deadline requirement
+   * @param srcFS
+   * @param srcs
+   * @param dstFS
+   * @param dst
+   * @param deleteSource
+   * @param overwrite
+   * @param conf
+   * @param deadline
+   * @return
+   * @throws IOException
+   */
+  public static boolean copy(FileSystem srcFS, Path[] srcs,
+                             FileSystem dstFS, Path dst,
+                             boolean deleteSource,
+                             boolean overwrite, Configuration conf, long deadline)
+          throws IOException {
+    boolean gotException = false;
+    boolean returnVal = true;
+    StringBuffer exceptions = new StringBuffer();
+
+    if (srcs.length == 1)
+      return copy(srcFS, srcs[0], dstFS, dst, deleteSource, overwrite, conf, deadline);
+
+    // Check if dest is directory
+    if (!dstFS.exists(dst)) {
+      throw new IOException("`" + dst +"': specified destination directory " +
+              "does not exist");
+    } else {
+      FileStatus sdst = dstFS.getFileStatus(dst);
+      if (!sdst.isDir())
+        throw new IOException("copying multiple files, but last argument `" +
+                dst + "' is not a directory");
+    }
+
+    for (Path src : srcs) {
+      try {
+        if (!copy(srcFS, src, dstFS, dst, deleteSource, overwrite, conf, deadline))
+          returnVal = false;
+      } catch (IOException e) {
+        gotException = true;
+        exceptions.append(e.getMessage());
+        exceptions.append("\n");
+      }
+    }
+    if (gotException) {
+      throw new IOException(exceptions.toString());
+    }
+    return returnVal;
+  }
+
+  /** Copy files between FileSystems with deadline requirement*/
+  public static boolean copy(FileSystem srcFS, Path src,
+                             FileSystem dstFS, Path dst,
+                             boolean deleteSource,
+                             boolean overwrite,
+                             Configuration conf,
+                             long deadline) throws IOException {
+    dst = checkDest(src.getName(), dstFS, dst, overwrite);
+
+    if (srcFS.getFileStatus(src).isDir()) {
+      checkDependencies(srcFS, src, dstFS, dst);
+      if (!dstFS.mkdirs(dst)) {
+        return false;
+      }
+      FileStatus contents[] = srcFS.listStatus(src);
+      for (int i = 0; i < contents.length; i++) {
+        copy(srcFS, contents[i].getPath(), dstFS,
+                new Path(dst, contents[i].getPath().getName()),
+                deleteSource, overwrite, conf, deadline);
+      }
+    } else if (srcFS.isFile(src)) {
+      InputStream in=null;
+      OutputStream out = null;
+      try {
+        in = srcFS.open(src);
+        out = dstFS.create(dst, overwrite);
+        IOUtils.copyBytes(in, out, conf, true, deadline);
+      } catch (IOException e) {
+        IOUtils.closeStream(out);
+        IOUtils.closeStream(in);
+        throw e;
+      }
+    } else {
+      throw new IOException(src.toString() + ": No such file or directory");
+    }
+    if (deleteSource) {
+      return srcFS.delete(src, true);
+    } else {
+      return true;
+    }
+
+  }
+
+
   /** Copy files between FileSystems. */
   public static boolean copy(FileSystem srcFS, Path src, 
                              FileSystem dstFS, Path dst, 

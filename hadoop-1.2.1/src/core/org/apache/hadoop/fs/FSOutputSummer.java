@@ -86,7 +86,17 @@ abstract public class FSOutputSummer extends OutputStream {
     for (int n=0;n<len;n+=write1(b, off+n, len-n)) {
     }
   }
-  
+
+  public synchronized void write(byte b[], int off, int len, long deadline)
+          throws IOException {
+    if (off < 0 || len < 0 || off > b.length - len) {
+      throw new ArrayIndexOutOfBoundsException();
+    }
+
+    for (int n=0;n<len;n+=write1(b, off+n, len-n)) {
+    }
+  }
+
   /**
    * Write a portion of an array, flushing to the underlying
    * stream at most once if necessary.

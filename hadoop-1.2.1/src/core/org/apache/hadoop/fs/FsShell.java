@@ -135,7 +135,7 @@ public class FsShell extends Configured implements Tool {
     if (srcs.length == 1 && srcs[0].toString().equals("-"))
       copyFromStdin(dstPath, dstFs);
     else
-      dstFs.copyFromLocalFile(false, false, srcs, dstPath);
+      dstFs.copyFromLocalFile(false, false, srcs, dstPath, -1);
   }
 
   /**
@@ -145,7 +145,7 @@ public class FsShell extends Configured implements Tool {
   void copyFromLocal(Path[] srcs, String dstf, long deadline) throws IOException {
     Path dstPath = new Path(dstf);
     FileSystem dstFs = dstPath.getFileSystem(getConf());
-    dstFs.copyFromLocalFile(false, false, srcs, dstPath);
+    dstFs.copyFromLocalFile(false, false, srcs, dstPath, deadline);
   }
   
   /**
