@@ -4014,7 +4014,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
                 s.getInetAddress().getHostAddress(),
                 s.getPort(),
                 deadline,
-                Math.min(blockSize, getDataQueueSize()));
+                blockSize);//writing process in HDFS is actually pipelined
         System.out.println("sent connection information");
         long writeTimeout = (datanodeWriteTimeout > 0) ?
                 (HdfsConstants.WRITE_TIMEOUT_EXTENSION * nodes.length +
@@ -4252,7 +4252,26 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         }
       } 
     }
-  
+
+    /**
+     * write chunk with deadline requirement, we set deadline variable in streamer
+     * so that it will report deadline adn flow size of each connection to the
+     * namenode
+     * @param b
+     * @param offset
+     * @param len
+     * @param checksum
+     * @param deadline
+     * @throws IOException
+     */
+    @Override
+    protected synchronized void writeChunk(byte[] b, int offset, int len, byte[] checksum, long deadline)
+            throws IOException {
+      System.out.println("set streamer.deadline as " + deadline);
+      streamer.deadline = deadline;
+      writeChunk(b, offset, len, checksum);
+    }
+
     // @see FSOutputSummer#writeChunk()
     @Override
     protected synchronized void writeChunk(byte[] b, int offset, int len, byte[] checksum) 
@@ -4350,15 +4369,6 @@ public class DFSClient implements FSConstants, java.io.Closeable {
       }
     }
 
-    /**
-     * get the number of bytes in dataQueue
-     * @return
-     */
-    private long getDataQueueSize() {
-      long ret = 0;
-      for (Packet p : dataQueue) ret += p.buf.length;
-      return ret;
-    }
 
     /**
      * All data is written out to datanodes. It is not guaranteed 

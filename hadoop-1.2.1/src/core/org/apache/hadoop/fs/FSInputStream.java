@@ -76,7 +76,8 @@ public abstract class FSInputStream extends InputStream
 
   public synchronized int readwithdeadline(byte[] buffer, int offset, int length, long deadline)
           throws IOException {
-    return 0;
+    //the default behavior is reading without deadline
+    return read(buffer, offset, length);
   }
 
 

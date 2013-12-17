@@ -1216,7 +1216,11 @@ public abstract class FileSystem extends Configured implements Closeable {
                                 Path[] srcs, Path dst, long deadline)
     throws IOException {
     Configuration conf = getConf();
-    FileUtil.copy(getLocal(conf), srcs, this, dst, delSrc, overwrite, conf, deadline);
+    System.out.println("copyFromLocalFile, deadline is " + deadline);
+    if (deadline != -1)
+      FileUtil.copy(getLocal(conf), srcs, this, dst, delSrc, overwrite, conf, deadline);
+    else
+      FileUtil.copy(getLocal(conf), srcs, this, dst, delSrc, overwrite, conf);
   }
   
   /**

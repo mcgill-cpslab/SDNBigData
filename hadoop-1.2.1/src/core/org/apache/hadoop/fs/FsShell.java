@@ -17,6 +17,18 @@
  */
 package org.apache.hadoop.fs;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.shell.CommandFormat;
+import org.apache.hadoop.fs.shell.Count;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.ipc.RPC;
+import org.apache.hadoop.ipc.RemoteException;
+import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,23 +40,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.zip.GZIPInputStream;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.shell.CommandFormat;
-import org.apache.hadoop.fs.shell.Count;
-import org.apache.hadoop.io.DataInputBuffer;
-import org.apache.hadoop.io.DataOutputBuffer;
-import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.ipc.RPC;
-import org.apache.hadoop.ipc.RemoteException;
-import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.util.StringUtils;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
 /** Provide command line access to a FileSystem. */
 public class FsShell extends Configured implements Tool {
@@ -145,6 +140,7 @@ public class FsShell extends Configured implements Tool {
   void copyFromLocal(Path[] srcs, String dstf, long deadline) throws IOException {
     Path dstPath = new Path(dstf);
     FileSystem dstFs = dstPath.getFileSystem(getConf());
+    System.out.println("copyFromLocal");
     dstFs.copyFromLocalFile(false, false, srcs, dstPath, deadline);
   }
   
@@ -1857,11 +1853,12 @@ public class FsShell extends Configured implements Tool {
         copyFromLocal(srcs, argv[i++]);
       } else if ("-puturgent".equals(cmd)) {
         //test deadline aware
-        Path[] srcs = new Path[argv.length-2];
-        for (int j=0 ; i < argv.length-1 ;)
+        Path[] srcs = new Path[argv.length-3];
+        for (int j=0 ; i < argv.length-2 ;)
           srcs[j++] = new Path(argv[i++]);
         String dst = argv[i++];
         //the third parameter is deadline
+        System.out.println("put urgent");
         copyFromLocal(srcs, dst, Long.parseLong(argv[i++]));
       } else if ("-moveFromLocal".equals(cmd)) {
         Path[] srcs = new Path[argv.length-2];

@@ -52,6 +52,23 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
         statistics.incrementBytesWritten(len);
       }
     }
+
+    /**
+     * write with deadline
+     * @param b
+     * @param off
+     * @param len
+     * @param deadline
+     * @throws IOException
+     */
+    public void write(byte b[], int off, int len, long deadline) throws IOException {
+      ((FSOutputSummer) out).write(b, off, len, deadline);
+      position += len;                            // update position
+      if (statistics != null) {
+        statistics.incrementBytesWritten(len);
+      }
+
+    }
       
     public long getPos() throws IOException {
       return position;                            // return cached position
@@ -93,8 +110,9 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
 
   public void write(byte b[], int off, int len, long deadline) throws IOException {
     //FSOutputSummer overrides it
-    ((FSOutputSummer) out).write(b, off, len, deadline);
-    //re-implement incCount here
+    System.out.println("in write(byte b[], int off, int len, long deadline) @FSDataOutputStream");
+    ((PositionCache) out).write(b, off, len, deadline);
+    //reimplement incCount,
     int temp = written + len;
     if (temp < 0) {
       temp = Integer.MAX_VALUE;

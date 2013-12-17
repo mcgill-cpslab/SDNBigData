@@ -105,12 +105,14 @@ public class IOUtils {
     byte buf[] = new byte[buffSize];
     int bytesRead = ((FSDataInputStream) in).readWithDeadline(buf, deadline);
     while (bytesRead >= 0) {
-      //the write(buf, 0, bytesRead) was implemented in DataOutputStream
-      ((FSDataOutputStream) out).write(buf, 0, bytesRead, deadline);
+      if (out instanceof FSDataOutputStream)
+        ((FSDataOutputStream) out).write(buf, 0, bytesRead, deadline);
+      else
+        out.write(buf, 0, bytesRead);
       if ((ps != null) && ps.checkError()) {
         throw new IOException("Unable to write to output stream.");
       }
-      System.out.println("in copyBytes(InputStream in, OutputStream out, int buffSize, long deadline)");
+      //System.out.println("in copyBytes(InputStream in, OutputStream out, int buffSize, long deadline)");
       bytesRead = ((FSDataInputStream) in).readWithDeadline(buf, deadline);
     }
   }

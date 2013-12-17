@@ -79,21 +79,23 @@ abstract public class FSOutputSummer extends OutputStream {
    */
   public synchronized void write(byte b[], int off, int len)
   throws IOException {
+    System.out.println("FSOutputSummer write without deadline");
     if (off < 0 || len < 0 || off > b.length - len) {
       throw new ArrayIndexOutOfBoundsException();
     }
 
-    for (int n=0;n<len;n+=write1(b, off+n, len-n)) {
+    for (int n=0;n<len;n+=write1(b, off+n, len-n, -1)) {
     }
   }
 
   public synchronized void write(byte b[], int off, int len, long deadline)
           throws IOException {
+    System.out.println("FSOutputSummer write with deadline");
     if (off < 0 || len < 0 || off > b.length - len) {
       throw new ArrayIndexOutOfBoundsException();
     }
-
-    for (int n=0;n<len;n+=write1(b, off+n, len-n)) {
+    System.out.println("len=" + len + ", ");
+    for (int n=0;n<len;n+=write1(b, off+n, len-n, deadline)) {
     }
   }
 
@@ -101,14 +103,18 @@ abstract public class FSOutputSummer extends OutputStream {
    * Write a portion of an array, flushing to the underlying
    * stream at most once if necessary.
    */
-  private int write1(byte b[], int off, int len) throws IOException {
+  private int write1(byte b[], int off, int len, long deadline) throws IOException {
     if(count==0 && len>=buf.length) {
       // local buffer is empty and user data has one chunk
       // checksum and output data
       final int length = buf.length;
       sum.update(b, off, length);
-      writeChecksumChunk(b, off, length, false);
+      System.out.println("writeChecksumChunk@FSOutputSummer");
+      writeChecksumChunk(b, off, length, false, deadline);
       return length;
+    } else {
+      System.out.println("len=" + len + ", buf.length=" + buf.length +
+        ", count=" + count);
     }
     
     // copy user data to local buffer
@@ -119,7 +125,8 @@ abstract public class FSOutputSummer extends OutputStream {
     count += bytesToCopy;
     if (count == buf.length) {
       // local buffer is full
-      flushBuffer();
+      System.out.println("flushBuffer@FSOutputSummer");
+      flushBuffer(deadline);
     } 
     return bytesToCopy;
   }
@@ -131,6 +138,10 @@ abstract public class FSOutputSummer extends OutputStream {
     flushBuffer(false);
   }
 
+  protected synchronized void flushBuffer(long deadline) throws IOException {
+    flushBuffer(false, deadline);
+  }
+
   /* Forces any buffered output bytes to be checksumed and written out to
    * the underlying output stream.  If keep is true, then the state of 
    * this object remains intact.
@@ -139,7 +150,22 @@ abstract public class FSOutputSummer extends OutputStream {
     if (count != 0) {
       int chunkLen = count;
       count = 0;
-      writeChecksumChunk(buf, 0, chunkLen, keep);
+      writeChecksumChunk(buf, 0, chunkLen, keep, -1);
+      if (keep) {
+        count = chunkLen;
+      }
+    }
+  }
+
+  /* Forces any buffered output bytes to be checksumed and written out to
+   * the underlying output stream.  If keep is true, then the state of
+   * this object remains intact.
+   */
+  protected synchronized void flushBuffer(boolean keep, long deadline) throws IOException {
+    if (count != 0) {
+      int chunkLen = count;
+      count = 0;
+      writeChecksumChunk(buf, 0, chunkLen, keep, deadline);
       if (keep) {
         count = chunkLen;
       }
@@ -150,14 +176,33 @@ abstract public class FSOutputSummer extends OutputStream {
    * to the underlying output stream. If keep is true then keep the
    * current checksum intact, do not reset it.
    */
-  private void writeChecksumChunk(byte b[], int off, int len, boolean keep)
+  private void writeChecksumChunk(byte b[], int off, int len, boolean keep, long deadline)
   throws IOException {
     int tempChecksum = (int)sum.getValue();
     if (!keep) {
       sum.reset();
     }
     int2byte(tempChecksum, checksum);
-    writeChunk(b, off, len, checksum);
+    if (deadline == -1)
+      writeChunk(b, off, len, checksum);
+    else {
+      System.out.println("write chunk with deadline");
+      writeChunk(b, off, len, checksum, deadline);
+    }
+  }
+
+  /**
+   * write chunk with deadline erquirement
+   * @param b
+   * @param offset
+   * @param len
+   * @param checksum
+   * @param deadline
+   * @throws IOException
+   */
+  protected synchronized void writeChunk(byte[] b, int offset, int len, byte[] checksum, long deadline)
+          throws IOException {
+
   }
 
   /**
