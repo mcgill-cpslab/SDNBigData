@@ -66,10 +66,10 @@ def parse_args():
            "slaves across multiple (an additional $0.01/Gb for bandwidth" +
            "between zones applies)")
   parser.add_option("-a", "--ami", help="Amazon Machine Image ID to use")
-  parser.add_option("-v", "--spark-version", default="0.8.0",
+  parser.add_option("-v", "--spark-version", default="0.8.1",
       help="Version of Spark to use: 'X.Y.Z' or a specific git hash")
   parser.add_option("--spark-git-repo", 
-      default="https://github.com/mesos/spark", 
+      default="https://github.com/apache/incubator-spark",
       help="Github repo from which to checkout supplied commit hash")
   parser.add_option("--hadoop-major-version", default="1",
       help="Major version of Hadoop (default: 1)")
@@ -97,6 +97,8 @@ def parse_args():
       help="The SSH user you want to connect as (default: root)")
   parser.add_option("--delete-groups", action="store_true", default=False,
       help="When destroying a cluster, delete the security groups that were created")
+  parser.add_option("--use-existing-master", action="store_true", default=False,
+      help="Launch fresh slaves, but use an existing stopped master if possible")
 
   (opts, args) = parser.parse_args()
   if len(args) != 2:
@@ -155,7 +157,7 @@ def is_active(instance):
 
 # Return correct versions of Spark and Shark, given the supplied Spark version
 def get_spark_shark_version(opts):
-  spark_shark_map = {"0.7.3": "0.7.0", "0.8.0": "0.8.0"}
+  spark_shark_map = {"0.7.3": "0.7.1", "0.8.0": "0.8.0", "0.8.1": "0.8.1"}
   version = opts.spark_version.replace("v", "")
   if version not in spark_shark_map:
     print >> stderr, "Don't know about Spark version: %s" % version
@@ -232,9 +234,9 @@ def launch_cluster(conn, opts, cluster_name):
     slave_group.authorize('tcp', 60075, 60075, '0.0.0.0/0')
 
   # Check if instances are already running in our groups
-  active_nodes = get_existing_cluster(conn, opts, cluster_name,
-                                      die_on_error=False)
-  if any(active_nodes):
+  existing_masters, existing_slaves = get_existing_cluster(conn, opts, cluster_name,
+                                                           die_on_error=False)
+  if existing_slaves or (existing_masters and not opts.use_existing_master):
     print >> stderr, ("ERROR: There are already instances running in " +
         "group %s or %s" % (master_group.name, slave_group.name))
     sys.exit(1)
@@ -335,21 +337,28 @@ def launch_cluster(conn, opts, cluster_name):
                                                         zone, slave_res.id)
       i += 1
 
-  # Launch masters
-  master_type = opts.master_instance_type
-  if master_type == "":
-    master_type = opts.instance_type
-  if opts.zone == 'all':
-    opts.zone = random.choice(conn.get_all_zones()).name
-  master_res = image.run(key_name = opts.key_pair,
-                         security_groups = [master_group],
-                         instance_type = master_type,
-                         placement = opts.zone,
-                         min_count = 1,
-                         max_count = 1,
-                         block_device_map = block_map)
-  master_nodes = master_res.instances
-  print "Launched master in %s, regid = %s" % (zone, master_res.id)
+  # Launch or resume masters
+  if existing_masters:
+    print "Starting master..."
+    for inst in existing_masters:
+      if inst.state not in ["shutting-down", "terminated"]:
+        inst.start()
+    master_nodes = existing_masters
+  else:
+    master_type = opts.master_instance_type
+    if master_type == "":
+      master_type = opts.instance_type
+    if opts.zone == 'all':
+      opts.zone = random.choice(conn.get_all_zones()).name
+    master_res = image.run(key_name = opts.key_pair,
+                           security_groups = [master_group],
+                           instance_type = master_type,
+                           placement = opts.zone,
+                           min_count = 1,
+                           max_count = 1,
+                           block_device_map = block_map)
+    master_nodes = master_res.instances
+    print "Launched master in %s, regid = %s" % (zone, master_res.id)
 
   # Return all the instances
   return (master_nodes, slave_nodes)
@@ -684,6 +693,7 @@ def main():
         cluster_name + "?\nDATA ON EPHEMERAL DISKS WILL BE LOST, " +
         "BUT THE CLUSTER WILL KEEP USING SPACE ON\n" +
         "AMAZON EBS IF IT IS EBS-BACKED!!\n" +
+        "All data on spot-instance slaves will be lost.\n" +
         "Stop cluster " + cluster_name + " (y/N): ")
     if response == "y":
       (master_nodes, slave_nodes) = get_existing_cluster(
@@ -695,7 +705,10 @@ def main():
       print "Stopping slaves..."
       for inst in slave_nodes:
         if inst.state not in ["shutting-down", "terminated"]:
-          inst.stop()
+          if inst.spot_instance_request_id:
+            inst.terminate()
+          else:
+            inst.stop()
 
   elif action == "start":
     (master_nodes, slave_nodes) = get_existing_cluster(conn, opts, cluster_name)

@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletRequest
 
 import scala.xml.{NodeSeq, Node}
 
-import org.apache.spark.scheduler.cluster.SchedulingMode
+import org.apache.spark.scheduler.SchedulingMode
 import org.apache.spark.ui.Page._
 import org.apache.spark.ui.UIUtils._
 
@@ -38,7 +38,7 @@ private[spark] class IndexPage(parent: JobProgressUI) {
       val now = System.currentTimeMillis()
 
       var activeTime = 0L
-      for (tasks <- listener.stageToTasksActive.values; t <- tasks) {
+      for (tasks <- listener.stageIdToTasksActive.values; t <- tasks) {
         activeTime += t.timeRunning(now)
       }
 

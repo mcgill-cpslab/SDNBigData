@@ -25,7 +25,6 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd._
 import scala.collection.parallel.mutable
 import org.apache.spark._
-import org.apache.spark.rdd.CoalescedRDDPartition
 
 class RDDSuite extends FunSuite with SharedSparkContext {
 
@@ -138,6 +137,26 @@ class RDDSuite extends FunSuite with SharedSparkContext {
     assert(rdd.leftOuterJoin(emptyKv).collect().size === 2)
     assert(rdd.cogroup(emptyKv).collect().size === 2)
     assert(rdd.union(emptyKv).collect().size === 2)
+  }
+
+  test("repartitioned RDDs") {
+    val data = sc.parallelize(1 to 1000, 10)
+
+    // Coalesce partitions
+    val repartitioned1 = data.repartition(2)
+    assert(repartitioned1.partitions.size == 2)
+    val partitions1 = repartitioned1.glom().collect()
+    assert(partitions1(0).length > 0)
+    assert(partitions1(1).length > 0)
+    assert(repartitioned1.collect().toSet === (1 to 1000).toSet)
+
+    // Split partitions
+    val repartitioned2 = data.repartition(20)
+    assert(repartitioned2.partitions.size == 20)
+    val partitions2 = repartitioned2.glom().collect()
+    assert(partitions2(0).length > 0)
+    assert(partitions2(19).length > 0)
+    assert(repartitioned2.collect().toSet === (1 to 1000).toSet)
   }
 
   test("coalesced RDDs") {
@@ -319,6 +338,44 @@ class RDDSuite extends FunSuite with SharedSparkContext {
     }
     assert(sample.size === checkSample.size)
     for (i <- 0 until sample.size) assert(sample(i) === checkSample(i))
+  }
+
+  test("take") {
+    var nums = sc.makeRDD(Range(1, 1000), 1)
+    assert(nums.take(0).size === 0)
+    assert(nums.take(1) === Array(1))
+    assert(nums.take(3) === Array(1, 2, 3))
+    assert(nums.take(500) === (1 to 500).toArray)
+    assert(nums.take(501) === (1 to 501).toArray)
+    assert(nums.take(999) === (1 to 999).toArray)
+    assert(nums.take(1000) === (1 to 999).toArray)
+
+    nums = sc.makeRDD(Range(1, 1000), 2)
+    assert(nums.take(0).size === 0)
+    assert(nums.take(1) === Array(1))
+    assert(nums.take(3) === Array(1, 2, 3))
+    assert(nums.take(500) === (1 to 500).toArray)
+    assert(nums.take(501) === (1 to 501).toArray)
+    assert(nums.take(999) === (1 to 999).toArray)
+    assert(nums.take(1000) === (1 to 999).toArray)
+
+    nums = sc.makeRDD(Range(1, 1000), 100)
+    assert(nums.take(0).size === 0)
+    assert(nums.take(1) === Array(1))
+    assert(nums.take(3) === Array(1, 2, 3))
+    assert(nums.take(500) === (1 to 500).toArray)
+    assert(nums.take(501) === (1 to 501).toArray)
+    assert(nums.take(999) === (1 to 999).toArray)
+    assert(nums.take(1000) === (1 to 999).toArray)
+
+    nums = sc.makeRDD(Range(1, 1000), 1000)
+    assert(nums.take(0).size === 0)
+    assert(nums.take(1) === Array(1))
+    assert(nums.take(3) === Array(1, 2, 3))
+    assert(nums.take(500) === (1 to 500).toArray)
+    assert(nums.take(501) === (1 to 501).toArray)
+    assert(nums.take(999) === (1 to 999).toArray)
+    assert(nums.take(1000) === (1 to 999).toArray)
   }
 
   test("top with predefined ordering") {

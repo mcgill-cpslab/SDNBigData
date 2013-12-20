@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.spark</groupId>
     <artifactId>spark-parent</artifactId>
-    <version>0.8.0-incubating</version>
+    <version>0.8.1-incubating</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -47,6 +47,10 @@
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro-ipc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -91,15 +95,15 @@
       <version>0.3.1</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
+      <groupId>${akka.group}</groupId>
       <artifactId>akka-actor</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
+      <groupId>${akka.group}</groupId>
       <artifactId>akka-remote</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
+      <groupId>${akka.group}</groupId>
       <artifactId>akka-slf4j</artifactId>
     </dependency>
     <dependency>
@@ -121,10 +125,6 @@
     <dependency>
       <groupId>colt</groupId>
       <artifactId>colt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.github.scala-incubator.io</groupId>
-      <artifactId>scala-io-file_2.9.2</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.mesos</groupId>

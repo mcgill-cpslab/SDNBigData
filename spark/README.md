@@ -55,7 +55,7 @@ versions without YARN, use:
     # Cloudera CDH 4.2.0 with MapReduce v1
     $ SPARK_HADOOP_VERSION=2.0.0-mr1-cdh4.2.0 sbt/sbt assembly
 
-For Apache Hadoop 2.x, 0.23.x, Cloudera CDH MRv2, and other Hadoop versions
+For Apache Hadoop 2.0.X, 2.1.X, 2.2.X, 0.23.x, Cloudera CDH MRv2, and other Hadoop versions
 with YARN, also set `SPARK_YARN=true`:
 
     # Apache Hadoop 2.0.5-alpha
@@ -64,12 +64,12 @@ with YARN, also set `SPARK_YARN=true`:
     # Cloudera CDH 4.2.0 with MapReduce v2
     $ SPARK_HADOOP_VERSION=2.0.0-cdh4.2.0 SPARK_YARN=true sbt/sbt assembly
 
-For convenience, these variables may also be set through the `conf/spark-env.sh` file
-described below.
+    # Apache Hadoop 2.2.0 with YARN
+    $ SPARK_HADOOP_VERSION=2.2.0 SPARK_YARN=true sbt/sbt assembly
 
 When developing a Spark application, specify the Hadoop version by adding the
 "hadoop-client" artifact to your project's dependencies. For example, if you're
-using Hadoop 1.0.1 and build your application using SBT, add this entry to
+using Hadoop 1.2.1 and build your application using SBT, add this entry to
 `libraryDependencies`:
 
     "org.apache.hadoop" % "hadoop-client" % "1.2.1"

@@ -200,7 +200,7 @@ class SparkILoop(in0: Option[BufferedReader], val out: PrintWriter, val master: 
       ____              __  
      / __/__  ___ _____/ /__
     _\ \/ _ \/ _ `/ __/  '_/
-   /___/ .__/\_,_/_/ /_/\_\   version 0.8.0
+   /___/ .__/\_,_/_/ /_/\_\   version 0.8.1
       /_/                  
 """)
     import Properties._
@@ -631,6 +631,20 @@ class SparkILoop(in0: Option[BufferedReader], val out: PrintWriter, val master: 
       shouldReplay = Some(":load " + arg)
     })
     Result(true, shouldReplay)
+  }
+
+  def addAllClasspath(args: Seq[String]): Unit = {
+    var added = false
+    var totalClasspath = ""
+    for (arg <- args) {
+      val f = File(arg).normalize
+      if (f.exists) {
+        added = true
+        addedClasspath = ClassPath.join(addedClasspath, f.path)
+        totalClasspath = ClassPath.join(settings.classpath.value, addedClasspath)
+      }
+    }
+    if (added) replay()
   }
 
   def addClasspath(arg: String): Unit = {

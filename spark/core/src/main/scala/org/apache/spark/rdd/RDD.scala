@@ -101,7 +101,7 @@ abstract class RDD[T: ClassManifest](
   protected def getPreferredLocations(split: Partition): Seq[String] = Nil
 
   /** Optionally overridden by subclasses to specify how they are partitioned. */
-  val partitioner: Option[Partitioner] = None
+  @transient val partitioner: Option[Partitioner] = None
 
   // =======================================================================
   // Methods and fields available on all RDDs
@@ -114,7 +114,7 @@ abstract class RDD[T: ClassManifest](
   val id: Int = sc.newRddId()
 
   /** A friendly name for this RDD */
-  var name: String = null
+  @transient var name: String = null
 
   /** Assign a name to this RDD */
   def setName(_name: String) = {
@@ -123,7 +123,7 @@ abstract class RDD[T: ClassManifest](
   }
 
   /** User-defined generator of this RDD*/
-  var generator = Utils.getCallSiteInfo.firstUserClass
+  @transient var generator = Utils.getCallSiteInfo.firstUserClass
 
   /** Reset generator*/
   def setGenerator(_generator: String) = {
@@ -266,6 +266,19 @@ abstract class RDD[T: ClassManifest](
   def distinct(): RDD[T] = distinct(partitions.size)
 
   /**
+   * Return a new RDD that has exactly numPartitions partitions.
+   *
+   * Can increase or decrease the level of parallelism in this RDD. Internally, this uses
+   * a shuffle to redistribute data.
+   *
+   * If you are decreasing the number of partitions in this RDD, consider using `coalesce`,
+   * which can avoid performing a shuffle.
+   */
+  def repartition(numPartitions: Int): RDD[T] = {
+    coalesce(numPartitions, true)
+  }
+
+  /**
    * Return a new RDD that is reduced into `numPartitions` partitions.
    *
    * This results in a narrow dependency, e.g. if you go from 1000 partitions
@@ -395,7 +408,6 @@ abstract class RDD[T: ClassManifest](
   def pipe(command: String, env: Map[String, String]): RDD[String] =
     new PipedRDD(this, command, env)
 
-
   /**
    * Return an RDD created by piping elements to a forked external process.
    * The print behavior can be customized by providing two functions.
@@ -418,26 +430,41 @@ abstract class RDD[T: ClassManifest](
       command: Seq[String],
       env: Map[String, String] = Map(),
       printPipeContext: (String => Unit) => Unit = null,
-      printRDDElement: (T, String => Unit) => Unit = null): RDD[String] =
+      printRDDElement: (T, String => Unit) => Unit = null): RDD[String] = {
     new PipedRDD(this, command, env,
       if (printPipeContext ne null) sc.clean(printPipeContext) else null,
       if (printRDDElement ne null) sc.clean(printRDDElement) else null)
+  }
 
   /**
    * Return a new RDD by applying a function to each partition of this RDD.
    */
-  def mapPartitions[U: ClassManifest](f: Iterator[T] => Iterator[U],
-    preservesPartitioning: Boolean = false): RDD[U] =
-    new MapPartitionsRDD(this, sc.clean(f), preservesPartitioning)
+  def mapPartitions[U: ClassManifest](
+      f: Iterator[T] => Iterator[U], preservesPartitioning: Boolean = false): RDD[U] = {
+    val func = (context: TaskContext, index: Int, iter: Iterator[T]) => f(iter)
+    new MapPartitionsRDD(this, sc.clean(func), preservesPartitioning)
+  }
 
   /**
    * Return a new RDD by applying a function to each partition of this RDD, while tracking the index
    * of the original partition.
    */
   def mapPartitionsWithIndex[U: ClassManifest](
-    f: (Int, Iterator[T]) => Iterator[U],
-    preservesPartitioning: Boolean = false): RDD[U] =
-    new MapPartitionsWithIndexRDD(this, sc.clean(f), preservesPartitioning)
+      f: (Int, Iterator[T]) => Iterator[U], preservesPartitioning: Boolean = false): RDD[U] = {
+    val func = (context: TaskContext, index: Int, iter: Iterator[T]) => f(index, iter)
+    new MapPartitionsRDD(this, sc.clean(func), preservesPartitioning)
+  }
+
+  /**
+   * Return a new RDD by applying a function to each partition of this RDD. This is a variant of
+   * mapPartitions that also passes the TaskContext into the closure.
+   */
+  def mapPartitionsWithContext[U: ClassManifest](
+      f: (TaskContext, Iterator[T]) => Iterator[U],
+      preservesPartitioning: Boolean = false): RDD[U] = {
+    val func = (context: TaskContext, index: Int, iter: Iterator[T]) => f(context, iter)
+    new MapPartitionsRDD(this, sc.clean(func), preservesPartitioning)
+  }
 
   /**
    * Return a new RDD by applying a function to each partition of this RDD, while tracking the index
@@ -445,22 +472,22 @@ abstract class RDD[T: ClassManifest](
    */
   @deprecated("use mapPartitionsWithIndex", "0.7.0")
   def mapPartitionsWithSplit[U: ClassManifest](
-    f: (Int, Iterator[T]) => Iterator[U],
-    preservesPartitioning: Boolean = false): RDD[U] =
-    new MapPartitionsWithIndexRDD(this, sc.clean(f), preservesPartitioning)
+      f: (Int, Iterator[T]) => Iterator[U], preservesPartitioning: Boolean = false): RDD[U] = {
+    mapPartitionsWithIndex(f, preservesPartitioning)
+  }
 
   /**
    * Maps f over this RDD, where f takes an additional parameter of type A.  This
    * additional parameter is produced by constructA, which is called in each
    * partition with the index of that partition.
    */
-  def mapWith[A: ClassManifest, U: ClassManifest](constructA: Int => A, preservesPartitioning: Boolean = false)
-    (f:(T, A) => U): RDD[U] = {
-      def iterF(index: Int, iter: Iterator[T]): Iterator[U] = {
-        val a = constructA(index)
-        iter.map(t => f(t, a))
-      }
-    new MapPartitionsWithIndexRDD(this, sc.clean(iterF _), preservesPartitioning)
+  def mapWith[A: ClassManifest, U: ClassManifest]
+      (constructA: Int => A, preservesPartitioning: Boolean = false)
+      (f: (T, A) => U): RDD[U] = {
+    mapPartitionsWithIndex((index, iter) => {
+      val a = constructA(index)
+      iter.map(t => f(t, a))
+    }, preservesPartitioning)
   }
 
   /**
@@ -468,13 +495,13 @@ abstract class RDD[T: ClassManifest](
    * additional parameter is produced by constructA, which is called in each
    * partition with the index of that partition.
    */
-  def flatMapWith[A: ClassManifest, U: ClassManifest](constructA: Int => A, preservesPartitioning: Boolean = false)
-    (f:(T, A) => Seq[U]): RDD[U] = {
-      def iterF(index: Int, iter: Iterator[T]): Iterator[U] = {
-        val a = constructA(index)
-        iter.flatMap(t => f(t, a))
-      }
-    new MapPartitionsWithIndexRDD(this, sc.clean(iterF _), preservesPartitioning)
+  def flatMapWith[A: ClassManifest, U: ClassManifest]
+      (constructA: Int => A, preservesPartitioning: Boolean = false)
+      (f: (T, A) => Seq[U]): RDD[U] = {
+    mapPartitionsWithIndex((index, iter) => {
+      val a = constructA(index)
+      iter.flatMap(t => f(t, a))
+    }, preservesPartitioning)
   }
 
   /**
@@ -482,13 +509,11 @@ abstract class RDD[T: ClassManifest](
    * This additional parameter is produced by constructA, which is called in each
    * partition with the index of that partition.
    */
-  def foreachWith[A: ClassManifest](constructA: Int => A)
-    (f:(T, A) => Unit) {
-      def iterF(index: Int, iter: Iterator[T]): Iterator[T] = {
-        val a = constructA(index)
-        iter.map(t => {f(t, a); t})
-      }
-    (new MapPartitionsWithIndexRDD(this, sc.clean(iterF _), true)).foreach(_ => {})
+  def foreachWith[A: ClassManifest](constructA: Int => A)(f: (T, A) => Unit) {
+    mapPartitionsWithIndex { (index, iter) =>
+      val a = constructA(index)
+      iter.map(t => {f(t, a); t})
+    }.foreach(_ => {})
   }
 
   /**
@@ -496,13 +521,11 @@ abstract class RDD[T: ClassManifest](
    * additional parameter is produced by constructA, which is called in each
    * partition with the index of that partition.
    */
-  def filterWith[A: ClassManifest](constructA: Int => A)
-    (p:(T, A) => Boolean): RDD[T] = {
-      def iterF(index: Int, iter: Iterator[T]): Iterator[T] = {
-        val a = constructA(index)
-        iter.filter(t => p(t, a))
-      }
-    new MapPartitionsWithIndexRDD(this, sc.clean(iterF _), true)
+  def filterWith[A: ClassManifest](constructA: Int => A)(p: (T, A) => Boolean): RDD[T] = {
+    mapPartitionsWithIndex((index, iter) => {
+      val a = constructA(index)
+      iter.filter(t => p(t, a))
+    }, preservesPartitioning = true)
   }
 
   /**
@@ -541,16 +564,14 @@ abstract class RDD[T: ClassManifest](
    * Applies a function f to all elements of this RDD.
    */
   def foreach(f: T => Unit) {
-    val cleanF = sc.clean(f)
-    sc.runJob(this, (iter: Iterator[T]) => iter.foreach(cleanF))
+    sc.runJob(this, (iter: Iterator[T]) => iter.foreach(f))
   }
 
   /**
    * Applies a function f to each partition of this RDD.
    */
   def foreachPartition(f: Iterator[T] => Unit) {
-    val cleanF = sc.clean(f)
-    sc.runJob(this, (iter: Iterator[T]) => cleanF(iter))
+    sc.runJob(this, (iter: Iterator[T]) => f(iter))
   }
 
   /**
@@ -675,6 +696,8 @@ abstract class RDD[T: ClassManifest](
    */
   def count(): Long = {
     sc.runJob(this, (iter: Iterator[T]) => {
+      // Use a while loop to count the number of elements rather than iter.size because
+      // iter.size uses a for loop, which is slightly slower in current version of Scala.
       var result = 0L
       while (iter.hasNext) {
         result += 1L
@@ -753,24 +776,42 @@ abstract class RDD[T: ClassManifest](
   }
 
   /**
-   * Take the first num elements of the RDD. This currently scans the partitions *one by one*, so
-   * it will be slow if a lot of partitions are required. In that case, use collect() to get the
-   * whole RDD instead.
+   * Take the first num elements of the RDD. It works by first scanning one partition, and use the
+   * results from that partition to estimate the number of additional partitions needed to satisfy
+   * the limit.
    */
   def take(num: Int): Array[T] = {
     if (num == 0) {
       return new Array[T](0)
     }
+
     val buf = new ArrayBuffer[T]
-    var p = 0
-    while (buf.size < num && p < partitions.size) {
+    val totalParts = this.partitions.length
+    var partsScanned = 0
+    while (buf.size < num && partsScanned < totalParts) {
+      // The number of partitions to try in this iteration. It is ok for this number to be
+      // greater than totalParts because we actually cap it at totalParts in runJob.
+      var numPartsToTry = 1
+      if (partsScanned > 0) {
+        // If we didn't find any rows after the first iteration, just try all partitions next.
+        // Otherwise, interpolate the number of partitions we need to try, but overestimate it
+        // by 50%.
+        if (buf.size == 0) {
+          numPartsToTry = totalParts - 1
+        } else {
+          numPartsToTry = (1.5 * num * partsScanned / buf.size).toInt
+        }
+      }
+      numPartsToTry = math.max(0, numPartsToTry)  // guard against negative num of partitions
+
       val left = num - buf.size
-      val res = sc.runJob(this, (it: Iterator[T]) => it.take(left).toArray, Array(p), true)
-      buf ++= res(0)
-      if (buf.size == num)
-        return buf.toArray
-      p += 1
+      val p = partsScanned until math.min(partsScanned + numPartsToTry, totalParts)
+      val res = sc.runJob(this, (it: Iterator[T]) => it.take(left).toArray, p, allowLocal = true)
+
+      res.foreach(buf ++= _.take(num - buf.size))
+      partsScanned += numPartsToTry
     }
+
     return buf.toArray
   }
 
@@ -884,7 +925,7 @@ abstract class RDD[T: ClassManifest](
   private var storageLevel: StorageLevel = StorageLevel.NONE
 
   /** Record user function generating this RDD. */
-  private[spark] val origin = Utils.formatSparkCallSite
+  @transient private[spark] val origin = Utils.formatSparkCallSite
 
   private[spark] def elementClassManifest: ClassManifest[T] = classManifest[T]
 
@@ -899,7 +940,7 @@ abstract class RDD[T: ClassManifest](
   def context = sc
 
   // Avoid handling doCheckpoint multiple times to prevent excessive recursion
-  private var doCheckpointCalled = false
+  @transient private var doCheckpointCalled = false
 
   /**
    * Performs the checkpointing of this RDD by saving this. It is called by the DAGScheduler
