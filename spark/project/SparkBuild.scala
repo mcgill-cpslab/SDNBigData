@@ -120,6 +120,8 @@ object SparkBuild extends Build {
     //local hadoop repo
     resolvers ++= Seq("Local Hadoop Repo" at "file:///Users/nanzhu/.m2/repository"),
 
+    resolvers ++= Seq("Local Hadoop Repo 2" at "file:///home/zhunan/.m2/repository"),
+
     // Shared between both core and streaming.
     resolvers ++= Seq("Akka Repository" at "http://repo.akka.io/releases/"),
 
