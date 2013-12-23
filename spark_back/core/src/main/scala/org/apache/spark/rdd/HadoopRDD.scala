@@ -19,7 +19,12 @@ package org.apache.spark.rdd
 
 import java.io.EOFException
 
-import org.apache.hadoop.mapred._
+import org.apache.hadoop.mapred.FileInputFormat
+import org.apache.hadoop.mapred.InputFormat
+import org.apache.hadoop.mapred.InputSplit
+import org.apache.hadoop.mapred.JobConf
+import org.apache.hadoop.mapred.RecordReader
+import org.apache.hadoop.mapred.Reporter
 import org.apache.hadoop.util.ReflectionUtils
 
 import org.apache.spark._
@@ -27,7 +32,6 @@ import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.util.NextIterator
 import org.apache.hadoop.conf.{Configuration, Configurable}
-import org.apache.hadoop.io.{Text, LongWritable}
 
 
 /**
@@ -143,54 +147,39 @@ class HadoopRDD[K, V](
   }
 
   override def compute(theSplit: Partition, context: TaskContext) = {
-    val iter: NextIterator[(K, V)] = new NextIterator[(K, V)] {
-        val split = theSplit.asInstanceOf[HadoopPartition]
-        logInfo("Input split: " + split.inputSplit)
-        var reader: RecordReader[K, V] = null
-        val jobConf = getJobConf()
-        val inputFormat = getInputFormat(jobConf)
-        reader = inputFormat.getRecordReader(split.inputSplit.value, jobConf, Reporter.NULL)
+    val iter = new NextIterator[(K, V)] {
+      val split = theSplit.asInstanceOf[HadoopPartition]
+      logInfo("Input split: " + split.inputSplit)
+      var reader: RecordReader[K, V] = null
 
-        // Register an on-task-completion callback to close the input stream.
-        context.addOnCompleteCallback {
-          () => closeIfNeeded()
+      val jobConf = getJobConf()
+      val inputFormat = getInputFormat(jobConf)
+      reader = inputFormat.getRecordReader(split.inputSplit.value, jobConf, Reporter.NULL)
+
+      // Register an on-task-completion callback to close the input stream.
+      context.addOnCompleteCallback{ () => closeIfNeeded() }
+
+      val key: K = reader.createKey()
+      val value: V = reader.createValue()
+
+      override def getNext() = {
+        try {
+          finished = !reader.next(key, value)
+        } catch {
+          case eof: EOFException =>
+            finished = true
         }
+        (key, value)
+      }
 
-        val key: K = reader.createKey()
-        val value: V = reader.createValue()
-
-        override def getNext() = {
-          if (System.getenv("spark.running.mode").equals("deadline")) {
-            //read data with the deadline requirement
-            val deadline: Long = System.getenv("taskdeadline").toLong
-            try {
-              val lreader = inputFormat.asInstanceOf[TextInputFormat].
-                getDeadlineAwareRecordReader(split.inputSplit.value, jobConf, Reporter.NULL, deadline)
-              finished = !lreader.next(key.asInstanceOf[LongWritable],
-                value.asInstanceOf[Text], deadline)
-            } catch {
-              case eof: EOFException =>
-                finished = true
-            }
-          } else {
-            try {
-              finished = !reader.next(key, value)
-            } catch {
-              case eof: EOFException =>
-                finished = true
-            }
-          }
-          (key, value)
-        }
-
-        override def close() {
-          try {
-            reader.close()
-          } catch {
-            case e: Exception => logWarning("Exception in RecordReader.close()", e)
-          }
+      override def close() {
+        try {
+          reader.close()
+        } catch {
+          case e: Exception => logWarning("Exception in RecordReader.close()", e)
         }
       }
+    }
     new InterruptibleIterator[(K, V)](context, iter)
   }
 

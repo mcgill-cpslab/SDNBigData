@@ -27,7 +27,6 @@ import org.apache.hadoop.fs.Path
 
 import org.apache.spark.Logging
 import org.apache.spark.SerializableWritable
-import org.apache.hadoop.mapred.TextOutputFormat.LineRecordWriter
 
 /**
  * Internal helper class that saves an RDD using a Hadoop OutputFormat. This is only public
@@ -94,14 +93,6 @@ class SparkHadoopWriter(@transient jobConf: JobConf)
   def write(key: AnyRef, value: AnyRef) {
     if (writer != null) {
       writer.write(key, value)
-    } else {
-      throw new IOException("Writer is null, open() has not been called")
-    }
-  }
-
-  def write(key: AnyRef, value: AnyRef, deadline: Long) {
-    if (writer != null) {
-       writer.asInstanceOf[LineRecordWriter[AnyRef, AnyRef]].write(key, value, deadline)
     } else {
       throw new IOException("Writer is null, open() has not been called")
     }
