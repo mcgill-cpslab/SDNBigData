@@ -27,7 +27,7 @@ object SparkBuild extends Build {
   // Hadoop version to build against. For example, "1.0.4" for Apache releases, or
   // "2.0.0-mr1-cdh4.2.0" for Cloudera Hadoop. Note that these variables can be set
   // through the environment variables SPARK_HADOOP_VERSION and SPARK_YARN.
-  val DEFAULT_HADOOP_VERSION = "1.0.4"
+  val DEFAULT_HADOOP_VERSION = "1.2.2-SNAPSHOT"
 
   // Whether the Hadoop version to build against is 2.2.x, or a variant of it. This can be set
   // through the SPARK_IS_NEW_HADOOP environment variable.
@@ -116,6 +116,9 @@ object SparkBuild extends Build {
 
     // also check the local Maven repository ~/.m2
     resolvers ++= Seq(Resolver.file("Local Maven Repo", file(Path.userHome + "/.m2/repository"))),
+
+    //local hadoop repo
+    resolvers ++= Seq("Local Hadoop Repo" at "file:///Users/nanzhu/.m2/repository"),
 
     // Shared between both core and streaming.
     resolvers ++= Seq("Akka Repository" at "http://repo.akka.io/releases/"),
@@ -231,6 +234,7 @@ object SparkBuild extends Build {
       "io.netty" % "netty-all" % "4.0.0.Beta2",
       "org.apache.derby" % "derby" % "10.4.2.0" % "test",
       "org.apache.hadoop" % "hadoop-client" % hadoopVersion excludeAll(excludeJackson, excludeNetty, excludeAsm, excludeCglib),
+      "org.apache.hadoop" % "hadoop-core" % hadoopVersion excludeAll(excludeJackson, excludeNetty, excludeAsm, excludeCglib),
       "net.java.dev.jets3t" % "jets3t" % "0.7.1",
       "org.apache.avro" % "avro" % "1.7.4",
       "org.apache.avro" % "avro-ipc" % "1.7.4" excludeAll(excludeNetty),
