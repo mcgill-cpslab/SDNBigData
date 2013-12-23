@@ -70,12 +70,18 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
      * @param o the object to print
      * @throws IOException if the write throws, we pass it on
      */
-    private void writeObject(Object o) throws IOException {
+    private void writeObject(Object o, long deadline) throws IOException {
       if (o instanceof Text) {
         Text to = (Text) o;
-        out.write(to.getBytes(), 0, to.getLength());
+        if (deadline == -1)
+          out.write(to.getBytes(), 0, to.getLength());
+        else
+          ((FSDataOutputStream) out).write(to.getBytes(), 0, to.getLength(), deadline);
       } else {
-        out.write(o.toString().getBytes(utf8));
+        if (deadline == -1)
+          out.write(o.toString().getBytes(utf8));
+        else
+          ((FSDataOutputStream) out).write(o.toString().getBytes(utf8), deadline);
       }
     }
 
@@ -88,15 +94,35 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         return;
       }
       if (!nullKey) {
-        writeObject(key);
+        writeObject(key, -1);
       }
       if (!(nullKey || nullValue)) {
         out.write(keyValueSeparator);
       }
       if (!nullValue) {
-        writeObject(value);
+        writeObject(value, -1);
       }
       out.write(newline);
+    }
+
+    public synchronized void write(K key, V value, long deadline)
+            throws IOException {
+
+      boolean nullKey = key == null || key instanceof NullWritable;
+      boolean nullValue = value == null || value instanceof NullWritable;
+      if (nullKey && nullValue) {
+        return;
+      }
+      if (!nullKey) {
+        writeObject(key, deadline);
+      }
+      if (!(nullKey || nullValue)) {
+        ((FSDataOutputStream) out).write(keyValueSeparator, deadline);
+      }
+      if (!nullValue) {
+        writeObject(value, deadline);
+      }
+      ((FSDataOutputStream) out).write(newline, deadline);
     }
 
     public synchronized void close(Reporter reporter) throws IOException {

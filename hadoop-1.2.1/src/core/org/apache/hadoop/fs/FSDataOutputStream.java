@@ -67,9 +67,8 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
       if (statistics != null) {
         statistics.incrementBytesWritten(len);
       }
-
     }
-      
+
     public long getPos() throws IOException {
       return position;                            // return cached position
     }
@@ -120,6 +119,15 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
     written = temp;
   }
 
+  /**
+   * deadline aware writing
+   * @param b
+   * @param deadline
+   * @throws IOException
+   */
+  public void write(byte b[], long deadline) throws IOException {
+    write(b, 0, b.length, deadline);
+  }
 
   /** {@inheritDoc} */
   public void sync() throws IOException {
