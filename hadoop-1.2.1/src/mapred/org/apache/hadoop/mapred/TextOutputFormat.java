@@ -36,7 +36,7 @@ import org.apache.hadoop.util.*;
  */
 public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
-  protected static class LineRecordWriter<K, V>
+  public static class LineRecordWriter<K, V>
     implements RecordWriter<K, V> {
     private static final String utf8 = "UTF-8";
     private static final byte[] newline;
