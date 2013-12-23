@@ -8,8 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="build" level="project" />
-    <orderEntry type="library" name="hadoop-1.2.1" level="project" />
-    <orderEntry type="library" name="hadoop-streaming-1.2.1" level="project" />
     <orderEntry type="module" module-name="streaming" />
     <orderEntry type="module" module-name="hadoop-1.2.1" />
   </component>

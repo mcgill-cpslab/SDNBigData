@@ -11,7 +11,7 @@ out
 logs
 src/native/*
 *.txt
-
+*.iml
 hadoop-1.2.1/src/native/INSTALL
 
 hadoop-1.2.1/src/native/INSTALL

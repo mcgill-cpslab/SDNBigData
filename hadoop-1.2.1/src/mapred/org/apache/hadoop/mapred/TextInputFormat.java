@@ -58,12 +58,12 @@ public class TextInputFormat extends FileInputFormat<LongWritable, Text>
     return new LineRecordReader(job, (FileSplit) genericSplit);
   }
 
-  public RecordReader<LongWritable, Text> getTimeAwareRecordReader(
+  public LineRecordReader getDeadlineAwareRecordReader(
           InputSplit genericSplit, JobConf job,
           Reporter reporter, long deadline)
           throws IOException {
 
     reporter.setStatus(genericSplit.toString());
-    return new LineRecordReader(job, (FileSplit) genericSplit);
+    return new LineRecordReader(job, (FileSplit) genericSplit, deadline);
   }
 }

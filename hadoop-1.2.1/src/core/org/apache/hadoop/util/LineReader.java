@@ -168,13 +168,15 @@ public class LineReader {
   public int readLine(Text str, int maxLineLength,
                       int maxBytesToConsume) throws IOException {
     if (this.recordDelimiterBytes != null) {
-      return readCustomLine(str, maxLineLength, maxBytesToConsume);
+      return readCustomLine(str, maxLineLength, maxBytesToConsume, -1);
     } else {
-      return readDefaultLine(str, maxLineLength, maxBytesToConsume);
+      return readDefaultLine(str, maxLineLength, maxBytesToConsume, -1);
     }
   }
 
-  /**
+
+
+    /**
    * readline with deadline information
    * @param str
    * @param maxLineLength
@@ -186,9 +188,9 @@ public class LineReader {
   public int readLine(Text str, int maxLineLength,
                       int maxBytesToConsume, long deadline) throws IOException {
     if (this.recordDelimiterBytes != null) {
-      return readCustomLine(str, maxLineLength, maxBytesToConsume);
+      return readCustomLine(str, maxLineLength, maxBytesToConsume, deadline);
     } else {
-      return readDefaultLine(str, maxLineLength, maxBytesToConsume);
+      return readDefaultLine(str, maxLineLength, maxBytesToConsume, deadline);
     }
   }
 
@@ -211,7 +213,8 @@ public class LineReader {
   /**
    * Read a line terminated by one of CR, LF, or CRLF.
    */
-  private int readDefaultLine(Text str, int maxLineLength, int maxBytesToConsume)
+  private int readDefaultLine(Text str, int maxLineLength, int maxBytesToConsume,
+                              long deadline)
   throws IOException {
     /* We're reading data from in, but the head of the stream may be
      * already buffered in buffer, so we have several cases:
@@ -240,7 +243,10 @@ public class LineReader {
         startPosn = bufferPosn = 0;
         if (prevCharCR)
           ++bytesConsumed; //account for CR from previous read
-        bufferLength = in.read(buffer);
+        if (deadline == -1 || !(in instanceof FSDataInputStream))
+            bufferLength = in.read(buffer);
+        else
+            bufferLength = ((FSDataInputStream) in).readWithDeadline(buffer, deadline);
         if (bufferLength <= 0)
           break; // EOF
       }
@@ -278,7 +284,8 @@ public class LineReader {
   /**
    * Read a line terminated by a custom delimiter.
    */
-  private int readCustomLine(Text str, int maxLineLength, int maxBytesToConsume)
+  private int readCustomLine(Text str, int maxLineLength, int maxBytesToConsume,
+                             long deadline)
       throws IOException {
     str.clear();
     int txtLength = 0; // tracks str.getLength(), as an optimization
@@ -289,7 +296,10 @@ public class LineReader {
       // time
       if (bufferPosn >= bufferLength) {
         startPosn = bufferPosn = 0;
-        bufferLength = in.read(buffer);
+        if (deadline == -1 || !(in instanceof FSDataInputStream))
+          bufferLength = in.read(buffer);
+        else
+          bufferLength = ((FSDataInputStream) in).readWithDeadline(buffer, deadline);
         if (bufferLength <= 0)
           break; // EOF
       }

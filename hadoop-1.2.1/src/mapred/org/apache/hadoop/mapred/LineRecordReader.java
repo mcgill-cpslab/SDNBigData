@@ -235,6 +235,39 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
     return false;
   }
 
+    /**
+     * go to next record with deadline requirement
+     * @param key
+     * @param value
+     * @param deadline
+     * @return
+     * @throws IOException
+     */
+    public synchronized boolean next(LongWritable key, Text value, long deadline)
+            throws IOException {
+
+        // We always read one extra line, which lies outside the upper
+        // split limit i.e. (end - 1)
+        while (getFilePosition() <= end) {
+            key.set(pos);
+
+            int newSize = in.readLine(value, maxLineLength,
+                    Math.max(maxBytesToConsume(pos), maxLineLength), deadline);
+            if (newSize == 0) {
+                return false;
+            }
+            pos += newSize;
+            if (newSize < maxLineLength) {
+                return true;
+            }
+
+            // line too long. try again
+            LOG.info("Skipped line of size " + newSize + " at pos " + (pos - newSize));
+        }
+
+        return false;
+    }
+
   /**
    * Get the progress within the split
    */

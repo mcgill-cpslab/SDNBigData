@@ -8,15 +8,13 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="hadoop-gridmix-1.2.1" level="project" />
-    <orderEntry type="library" name="build" level="project" />
-    <orderEntry type="library" name="lib2" level="project" />
-    <orderEntry type="library" name="hadoop-1.2.1" level="project" />
+    <orderEntry type="library" name="lib" level="project" />
     <orderEntry type="library" name="common" level="project" />
+    <orderEntry type="library" name="build" level="project" />
     <orderEntry type="module" module-name="fairscheduler" />
-    <orderEntry type="module" module-name="hadoop-1.2.1" />
     <orderEntry type="module" module-name="gridmix2" />
     <orderEntry type="module" module-name="capacity-scheduler" />
+    <orderEntry type="module" module-name="hadoop-1.2.1" />
   </component>
 </module>
 
