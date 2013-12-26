@@ -158,23 +158,23 @@ class HadoopRDD[K, V](
 
         val key: K = reader.createKey()
         val value: V = reader.createValue()
+      val deadline: Long = System.getenv("SPARK_TASK_DEADLINE").toLong
+      val lreader = inputFormat.asInstanceOf[TextInputFormat].
+        getDeadlineAwareRecordReader(split.inputSplit.value, jobConf, Reporter.NULL, deadline)
 
-        override def getNext() = {
-          if (System.getenv("spark.running.mode").equals("deadline")) {
-            //read data with the deadline requirement
-            val deadline: Long = System.getenv("taskdeadline").toLong
+      override def getNext() = {
+          if (System.getenv("SPARK_RUNNING_MODE") == null ||
+            !System.getenv("SPARK_RUNNING_MODE").equals("deadline")) {
             try {
-              val lreader = inputFormat.asInstanceOf[TextInputFormat].
-                getDeadlineAwareRecordReader(split.inputSplit.value, jobConf, Reporter.NULL, deadline)
-              finished = !lreader.next(key.asInstanceOf[LongWritable],
-                value.asInstanceOf[Text], deadline)
+              finished = !reader.next(key, value)
             } catch {
               case eof: EOFException =>
                 finished = true
             }
           } else {
             try {
-              finished = !reader.next(key, value)
+              finished = !lreader.next(key.asInstanceOf[LongWritable],
+                value.asInstanceOf[Text], deadline)
             } catch {
               case eof: EOFException =>
                 finished = true

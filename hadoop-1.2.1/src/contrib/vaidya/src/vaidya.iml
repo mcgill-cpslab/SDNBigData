@@ -9,10 +9,10 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="lib" level="project" />
     <orderEntry type="library" name="build" level="project" />
-    <orderEntry type="module" module-name="fairscheduler" />
-    <orderEntry type="module" module-name="gridmix2" />
     <orderEntry type="module" module-name="capacity-scheduler" />
+    <orderEntry type="module" module-name="fairscheduler" />
     <orderEntry type="module" module-name="hadoop-1.2.1" />
+    <orderEntry type="module" module-name="gridmix2" />
   </component>
 </module>
 

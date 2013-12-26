@@ -18,12 +18,15 @@
 
 package org.apache.hadoop.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 //import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.fs.FSInputStream;
 import org.apache.hadoop.io.Text;
 
+import javax.sound.sampled.Line;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -40,6 +43,8 @@ import java.net.Socket;
  * line.
  */
 public class LineReader {
+  private static final Log LOG
+          = LogFactory.getLog(LineReader.class.getName());
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
   private int bufferSize = DEFAULT_BUFFER_SIZE;
   private InputStream in;
@@ -187,26 +192,13 @@ public class LineReader {
    */
   public int readLine(Text str, int maxLineLength,
                       int maxBytesToConsume, long deadline) throws IOException {
+    LOG.info("readLine(Text str, int maxLineLength," +
+            "                      int maxBytesToConsume, long deadline)");
     if (this.recordDelimiterBytes != null) {
       return readCustomLine(str, maxLineLength, maxBytesToConsume, deadline);
     } else {
       return readDefaultLine(str, maxLineLength, maxBytesToConsume, deadline);
     }
-  }
-
-  /**
-   * return the remote channel connecting to the datanode
-   * if the the wrappedStream is DFSInputStream it must be connecting to the remote side
-   * otherwise,
-   * @return the socket connecting to the remote datanodes
-   */
-  public Socket getRemoteChannel() {
-    if (in instanceof FSDataInputStream) {
-      InputStream wrappedStream = ((FSDataInputStream) in).getInStream();
-      if (wrappedStream instanceof FSInputStream)
-        return ((FSInputStream) wrappedStream).getRemoteChannel();
-    }
-    return null;
   }
 
 

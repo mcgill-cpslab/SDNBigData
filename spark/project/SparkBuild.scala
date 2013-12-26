@@ -16,10 +16,14 @@
  */
 
 import sbt._
+import sbt.ClasspathDependency
 import sbt.Classpaths.publishTask
-import Keys._
+import sbt.ExclusionRule
+import sbt.Keys._
 import sbtassembly.Plugin._
 import AssemblyKeys._
+import scala.Some
+
 // For Sonatype publishing
 //import com.jsuereth.pgp.sbtplugin.PgpKeys._
 
@@ -246,7 +250,8 @@ object SparkBuild extends Build {
       "com.codahale.metrics" % "metrics-json" % "3.0.0",
       "com.codahale.metrics" % "metrics-ganglia" % "3.0.0",
       "com.twitter" % "chill_2.9.3" % "0.3.1",
-      "com.twitter" % "chill-java" % "0.3.1"
+      "com.twitter" % "chill-java" % "0.3.1",
+      "commons-configuration" % "commons-configuration" % "1.7"
     )
   )
 
@@ -319,6 +324,7 @@ object SparkBuild extends Build {
     libraryDependencies ++= Seq(
       // Exclude rule required for all ?
       "org.apache.hadoop" % "hadoop-client" % hadoopVersion excludeAll(excludeJackson, excludeNetty, excludeAsm, excludeCglib),
+      "org.apache.hadoop" % "hadoop-core" % hadoopVersion excludeAll(excludeJackson, excludeNetty, excludeAsm, excludeCglib),
       "org.apache.hadoop" % "hadoop-yarn-api" % hadoopVersion excludeAll(excludeJackson, excludeNetty, excludeAsm, excludeCglib),
       "org.apache.hadoop" % "hadoop-yarn-common" % hadoopVersion excludeAll(excludeJackson, excludeNetty, excludeAsm, excludeCglib),
       "org.apache.hadoop" % "hadoop-yarn-client" % hadoopVersion excludeAll(excludeJackson, excludeNetty, excludeAsm, excludeCglib)
