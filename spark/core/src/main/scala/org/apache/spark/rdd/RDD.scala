@@ -860,6 +860,14 @@ abstract class RDD[T: ClassManifest](
   }
 
   /**
+   * Save this RDD as a text file, with the deadline requirement
+   */
+  def saveAsTextFile(path: String, deadline: Long) {
+    this.map(x => (NullWritable.get(), new Text(x.toString)))
+      .saveAsHadoopFile[TextOutputFormat[NullWritable, Text]](path, deadline)
+  }
+
+  /**
    * Save this RDD as a compressed text file, using string representations of elements.
    */
   def saveAsTextFile(path: String, codec: Class[_ <: CompressionCodec]) {

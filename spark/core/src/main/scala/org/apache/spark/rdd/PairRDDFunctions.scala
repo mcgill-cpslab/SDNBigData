@@ -529,6 +529,12 @@ class PairRDDFunctions[K: ClassManifest, V: ClassManifest](self: RDD[(K, V)])
     saveAsHadoopFile(path, getKeyClass, getValueClass, fm.erasure.asInstanceOf[Class[F]])
   }
 
+  def saveAsHadoopFile[F <: OutputFormat[K, V]](path: String, deadline: Long)(
+    implicit fm: ClassManifest[F]) {
+    saveAsHadoopFile(path, getKeyClass, getValueClass, fm.erasure.asInstanceOf[Class[F]],
+      deadline = deadline)
+  }
+
   /**
    * Output the RDD to any Hadoop-supported file system, using a Hadoop `OutputFormat` class
    * supporting the key and value types K and V in this RDD. Compress the result with the
@@ -622,7 +628,8 @@ class PairRDDFunctions[K: ClassManifest, V: ClassManifest](self: RDD[(K, V)])
       valueClass: Class[_],
       outputFormatClass: Class[_ <: OutputFormat[_, _]],
       conf: JobConf = new JobConf(self.context.hadoopConfiguration),
-      codec: Option[Class[_ <: CompressionCodec]] = None) {
+      codec: Option[Class[_ <: CompressionCodec]] = None,
+                        deadline: Long = -1) {
     conf.setOutputKeyClass(keyClass)
     conf.setOutputValueClass(valueClass)
     // conf.setOutputFormat(outputFormatClass) // Doesn't work in Scala 2.9 due to what may be a generics bug
@@ -636,8 +643,9 @@ class PairRDDFunctions[K: ClassManifest, V: ClassManifest](self: RDD[(K, V)])
     }
     conf.setOutputCommitter(classOf[FileOutputCommitter])
     FileOutputFormat.setOutputPath(conf, SparkHadoopWriter.createPathFromString(path, conf))
-    saveAsHadoopDataset(conf)
+    saveAsHadoopDataset(conf, deadline = deadline)
   }
+
 
   /**
    * Output the RDD to any Hadoop-supported storage system, using a Hadoop JobConf object for
@@ -645,7 +653,7 @@ class PairRDDFunctions[K: ClassManifest, V: ClassManifest](self: RDD[(K, V)])
    * (e.g. a table name to write to) in the same way as it would be configured for a Hadoop
    * MapReduce job.
    */
-  def saveAsHadoopDataset(conf: JobConf) {
+  def saveAsHadoopDataset(conf: JobConf, deadline: Long = -1) {
     val outputFormatClass = conf.getOutputFormat
     val keyClass = conf.getOutputKeyClass
     val valueClass = conf.getOutputValueClass
@@ -676,7 +684,10 @@ class PairRDDFunctions[K: ClassManifest, V: ClassManifest](self: RDD[(K, V)])
       while(iter.hasNext) {
         val record = iter.next()
         count += 1
-        writer.write(record._1.asInstanceOf[AnyRef], record._2.asInstanceOf[AnyRef])
+        if (deadline == -1)
+          writer.write(record._1.asInstanceOf[AnyRef], record._2.asInstanceOf[AnyRef])
+        else
+          writer.write(record._1.asInstanceOf[AnyRef], record._2.asInstanceOf[AnyRef], deadline)
       }
 
       writer.close()
