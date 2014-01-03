@@ -137,7 +137,13 @@ public enum OFType {
     @Override
     public OFMessage instantiate() {
       return new OFFlowInstallResponse();
-    }});
+    }}),
+    SWITCH_RATE_LIMITING_STATE (22, OFSwitchRateLimitingState.class, new Instantiable<OFMessage>() {
+      @Override
+      public OFMessage instantiate() {
+        return new OFSwitchRateLimitingState();
+      }
+    });
 
     static OFType[] mapping;
 
