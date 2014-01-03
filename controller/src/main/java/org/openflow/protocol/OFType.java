@@ -127,7 +127,17 @@ public enum OFType {
                             @Override
                             public OFMessage instantiate() {
                                 return new OFBarrierReply();
-                            }});
+                            }}),
+    FLOW_INSTALL_REQUEST (20, OFFlowInstallRequest.class, new Instantiable<OFMessage>() {
+      @Override
+      public OFMessage instantiate() {
+        return new OFFlowInstallRequest();
+      }}),
+    FLOW_INSTALL_RESPONSE (21, OFFlowInstallRequest.class, new Instantiable<OFMessage>() {
+    @Override
+    public OFMessage instantiate() {
+      return new OFFlowInstallResponse();
+    }});
 
     static OFType[] mapping;
 

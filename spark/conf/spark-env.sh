@@ -20,5 +20,5 @@
 # - SPARK_WORKER_INSTANCES, to set the number of worker processes per node
 SPARK_MASTER_IP=127.0.0.1
 SPARK_MASTER_PORT=7077
-export SPARK_RUNNING_MODE=deadline
+export SPARK_RUNNING_MODE=nodeadline
 export SPARK_TASK_DEADLINE=1000
