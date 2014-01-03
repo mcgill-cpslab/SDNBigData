@@ -69,6 +69,6 @@ public class Controller implements IOFMessageListener, IFloodlightModule {
 
   @Override
   public void startUp(FloodlightModuleContext context) {
-
+    floodlightProvider.addOFMessageListener(OFType.FLOW_INSTALL_REQUEST, this);
   }
 }
