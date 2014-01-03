@@ -30,6 +30,24 @@ import java.util.concurrent.Executors;
 
 public class RateController implements IOFMessageListener, IFloodlightModule {
 
+  private class AppAgentMsgFactory implements ChannelPipelineFactory {
+
+    private RateController rateController;
+
+    AppAgentMsgFactory(RateController controller) {
+      rateController = controller;
+    }
+
+    @Override
+    public ChannelPipeline getPipeline() throws Exception {
+      ChannelPipeline p = Channels.pipeline();
+      p.addLast("msg decoder", new AppAgentMsgDecoder());
+      p.addLast("msg dispatcher", new AppAgentChannelHandler(rateController));
+      p.addLast("msg encoder", new AppAgentMsgEncoder());
+      return p;
+    }
+  }
+
   private class AppAgentMsgDecoder extends FrameDecoder {
     private MessageParser parser = new MessageParser();
     @Override
@@ -65,20 +83,33 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
 
   private class AppAgentChannelHandler extends SimpleChannelHandler {
 
+    private RateController rateController;
+
+    AppAgentChannelHandler (RateController controller) {
+      rateController = controller;
+    }
+
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent msgEvent) {
-
+      if (!(msgEvent.getMessage() instanceof List)) return;
+      List<AppAgentMsg> msglist = (List<AppAgentMsg>) msgEvent.getMessage();
+      for (AppAgentMsg msg : msglist) {
+        rateController.processAppMessage(msg);
+      }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent expEvent) {
-
+      expEvent.getCause().printStackTrace();
     }
+
+
   }
 
   protected IFloodlightProviderService floodlightProvider;
   protected static Logger logger;
   private HashMap<IOFSwitch, SwitchRateLimiterStatus> switchHashMap = null;
+  private AppAgentMsgFactory aamFactory = null;
 
   private class SwitchRateLimiterStatus {
     private int tablesize;
@@ -95,24 +126,13 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
             Executors.newCachedThreadPool(),
             Executors.newCachedThreadPool());
     ServerBootstrap bootstrap = new ServerBootstrap(factory);
-    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-      @Override
-      public ChannelPipeline getPipeline() throws Exception {
-        return Channels.pipeline(new AppAgentChannelHandler());
-      }
-    });
+    aamFactory = new AppAgentMsgFactory(this);
+    bootstrap.setPipelineFactory(aamFactory);
     bootstrap.setOption("child.tcpNoDelay", true);
     bootstrap.setOption("child.keepAlive", true);
     bootstrap.bind(new InetSocketAddress(6634));
   }
 
-  private void processFlowInstallRequest() {
-
-  }
-
-  private void processSwitchRateLimitingRate() {
-
-  }
 
   @Override
   /**
@@ -124,14 +144,13 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
         if (!switchHashMap.containsKey(sw))
           switchHashMap.put(sw, new SwitchRateLimiterStatus());
         break;
-      case FLOW_INSTALL_REQUEST:
-        processFlowInstallRequest();
-        break;
-      case SWITCH_RATE_LIMITING_STATE:
-        processSwitchRateLimitingRate();
-        break;
     }
     return null;
+  }
+
+  //TODO
+  private void processAppMessage(AppAgentMsg  msg) {
+
   }
 
   @Override
