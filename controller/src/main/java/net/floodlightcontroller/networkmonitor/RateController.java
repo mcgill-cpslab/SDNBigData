@@ -9,17 +9,72 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.networkmonitor.message.AppAgentMsg;
+import net.floodlightcontroller.networkmonitor.message.MessageParser;
+import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.codec.frame.FrameDecoder;
+import org.jboss.netty.handler.codec.oneone.OneToOneDecoder;
+import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.concurrent.Executors;
 
 public class RateController implements IOFMessageListener, IFloodlightModule {
+
+  private class AppAgentMsgDecoder extends FrameDecoder {
+    private MessageParser parser = new MessageParser();
+    @Override
+    protected List<AppAgentMsg> decode(ChannelHandlerContext channelHandlerContext,
+                            Channel channel, ChannelBuffer channelBuffer) throws Exception {
+      if (!channel.isConnected()) return null;
+      return parser.parseMessage(channelBuffer);
+    }
+  }
+
+  private class AppAgentMsgEncoder extends OneToOneEncoder {
+
+    @Override
+    protected Object encode(ChannelHandlerContext channelHandlerContext,
+                            Channel channel, Object msg) throws Exception {
+      if (!(  msg instanceof List))
+        return msg;
+
+      @SuppressWarnings("unchecked")
+      List<AppAgentMsg> msglist = (List<AppAgentMsg>)msg;
+      int size = 0;
+      for (AppAgentMsg aam :  msglist) {
+        size += aam.getLengthU();
+      }
+
+      ChannelBuffer buf = ChannelBuffers.buffer(size);;
+      for (AppAgentMsg aam :  msglist) {
+        aam.writeTo(buf);
+      }
+      return buf;
+    }
+  }
+
+  private class AppAgentChannelHandler extends SimpleChannelHandler {
+
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent msgEvent) {
+
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent expEvent) {
+
+    }
+  }
 
   protected IFloodlightProviderService floodlightProvider;
   protected static Logger logger;
@@ -35,6 +90,20 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
     logger = LoggerFactory.getLogger(RateController.class);
     switchHashMap = new HashMap<IOFSwitch, SwitchRateLimiterStatus>();
+    //bind to a new port to communicate with the application agents
+    ChannelFactory factory = new NioServerSocketChannelFactory(
+            Executors.newCachedThreadPool(),
+            Executors.newCachedThreadPool());
+    ServerBootstrap bootstrap = new ServerBootstrap(factory);
+    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+      @Override
+      public ChannelPipeline getPipeline() throws Exception {
+        return Channels.pipeline(new AppAgentChannelHandler());
+      }
+    });
+    bootstrap.setOption("child.tcpNoDelay", true);
+    bootstrap.setOption("child.keepAlive", true);
+    bootstrap.bind(new InetSocketAddress(6634));
   }
 
   private void processFlowInstallRequest() {
