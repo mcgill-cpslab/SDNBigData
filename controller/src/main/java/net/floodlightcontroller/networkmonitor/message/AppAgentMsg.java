@@ -4,7 +4,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.openflow.util.U16;
 
 public class AppAgentMsg {
-  protected static int MINIMUM_LENGTH = 8;
+  protected static int MINIMUM_LENGTH = 3;
 
   protected AppMsgType type = null;
   protected short length = 0;

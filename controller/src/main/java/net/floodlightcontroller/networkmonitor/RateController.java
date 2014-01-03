@@ -10,6 +10,8 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.networkmonitor.message.AppAgentMsg;
+import net.floodlightcontroller.networkmonitor.message.FlowInstallRequest;
+import net.floodlightcontroller.networkmonitor.message.FlowInstallResponse;
 import net.floodlightcontroller.networkmonitor.message.MessageParser;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -84,9 +86,12 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   private class AppAgentChannelHandler extends SimpleChannelHandler {
 
     private RateController rateController;
+    private ArrayList<AppAgentMsg> outBuffer;
+    private int outBufferSize;
 
     AppAgentChannelHandler (RateController controller) {
       rateController = controller;
+      outBuffer = new ArrayList<AppAgentMsg>();
     }
 
     @Override
@@ -96,20 +101,22 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
       for (AppAgentMsg msg : msglist) {
         rateController.processAppMessage(msg);
       }
+      //flush the outbuffer
+      msgEvent.getChannel().write(outBuffer);
+      outBuffer.clear();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent expEvent) {
       expEvent.getCause().printStackTrace();
     }
-
-
   }
 
   protected IFloodlightProviderService floodlightProvider;
   protected static Logger logger;
   private HashMap<IOFSwitch, SwitchRateLimiterStatus> switchHashMap = null;
   private AppAgentMsgFactory aamFactory = null;
+  private AppAgentChannelHandler channelHandler = null;
 
   private class SwitchRateLimiterStatus {
     private int tablesize;
@@ -121,6 +128,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
     logger = LoggerFactory.getLogger(RateController.class);
     switchHashMap = new HashMap<IOFSwitch, SwitchRateLimiterStatus>();
+    channelHandler = new AppAgentChannelHandler(this);
     //bind to a new port to communicate with the application agents
     ChannelFactory factory = new NioServerSocketChannelFactory(
             Executors.newCachedThreadPool(),
@@ -148,9 +156,25 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     return null;
   }
 
-  //TODO
-  private void processAppMessage(AppAgentMsg  msg) {
+  private boolean installFlowToSwitch(FlowInstallRequest request) {
 
+    return false;
+  }
+
+  //TODO
+  private void processAppMessage(AppAgentMsg msg) {
+    switch (msg.getType()) {
+      case FLOW_INSTALL_REQUEST:
+        boolean installSuccess = installFlowToSwitch((FlowInstallRequest) msg);
+        byte installSuccessByte = 0;
+        if (installSuccess) installSuccessByte = 1;
+        FlowInstallResponse response = new FlowInstallResponse();
+        response.setInstalledSuccessfully(installSuccessByte);
+        channelHandler.outBuffer.add(response);
+        break;
+      case FLOW_PROBING:
+        break;
+    }
   }
 
   @Override
