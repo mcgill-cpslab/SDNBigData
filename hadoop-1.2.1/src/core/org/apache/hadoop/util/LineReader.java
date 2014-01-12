@@ -98,11 +98,11 @@ public class LineReader {
    */
   public LineReader(InputStream in, Configuration conf) throws IOException {
     this(in, conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE));
-    jobid = ((JobConf) conf).getJobName().hashCode();
-    jobpriority = ((JobConf) conf).getJobPriority().value();
-    if (in instanceof DFSClient.DFSDataInputStream) {
-      ((DFSClient.DFSDataInputStream) in).setJobId(jobid);
-      ((DFSClient.DFSDataInputStream) in).setJobPriority(jobpriority);
+    jobid = conf.get("mapred.job.name").hashCode();
+    jobpriority = Integer.parseInt(conf.get("mapred.job.priority"));
+    if (in instanceof FSDataInputStream) {
+      ((FSDataInputStream) in).setJobid(jobid);
+      ((FSDataInputStream) in).setJobPriority(jobpriority);
     }
   }
 

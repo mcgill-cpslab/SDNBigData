@@ -1428,7 +1428,6 @@ public class JobConf extends Configuration {
     if(prio == null) {
       return JobPriority.NORMAL;
     }
-    
     return JobPriority.valueOf(prio);
   }
 

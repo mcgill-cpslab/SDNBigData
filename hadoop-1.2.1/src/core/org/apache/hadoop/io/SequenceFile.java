@@ -976,8 +976,8 @@ public class SequenceFile {
         this.compressedValSerializer.open(deflateOut);
       }
       //job id and priority
-      out.setJobid(((JobConf) conf).getJobName().hashCode());
-      out.setJobpriority(((JobConf) conf).getJobPriority().value());
+      out.setJobid(conf.get("mapred.job.name").hashCode());
+      out.setJobpriority(Integer.parseInt(conf.get("mapred.job.priority")));
     }
     
     /** Returns the class of keys in this file. */
@@ -1492,12 +1492,8 @@ public class SequenceFile {
       this.conf = conf;
       seek(start);
       this.end = in.getPos() + length;
-      if (in instanceof DFSClient.DFSDataInputStream) {
-        ((DFSClient.DFSDataInputStream) in).setJobId(
-                ((JobConf) conf).getJobName().hashCode());
-        ((DFSClient.DFSDataInputStream) in).setJobId(
-                ((JobConf) conf).getJobPriority().hashCode());
-      }
+      in.setJobid(conf.get("mapred.job.name").hashCode());
+      in.setJobPriority(Integer.parseInt(conf.get("mapred.job.priority")));
       init(tempReader);
     }
 

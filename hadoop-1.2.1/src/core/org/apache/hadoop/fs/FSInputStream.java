@@ -29,6 +29,7 @@ import java.net.Socket;
  *****************************************************************/
 public abstract class FSInputStream extends InputStream
     implements Seekable, PositionedReadable {
+
   /**
    * Seek to the given offset from the start of the file.
    * The next read() will be from that location.  Can't
@@ -100,4 +101,5 @@ public abstract class FSInputStream extends InputStream
     throws IOException {
     readFully(position, buffer, 0, buffer.length);
   }
+
 }
