@@ -36,7 +36,10 @@ abstract public class FSOutputSummer extends OutputStream {
   private byte checksum[];
   // The number of valid bytes in the buffer.
   private int count;
-  
+
+  protected int jobid;
+  protected int jobpriority;
+
   protected FSOutputSummer(Checksum sum, int maxChunkSize, int checksumSize) {
     this.sum = sum;
     this.buf = new byte[maxChunkSize];
@@ -203,6 +206,14 @@ abstract public class FSOutputSummer extends OutputStream {
   protected synchronized void writeChunk(byte[] b, int offset, int len, byte[] checksum, long deadline)
           throws IOException {
 
+  }
+
+  public void setJobid(int id) {
+    jobid = id;
+  }
+
+  public void setJobpriority(int p) {
+    jobpriority = p;
   }
 
   /**

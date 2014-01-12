@@ -3165,7 +3165,8 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         lastException = e;
       }
     }
-    
+
+
     private class Packet {
       ByteBuffer buffer;           // only one of buf and buffer is non-null
       byte[]  buf;
@@ -4143,6 +4144,15 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         NetUtils.connect(s, target, getRandomLocalInterfaceAddr(), timeoutValue);
         s.setSoTimeout(timeoutValue);
         s.setSendBufferSize(DEFAULT_DATA_SOCKET_SIZE);
+        //yes, here should be a sync call
+        namenode.sendConnectionInfo(
+                s.getLocalAddress().getHostAddress(),
+                s.getLocalPort(),
+                s.getInetAddress().getHostAddress(),
+                s.getPort(),
+                jobid,
+                jobpriority);//writing process in HDFS is actually pipelined
+        System.out.println("sent connection information");
         LOG.debug("Send buf size " + s.getSendBufferSize());
         long writeTimeout = (datanodeWriteTimeout > 0) ?
             (HdfsConstants.WRITE_TIMEOUT_EXTENSION * nodes.length +

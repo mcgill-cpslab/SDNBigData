@@ -975,6 +975,9 @@ public class SequenceFile {
         this.compressedValSerializer = serializationFactory.getSerializer(valClass);
         this.compressedValSerializer.open(deflateOut);
       }
+      //job id and priority
+      out.setJobid(((JobConf) conf).getJobName().hashCode());
+      out.setJobpriority(((JobConf) conf).getJobPriority().value());
     }
     
     /** Returns the class of keys in this file. */

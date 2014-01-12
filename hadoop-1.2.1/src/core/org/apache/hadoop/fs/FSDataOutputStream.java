@@ -92,6 +92,9 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
                             long startPosition) throws IOException {
     super(new PositionCache(out, stats, startPosition));
     wrappedStream = out;    //wrapped stream would be the DFSOutputStream
+    if (wrappedStream instanceof FSOutputSummer) {
+
+    }
   }
   
   public long getPos() throws IOException {
@@ -135,6 +138,18 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
       ((Syncable)wrappedStream).sync();
     } else {
       wrappedStream.flush();
+    }
+  }
+
+  public void setJobid(int id) {
+    if (wrappedStream instanceof FSOutputSummer) {
+      ((FSOutputSummer) wrappedStream).setJobid(id);
+    }
+  }
+
+  public void setJobpriority(int p) {
+    if (wrappedStream instanceof FSOutputSummer) {
+      ((FSOutputSummer) wrappedStream).setJobpriority(p);
     }
   }
 }

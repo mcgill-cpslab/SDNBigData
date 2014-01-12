@@ -202,10 +202,11 @@ public class DistributedFileSystem extends FileSystem {
     Progressable progress) throws IOException {
 
     statistics.incrementWriteOps(1);
-    return new FSDataOutputStream
+    FSDataOutputStream fsoutstream =  new FSDataOutputStream
        (dfs.create(getPathName(f), permission,
                    overwrite, true, replication, blockSize, progress, bufferSize),
         statistics);
+    return fsoutstream;
   }
 
   /**
