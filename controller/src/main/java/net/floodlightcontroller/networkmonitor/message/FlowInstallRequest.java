@@ -8,6 +8,7 @@ public class FlowInstallRequest extends AppAgentMsg {
   private int destinationIP = 0;
   private short sourcePort = 0;
   private short destinationPort = 0;
+
   private long deadline = 0;
   private long flowsize = 0;
 
@@ -36,4 +37,22 @@ public class FlowInstallRequest extends AppAgentMsg {
     data.writeLong(deadline);
     data.writeLong(flowsize);
   }
+
+  public int getSourceIP() {
+    return sourceIP;
+  }
+
+  public int getDestinationIP() {
+    return destinationIP;
+  }
+
+  public long getDeadline() {
+    return deadline;
+  }
+
+  public long getFlowsize() {
+    return flowsize;
+  }
+
+
 }

@@ -119,22 +119,22 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     public String localIP;
     public int remoteport;
     public int localport;
-    public long flowsize;//inbytes
-    public long deadline;
+    public int jobid;//inbytes
+    public int jobpriority;
     public ClientConnectionInfo(String lIP, int lport, String rIP,
-                                int rport, long dline, long fsize) {
+                                int rport, int jobid, int jobpriority) {
       remoteIP = rIP;
       remoteport = rport;
       localIP = lIP;
       localport = lport;
-      flowsize = fsize;
-      deadline = dline;
+      this.jobid = jobid;
+      this.jobpriority = jobpriority;
     }
 
     @Override
     public String toString() {
       return "<" + localIP + "," + localport + "," + remoteIP + "," +
-              remoteport + "," + flowsize + " bytes," + deadline + "ms";
+              remoteport + "," + jobid + " ," + jobpriority;
     }
   }
   
@@ -671,13 +671,32 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
                                     long deadline, long flowsize)
           throws IOException {
     //add to the list
-    ClientConnectionInfo cci = new ClientConnectionInfo(senderip, senderport, receiverip,
+  /*  ClientConnectionInfo cci = new ClientConnectionInfo(senderip, senderport, receiverip,
             receiverport, deadline, flowsize);
     connectionLists.add(cci);
-    LOG.info("get the connection info:" + cci.toString());
+    LOG.info("get the connection info:" + cci.toString());*/
     //TODO: send the connection information to the openflow controller
     return true;
   }
+
+  /**
+   * called by the client to send connection information to the namenode
+   * @param jobid
+   * @param jobpriority
+   * @return
+   * @throws IOException
+   */
+  public boolean sendConnectionInfo(String senderip, int senderport,
+                                    String receiverip, int receiverport,
+                                    int jobid, int jobpriority)
+          throws IOException {
+    ClientConnectionInfo cci = new ClientConnectionInfo(senderip, senderport,
+            receiverip, receiverport, jobid, jobpriority);
+    connectionLists.add(cci);
+    LOG.info("get the connection info:" + cci.toString());
+    return true;
+  }
+
 
   /** {@inheritDoc} */
   public LocatedBlocks   getBlockLocations(String src, 

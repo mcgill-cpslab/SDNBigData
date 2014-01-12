@@ -128,17 +128,7 @@ public enum OFType {
                             public OFMessage instantiate() {
                                 return new OFBarrierReply();
                             }}),
-    FLOW_INSTALL_REQUEST (20, OFFlowInstallRequest.class, new Instantiable<OFMessage>() {
-      @Override
-      public OFMessage instantiate() {
-        return new OFFlowInstallRequest();
-      }}),
-    FLOW_INSTALL_RESPONSE (21, OFFlowInstallRequest.class, new Instantiable<OFMessage>() {
-    @Override
-    public OFMessage instantiate() {
-      return new OFFlowInstallResponse();
-    }}),
-    SWITCH_RATE_LIMITING_STATE (22, OFSwitchRateLimitingState.class, new Instantiable<OFMessage>() {
+    SWITCH_RATE_LIMITING_STATE (20, OFSwitchRateLimitingState.class, new Instantiable<OFMessage>() {
       @Override
       public OFMessage instantiate() {
         return new OFSwitchRateLimitingState();

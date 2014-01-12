@@ -23,10 +23,36 @@ package org.apache.hadoop.mapred;
  */
 public enum JobPriority {
 
-  VERY_HIGH,
-  HIGH,
-  NORMAL,
-  LOW,
-  VERY_LOW;
-  
+  VERY_HIGH(5),
+  HIGH(4),
+  NORMAL(3),
+  LOW(2),
+  VERY_LOW(1);
+
+  private int value = 0;
+
+  private JobPriority(int value) {
+    this.value = value;
+  }
+
+  public static JobPriority valueOf(int v) {
+    switch (v) {
+      case 1:
+        return VERY_LOW;
+      case 2:
+        return LOW;
+      case 3:
+        return NORMAL;
+      case 4:
+        return HIGH;
+      case 5:
+        return VERY_HIGH;
+      default:
+        return null;
+    }
+  }
+
+  public int value() {
+    return value;
+  }
 }

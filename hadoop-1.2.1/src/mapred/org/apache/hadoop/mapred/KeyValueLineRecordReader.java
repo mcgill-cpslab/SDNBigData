@@ -52,7 +52,6 @@ public class KeyValueLineRecordReader implements RecordReader<Text, Text> {
 
   public KeyValueLineRecordReader(Configuration job, FileSplit split)
     throws IOException {
-    
     lineRecordReader = new LineRecordReader(job, split);
     dummyKey = lineRecordReader.createKey();
     innerValue = lineRecordReader.createValue();

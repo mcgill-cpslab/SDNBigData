@@ -24,7 +24,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 //import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.fs.FSInputStream;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 
 import javax.sound.sampled.Line;
 import java.io.IOException;
@@ -45,6 +47,8 @@ import java.net.Socket;
 public class LineReader {
   private static final Log LOG
           = LogFactory.getLog(LineReader.class.getName());
+  private int jobid = -1;
+  private int jobpriority = -1;
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
   private int bufferSize = DEFAULT_BUFFER_SIZE;
   private InputStream in;
@@ -94,6 +98,12 @@ public class LineReader {
    */
   public LineReader(InputStream in, Configuration conf) throws IOException {
     this(in, conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE));
+    jobid = ((JobConf) conf).getJobName().hashCode();
+    jobpriority = ((JobConf) conf).getJobPriority().value();
+    if (in instanceof DFSClient.DFSInputStream) {
+      ((DFSClient.DFSInputStream) in).setJobid(jobid);
+      ((DFSClient.DFSInputStream) in).setJobPriority(jobpriority);
+    }
   }
 
   /**

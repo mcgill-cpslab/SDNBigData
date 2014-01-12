@@ -1932,6 +1932,8 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     private Block currentBlock = null;
     private long pos = 0;
     private long blockEnd = -1;
+    private int jobid = -1;
+    private int jobpriority = -1;
 
     /**
      * This variable tracks the number of failures since the start of the
@@ -2416,7 +2418,16 @@ public class DFSClient implements FSConstants, java.io.Closeable {
           NetUtils.connect(s, targetAddr, getRandomLocalInterfaceAddr(), 
               socketTimeout);
           s.setSoTimeout(socketTimeout);
-          blockReader = RemoteBlockReader.newBlockReader(s, src, blk.getBlockId(), 
+          System.out.println("sending connection information");
+          namenode.sendConnectionInfo(
+                  s.getLocalAddress().getHostAddress(),
+                  s.getLocalPort(),
+                  s.getInetAddress().getHostAddress(),
+                  s.getPort(),
+                  jobid,
+                  jobpriority);
+          System.out.println("sent connection information");
+          blockReader = RemoteBlockReader.newBlockReader(s, src, blk.getBlockId(),
               accessToken, 
               blk.getGenerationStamp(),
               offsetIntoBlock, blk.getNumBytes() - offsetIntoBlock,
@@ -2924,6 +2935,14 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         return n;
       }
       return n < 0 ? -1 : 0;
+    }
+
+    public void setJobPriority(int p) {
+      jobpriority = p;
+    }
+
+    public void setJobid(int id) {
+      jobid = id;
     }
 
     /**
