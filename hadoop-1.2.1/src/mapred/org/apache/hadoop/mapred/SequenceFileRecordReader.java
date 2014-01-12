@@ -40,6 +40,7 @@ public class SequenceFileRecordReader<K, V> implements RecordReader<K, V> {
     throws IOException {
     Path path = split.getPath();
     FileSystem fs = path.getFileSystem(conf);
+
     this.in = new SequenceFile.Reader(fs, path, conf);
     this.end = split.getStart() + split.getLength();
     this.conf = conf;

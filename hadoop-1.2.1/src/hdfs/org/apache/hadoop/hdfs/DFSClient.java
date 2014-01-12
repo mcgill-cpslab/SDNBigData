@@ -3085,6 +3085,14 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     public long getVisibleLength() throws IOException {
       return ((DFSInputStream)in).getFileLength();
     }
+
+    public void setJobId(int id) {
+      ((DFSInputStream) in).setJobid(id);
+    }
+
+    public void setJobPriority(int p) {
+      ((DFSInputStream) in).setJobPriority(p);
+    }
   }
 
   /****************************************************************

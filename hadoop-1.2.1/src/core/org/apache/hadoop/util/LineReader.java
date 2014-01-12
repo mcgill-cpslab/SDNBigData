@@ -100,9 +100,9 @@ public class LineReader {
     this(in, conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE));
     jobid = ((JobConf) conf).getJobName().hashCode();
     jobpriority = ((JobConf) conf).getJobPriority().value();
-    if (in instanceof DFSClient.DFSInputStream) {
-      ((DFSClient.DFSInputStream) in).setJobid(jobid);
-      ((DFSClient.DFSInputStream) in).setJobPriority(jobpriority);
+    if (in instanceof DFSClient.DFSDataInputStream) {
+      ((DFSClient.DFSDataInputStream) in).setJobId(jobid);
+      ((DFSClient.DFSDataInputStream) in).setJobPriority(jobpriority);
     }
   }
 

@@ -24,6 +24,7 @@ import java.rmi.server.UID;
 import java.security.MessageDigest;
 import org.apache.commons.logging.*;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.io.compress.CodecPool;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionInputStream;
@@ -37,6 +38,7 @@ import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.hadoop.conf.*;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -1487,6 +1489,12 @@ public class SequenceFile {
       this.conf = conf;
       seek(start);
       this.end = in.getPos() + length;
+      if (in instanceof DFSClient.DFSDataInputStream) {
+        ((DFSClient.DFSDataInputStream) in).setJobId(
+                ((JobConf) conf).getJobName().hashCode());
+        ((DFSClient.DFSDataInputStream) in).setJobId(
+                ((JobConf) conf).getJobPriority().hashCode());
+      }
       init(tempReader);
     }
 
