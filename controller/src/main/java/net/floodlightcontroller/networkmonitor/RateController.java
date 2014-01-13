@@ -4,7 +4,6 @@ package net.floodlightcontroller.networkmonitor;
 import message.AppAgentMsg;
 import message.FlowInstallRequest;
 import message.FlowInstallResponse;
-import message.MessageParser;
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFMessageListener;
@@ -15,12 +14,8 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.devicemanager.internal.Entity;
 import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.handler.codec.frame.FrameDecoder;
-import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFSwitchRateLimitingState;
 import org.openflow.protocol.OFType;
@@ -31,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.Executors;
+
+import nettychannel.*;
 
 public class RateController implements IOFMessageListener, IFloodlightModule {
 
@@ -49,39 +46,6 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
       p.addLast("msg dispatcher", new AppAgentChannelHandler(rateController));
       p.addLast("msg encoder", new AppAgentMsgEncoder());
       return p;
-    }
-  }
-
-  private class AppAgentMsgDecoder extends FrameDecoder {
-    private MessageParser parser = new MessageParser();
-    @Override
-    protected List<AppAgentMsg> decode(ChannelHandlerContext channelHandlerContext,
-                            Channel channel, ChannelBuffer channelBuffer) throws Exception {
-      if (!channel.isConnected()) return null;
-      return parser.parseMessage(channelBuffer);
-    }
-  }
-
-  private class AppAgentMsgEncoder extends OneToOneEncoder {
-
-    @Override
-    protected Object encode(ChannelHandlerContext channelHandlerContext,
-                            Channel channel, Object msg) throws Exception {
-      if (!(msg instanceof List))
-        return msg;
-
-      @SuppressWarnings("unchecked")
-      List<AppAgentMsg> msglist = (List<AppAgentMsg>)msg;
-      int size = 0;
-      for (AppAgentMsg aam :  msglist) {
-        size += aam.getLengthU();
-      }
-
-      ChannelBuffer buf = ChannelBuffers.buffer(size);;
-      for (AppAgentMsg aam :  msglist) {
-        aam.writeTo(buf);
-      }
-      return buf;
     }
   }
 
