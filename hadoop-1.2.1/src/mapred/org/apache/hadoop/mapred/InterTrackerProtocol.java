@@ -154,4 +154,7 @@ interface InterTrackerProtocol extends VersionedProtocol {
    * Returns the VersionInfo version of the JobTracker
    */
   public String getVIVersion() throws IOException;
+
+  public void saveConnInfo(String localIP, int localport, String remoteIP, int remotePort,
+                             int jobid, int jobpriority);
 }

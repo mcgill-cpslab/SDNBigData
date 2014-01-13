@@ -125,6 +125,30 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
     RefreshAuthorizationPolicyProtocol, AdminOperationsProtocol,
     JobTrackerMXBean {
 
+  public class ClientConnectionInfo {
+    public String remoteIP;
+    public String localIP;
+    public int remoteport;
+    public int localport;
+    public int jobid;//inbytes
+    public int jobpriority;
+    public ClientConnectionInfo(String lIP, int lport, String rIP,
+                                int rport, int jobid, int jobpriority) {
+      remoteIP = rIP;
+      remoteport = rport;
+      localIP = lIP;
+      localport = lport;
+      this.jobid = jobid;
+      this.jobpriority = jobpriority;
+    }
+
+    @Override
+    public String toString() {
+      return "<" + localIP + "," + localport + "," + remoteIP + "," +
+              remoteport + "," + jobid + " ," + jobpriority;
+    }
+  }
+
   static{
     Configuration.addDefaultResource("mapred-default.xml");
     Configuration.addDefaultResource("mapred-site.xml");
@@ -136,6 +160,8 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   
   private final long DELEGATION_TOKEN_GC_INTERVAL = 3600000; // 1 hour
   private final DelegationTokenSecretManager secretManager;
+
+  private ArrayList<ClientConnectionInfo> connList = new ArrayList<ClientConnectionInfo>();
 
   // The maximum fraction (range [0.0-1.0]) of nodes in cluster allowed to be
   // added to the all-jobs blacklist via heuristics.  By default, no more than
@@ -2912,6 +2938,15 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   // Just returns the VersionInfo version (unlike MXBean#getVersion)
   public String getVIVersion() throws IOException {
     return VersionInfo.getVersion();
+  }
+
+  @Override
+  public void saveConnInfo(String localIP, int localport, String remoteIP, int remotePort,
+                             int jobid, int jobpriority) {
+    synchronized (connList) {
+      connList.add(new ClientConnectionInfo(localIP, localport, remoteIP, remotePort,
+              jobid, jobpriority));
+    }
   }
 
   public String getBuildVersion() throws IOException {

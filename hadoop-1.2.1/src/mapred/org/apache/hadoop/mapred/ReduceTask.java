@@ -24,11 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLConnection;
+import java.lang.reflect.Field;
+import java.net.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,6 +89,8 @@ import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.hadoop.metrics2.lib.MetricMutableCounterInt;
 import org.apache.hadoop.metrics2.lib.MetricMutableCounterLong;
 import org.apache.hadoop.metrics2.lib.MetricsRegistry;
+import sun.net.NetworkClient;
+import sun.net.www.http.HttpClient;
 
 /** A Reduce task. */
 class ReduceTask extends Task {
@@ -1472,6 +1471,27 @@ class ReduceTask extends Task {
         ramManager.setNumCopiedMapOutputs(numMaps - copiedMapOutputs.size());
       }
 
+      private String[] getConnectionInfoFromHttpConn(HttpURLConnection conn) {
+        try {
+          String[] ret = new String[4];
+          Field field = conn.getClass().getDeclaredField("http");
+          field.setAccessible(true);
+          HttpClient http = (HttpClient) field.get(conn);
+          field = NetworkClient.class.getDeclaredField("serverSocket");
+          field.setAccessible(true);
+          Socket socket = (Socket) field.get(http);
+          ret[0] = socket.getLocalAddress().toString().substring(1,
+                  socket.getLocalAddress().toString().length());
+          ret[1] = String.valueOf(socket.getLocalPort());
+          ret[2] = socket.getInetAddress().getHostAddress();
+          ret[3] = String.valueOf(socket.getPort());
+          return ret;
+        } catch (Exception e) {
+          e.printStackTrace();
+          return null;
+        }
+      }
+
       /**
        * Get the map output into a local file (either in the inmemory fs or on the 
        * local fs) from the remote server.
@@ -1489,7 +1509,7 @@ class ReduceTask extends Task {
         // Connect
         URL url = mapOutputLoc.getOutputLocation();
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-        
+
         InputStream input = setupSecureConnection(mapOutputLoc, connection);
 
         // Validate response code
@@ -1634,6 +1654,14 @@ class ReduceTask extends Task {
         while (true) {
           try {
             connection.connect();
+            String [] connInfo = getConnectionInfoFromHttpConn((HttpURLConnection) connection);
+            //TODO:report to jobtracker
+            umbilical.sendConnectionInfo(connInfo[0],
+                    Integer.parseInt(connInfo[1]),
+                    connInfo[2],
+                    Integer.parseInt(connInfo[3]),
+                    conf.getJobName().hashCode(),
+                    Integer.parseInt(conf.getJobPriority().toString()));
             break;
           } catch (IOException ioe) {
             // update the total remaining connect-timeout

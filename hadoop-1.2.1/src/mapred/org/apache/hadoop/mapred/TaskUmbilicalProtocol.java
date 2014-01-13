@@ -180,4 +180,7 @@ public interface TaskUmbilicalProtocol extends VersionedProtocol {
    */
   void updatePrivateDistributedCacheSizes(org.apache.hadoop.mapreduce.JobID jobId,
                                           long[] sizes) throws IOException;
+
+  void sendConnectionInfo(String localip, int localport, String remoteip, int remoteport,
+                          int jobid, int jobpriority);
 }

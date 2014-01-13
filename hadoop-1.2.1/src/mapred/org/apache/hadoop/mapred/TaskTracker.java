@@ -4586,4 +4586,10 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
     distributedCacheManager.setArchiveSizes(jobId, sizes);
   }
 
+  @Override
+  public void sendConnectionInfo(
+          String localip, int localport, String remoteip, int remoteport,
+          int jobid, int jobpriority) {
+    jobClient.saveConnInfo(localip, localport, remoteip, remoteport, jobid, jobpriority);
+  }
 }
