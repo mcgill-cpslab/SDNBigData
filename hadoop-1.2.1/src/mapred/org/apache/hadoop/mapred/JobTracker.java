@@ -18,13 +18,11 @@
 package org.apache.hadoop.mapred;
 
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.PrivilegedExceptionAction;
 import java.text.ParseException;
@@ -125,7 +123,50 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
     RefreshAuthorizationPolicyProtocol, AdminOperationsProtocol,
     JobTrackerMXBean {
 
-  public class ClientConnectionInfo {
+  public class ConnectionInfoSender extends Thread {
+
+    private String controllerIP = conf.get("openflow.controller.ip", "192.168.55.110");
+    private String controllerPort = conf.get("openflow.controller.port", "6633");
+
+
+    private Socket socketToController = null;
+
+    public ConnectionInfoSender() {
+      try {
+        socketToController = new Socket();
+        socketToController.connect(new InetSocketAddress(controllerIP,
+                Integer.parseInt(controllerPort)));
+        socketToController.setKeepAlive(true);
+        socketToController.setTcpNoDelay(true);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    @Override
+    public void run() {
+
+      try {
+        while (true) {
+          if (connList.isEmpty()) {
+            ClientConnectionInfo conninfo = null;
+            synchronized (connList) {
+              conninfo = connList.get(0);
+              connList.remove(0);
+            }
+            OutputStream socketOutputStream = socketToController.getOutputStream();
+            socketOutputStream.write(conninfo.serialize());
+          } else {
+            Thread.sleep(50);
+          }
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public class ClientConnectionInfo implements Serializable {
     public String remoteIP;
     public String localIP;
     public int remoteport;
@@ -146,6 +187,13 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
     public String toString() {
       return "<" + localIP + "," + localport + "," + remoteIP + "," +
               remoteport + "," + jobid + " ," + jobpriority;
+    }
+
+    public byte[] serialize() throws IOException {
+      ByteArrayOutputStream b = new ByteArrayOutputStream();
+      ObjectOutputStream o = new ObjectOutputStream(b);
+      o.writeObject(this);
+      return b.toByteArray();
     }
   }
 
