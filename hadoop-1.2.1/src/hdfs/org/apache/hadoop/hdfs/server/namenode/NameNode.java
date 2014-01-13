@@ -115,6 +115,8 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     Configuration.addDefaultResource("hdfs-site.xml");
   }
 
+
+
   public class ConnectionInfoSender extends Thread {
 
     private String controllerIP = conf.get("openflow.controller.ip", "192.168.55.110");

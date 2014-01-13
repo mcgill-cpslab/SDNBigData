@@ -1,6 +1,10 @@
 package net.floodlightcontroller.networkmonitor;
 
 
+import message.AppAgentMsg;
+import message.FlowInstallRequest;
+import message.FlowInstallResponse;
+import message.MessageParser;
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFMessageListener;
@@ -9,12 +13,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.floodlightcontroller.devicemanager.IDeviceService;
 import net.floodlightcontroller.devicemanager.internal.Entity;
-import net.floodlightcontroller.networkmonitor.message.AppAgentMsg;
-import net.floodlightcontroller.networkmonitor.message.FlowInstallRequest;
-import net.floodlightcontroller.networkmonitor.message.FlowInstallResponse;
-import net.floodlightcontroller.networkmonitor.message.MessageParser;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
