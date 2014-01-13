@@ -61,9 +61,9 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ServicePlugin;
 import org.apache.hadoop.util.StringUtils;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
@@ -114,6 +114,50 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     Configuration.addDefaultResource("hdfs-site.xml");
   }
 
+  public class ConnectionInfoSender extends Thread {
+
+    private String controllerIP = conf.get("openflow.controller.ip", "192.168.55.110");
+    private String controllerPort = conf.get("openflow.controller.port", "6633");
+
+
+    private Socket socketToController = null;
+
+    public ConnectionInfoSender() {
+      try {
+        socketToController = new Socket();
+        socketToController.connect(new InetSocketAddress(controllerIP,
+                Integer.parseInt(controllerPort)));
+        socketToController.setKeepAlive(true);
+        socketToController.setTcpNoDelay(true);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    @Override
+    public void run() {
+
+      try {
+        while (true) {
+          if (connList.isEmpty()) {
+            ClientConnectionInfo conninfo = null;
+            synchronized (connList) {
+              conninfo = connList.get(0);
+              connList.remove(0);
+            }
+            OutputStream socketOutputStream = socketToController.getOutputStream();
+            socketOutputStream.write(conninfo.serialize());
+          } else {
+            Thread.sleep(50);
+          }
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+
   public class ClientConnectionInfo {
     public String remoteIP;
     public String localIP;
@@ -135,6 +179,13 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     public String toString() {
       return "<" + localIP + "," + localport + "," + remoteIP + "," +
               remoteport + "," + jobid + " ," + jobpriority;
+    }
+
+    public byte[] serialize() throws IOException {
+      ByteArrayOutputStream b = new ByteArrayOutputStream();
+      ObjectOutputStream o = new ObjectOutputStream(b);
+      o.writeObject(this);
+      return b.toByteArray();
     }
   }
   
@@ -185,7 +236,9 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
   /** Activated plug-ins. */
   private List<ServicePlugin> plugins;
 
-  private LinkedList<ClientConnectionInfo> connectionLists;
+  private LinkedList<ClientConnectionInfo> connList;
+
+  private Configuration conf;
   
   /** Format a new filesystem.  Destroys any filesystem that may already
    * exist at this location.  **/
@@ -277,6 +330,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
    * @param conf the configuration
    */
   private void initialize(Configuration conf) throws IOException {
+    this.conf = conf;
     InetSocketAddress socAddr = NameNode.getAddress(conf);
     UserGroupInformation.setConfiguration(conf);
     SecurityUtil.login(conf, DFSConfigKeys.DFS_NAMENODE_KEYTAB_FILE_KEY, 
@@ -284,7 +338,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     int handlerCount = conf.getInt("dfs.namenode.handler.count", 10);
 
     //initialize connection list
-    connectionLists = new LinkedList<ClientConnectionInfo>();
+    connList = new LinkedList<ClientConnectionInfo>();
 
     // set service-level authorization security policy
     if (serviceAuthEnabled = 
@@ -673,7 +727,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     //add to the list
   /*  ClientConnectionInfo cci = new ClientConnectionInfo(senderip, senderport, receiverip,
             receiverport, deadline, flowsize);
-    connectionLists.add(cci);
+    connList.add(cci);
     LOG.info("get the connection info:" + cci.toString());*/
     //TODO: send the connection information to the openflow controller
     return true;
@@ -692,7 +746,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
           throws IOException {
     ClientConnectionInfo cci = new ClientConnectionInfo(senderip, senderport,
             receiverip, receiverport, jobid, jobpriority);
-    connectionLists.add(cci);
+    connList.add(cci);
     LOG.info("get the connection info:" + cci.toString());
     return true;
   }
