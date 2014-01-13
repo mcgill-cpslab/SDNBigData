@@ -1589,6 +1589,9 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   private volatile boolean hasRecovered = false;
   private volatile long recoveryDuration;
 
+  //network manager
+  private ConnectionInfoSender connsender = null;
+
   //
   // Properties to maintain while running Jobs and Tasks:
   //
@@ -2119,6 +2122,8 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
     }
     
     this.initDone.set(conf.getBoolean(JT_INIT_CONFIG_KEY_FOR_TESTS, true));
+    //start the connsender
+    connsender.start();
   }
 
   private static SimpleDateFormat getDateFormat() {
