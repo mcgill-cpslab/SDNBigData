@@ -1,4 +1,5 @@
-package net.floodlightcontroller.networkmonitor.message;
+package message;
+
 
 import org.jboss.netty.buffer.ChannelBuffer;
 

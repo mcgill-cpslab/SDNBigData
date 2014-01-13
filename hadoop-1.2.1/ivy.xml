@@ -84,6 +84,9 @@
       name="commons-cli"
       rev="${commons-cli.version}"
       conf="client->default"/>
+    <dependency org="io.netty"
+                name="netty"
+                rev="3.9.0.Final" />
 
     <dependency org="commons-io"
       name="commons-io"

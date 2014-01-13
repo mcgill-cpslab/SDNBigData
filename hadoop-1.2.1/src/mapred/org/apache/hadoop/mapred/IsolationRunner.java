@@ -131,6 +131,11 @@ public class IsolationRunner {
                                        long[] sizes){
       // NOTHING
     }
+
+    @Override
+    public void sendConnectionInfo(String localip, int localport, String remoteip, int remoteport, int jobid, int jobpriority) {
+
+    }
   }
   
   private ClassLoader makeClassLoader(JobConf conf, 

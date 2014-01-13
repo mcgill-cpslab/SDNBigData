@@ -60,6 +60,7 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ServicePlugin;
 import org.apache.hadoop.util.StringUtils;
+import org.jboss.netty.buffer.ChannelBuffer;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -124,6 +125,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
 
     public ConnectionInfoSender() {
       try {
+        ChannelBuffer buffer;
         socketToController = new Socket();
         socketToController.connect(new InetSocketAddress(controllerIP,
                 Integer.parseInt(controllerPort)));
@@ -158,7 +160,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
   }
 
 
-  public class ClientConnectionInfo {
+  public class ClientConnectionInfo implements Serializable {
     public String remoteIP;
     public String localIP;
     public int remoteport;
@@ -331,6 +333,10 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
    */
   private void initialize(Configuration conf) throws IOException {
     this.conf = conf;
+    //start connsender
+    ConnectionInfoSender sender = new ConnectionInfoSender();
+    sender.start();
+
     InetSocketAddress socAddr = NameNode.getAddress(conf);
     UserGroupInformation.setConfiguration(conf);
     SecurityUtil.login(conf, DFSConfigKeys.DFS_NAMENODE_KEYTAB_FILE_KEY, 

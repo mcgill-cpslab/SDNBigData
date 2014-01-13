@@ -564,7 +564,12 @@ public class LocalJobRunner implements JobSubmissionProtocol {
                                                                 throws IOException {
       trackerDistributedCacheManager.setArchiveSizes(jobId, sizes);
     }
-    
+
+    @Override
+    public void sendConnectionInfo(String localip, int localport, String remoteip, int remoteport, int jobid, int jobpriority) {
+
+    }
+
   }
 
   public LocalJobRunner(JobConf conf) throws IOException {

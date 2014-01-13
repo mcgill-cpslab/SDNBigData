@@ -23,15 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 //import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.fs.FSInputStream;
-import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
-
-import javax.sound.sampled.Line;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Socket;
 
 /**
  * A class that provides a line reader from an input stream.
