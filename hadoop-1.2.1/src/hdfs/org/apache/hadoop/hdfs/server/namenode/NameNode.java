@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
-import com.sun.tools.javac.comp.Flow;
 import message.AppAgentMsg;
 import message.FlowInstallRequest;
 import message.FlowInstallResponse;
@@ -67,14 +66,12 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ServicePlugin;
 import org.apache.hadoop.util.StringUtils;
 import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import utils.Utils;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
@@ -327,7 +324,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
 
   private Channel toControllerChannel = null;
 
-  private void initControllerChannle() {
+  private void initControllerChannel() {
     NioClientSocketChannelFactory clientfactory = new NioClientSocketChannelFactory(
             Executors.newSingleThreadExecutor(),
             Executors.newCachedThreadPool());
@@ -364,7 +361,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
 
     //initialize connection list
     connList = new LinkedList<FlowInstallRequest>();
-    initControllerChannle();
+    initControllerChannel();
 
     // set service-level authorization security policy
     if (serviceAuthEnabled = 

@@ -22,7 +22,6 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.BindException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.PrivilegedExceptionAction;
 import java.text.ParseException;
@@ -47,8 +46,14 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import message.AppAgentMsg;
+import message.FlowInstallRequest;
+import message.FlowInstallResponse;
+import nettychannel.AppAgentMsgDecoder;
+import nettychannel.AppAgentMsgEncoder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -69,8 +74,6 @@ import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RPC.VersionMismatch;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.mapred.AuditLogger.Constants;
-import org.apache.hadoop.mapred.JobHistory.Keys;
-import org.apache.hadoop.mapred.JobHistory.Values;
 import org.apache.hadoop.mapred.JobInProgress.KillInterruptedException;
 import org.apache.hadoop.mapred.JobStatusChangeEvent.EventType;
 import org.apache.hadoop.mapred.QueueManager.QueueACL;
@@ -111,6 +114,9 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ServicePlugin;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.VersionInfo;
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.mortbay.util.ajax.JSON;
 
 /*******************************************************
@@ -122,78 +128,66 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
     JobSubmissionProtocol, TaskTrackerManager, RefreshUserMappingsProtocol,
     RefreshAuthorizationPolicyProtocol, AdminOperationsProtocol,
     JobTrackerMXBean {
-
-  public class ConnectionInfoSender extends Thread {
-
-    private String controllerIP = conf.get("openflow.controller.ip", "192.168.55.110");
-    private String controllerPort = conf.get("openflow.controller.port", "6633");
+  public class AppAgentChannelHandler extends SimpleChannelHandler
+          implements Runnable {
 
 
-    private Socket socketToController = null;
 
-    public ConnectionInfoSender() {
-      try {
-        socketToController = new Socket();
-        socketToController.connect(new InetSocketAddress(controllerIP,
-                Integer.parseInt(controllerPort)));
-        socketToController.setKeepAlive(true);
-        socketToController.setTcpNoDelay(true);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+    public AppAgentChannelHandler() {
+      new Thread(this).start();
     }
 
     @Override
     public void run() {
-
-      try {
-        while (true) {
-          if (connList.isEmpty()) {
-            ClientConnectionInfo conninfo = null;
-            synchronized (connList) {
-              conninfo = connList.get(0);
-              connList.remove(0);
-            }
-            OutputStream socketOutputStream = socketToController.getOutputStream();
-            socketOutputStream.write(conninfo.serialize());
-          } else {
-            Thread.sleep(50);
+      while (true) {
+        if (connList.isEmpty()) {
+          try {
+            Thread.sleep(10);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        } else {
+          //flush buffer
+          synchronized (connList) {
+            toControllerChannel.write(connList);
+            connList.clear();
           }
         }
-      } catch (Exception e) {
-        e.printStackTrace();
       }
-    }
-  }
-
-  public class ClientConnectionInfo implements Serializable {
-    public String remoteIP;
-    public String localIP;
-    public int remoteport;
-    public int localport;
-    public int jobid;//inbytes
-    public int jobpriority;
-    public ClientConnectionInfo(String lIP, int lport, String rIP,
-                                int rport, int jobid, int jobpriority) {
-      remoteIP = rIP;
-      remoteport = rport;
-      localIP = lIP;
-      localport = lport;
-      this.jobid = jobid;
-      this.jobpriority = jobpriority;
     }
 
     @Override
-    public String toString() {
-      return "<" + localIP + "," + localport + "," + remoteIP + "," +
-              remoteport + "," + jobid + " ," + jobpriority;
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent msgEvent) {
+      if (!(msgEvent.getMessage() instanceof List)) return;
+      List<AppAgentMsg> msglist = (List<AppAgentMsg>) msgEvent.getMessage();
+      for (AppAgentMsg msg : msglist) {
+        processAppMessage(msg);
+      }
     }
 
-    public byte[] serialize() throws IOException {
-      ByteArrayOutputStream b = new ByteArrayOutputStream();
-      ObjectOutputStream o = new ObjectOutputStream(b);
-      o.writeObject(this);
-      return b.toByteArray();
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent expEvent) {
+      expEvent.getCause().printStackTrace();
+    }
+
+    @Override
+    public void channelConnected (ChannelHandlerContext ctx, ChannelStateEvent e) {
+      toControllerChannel = e.getChannel();
+    }
+
+    private void processAppMessage(AppAgentMsg msg) {
+      switch (msg.getType()) {
+        case FLOW_INSTALL_RESPONSE:
+          FlowInstallResponse res = (FlowInstallResponse) msg;
+          if (res.isInstalledSuccessfully() == 1) {
+            synchronized (connList) {
+              connList.remove(res.getIdx());
+            }
+          }
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -209,7 +203,7 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   private final long DELEGATION_TOKEN_GC_INTERVAL = 3600000; // 1 hour
   private final DelegationTokenSecretManager secretManager;
 
-  private ArrayList<ClientConnectionInfo> connList = new ArrayList<ClientConnectionInfo>();
+  private ArrayList<FlowInstallRequest> connList = new ArrayList<FlowInstallRequest>();
 
   // The maximum fraction (range [0.0-1.0]) of nodes in cluster allowed to be
   // added to the all-jobs blacklist via heuristics.  By default, no more than
@@ -1590,7 +1584,7 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   private volatile long recoveryDuration;
 
   //network manager
-  private ConnectionInfoSender connsender = null;
+  private Channel toControllerChannel = null;
 
   //
   // Properties to maintain while running Jobs and Tasks:
@@ -1803,6 +1797,26 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
       }
     }
   }
+
+  private void initControllerChannel() {
+    NioClientSocketChannelFactory clientfactory = new NioClientSocketChannelFactory(
+            Executors.newSingleThreadExecutor(),
+            Executors.newCachedThreadPool());
+    ClientBootstrap clientBootstrap = new ClientBootstrap(clientfactory);
+    clientBootstrap.setOption("keepAlive", true);
+    clientBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+      @Override
+      public ChannelPipeline getPipeline() throws Exception {
+        ChannelPipeline p = Channels.pipeline();
+        p.addLast("msg decoder", new AppAgentMsgDecoder());
+        p.addLast("msg handler", new AppAgentChannelHandler());
+        p.addLast("msg encoder", new AppAgentMsgEncoder());
+        return p;
+      }
+    });
+    clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip"),
+            Integer.parseInt(conf.get("openflow.controller.port"))));
+  }
   
   @InterfaceAudience.Private
   void initialize() 
@@ -1933,6 +1947,8 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
       hdfsMonitor = new HDFSMonitorThread(this.conf, this, this.fs);
       hdfsMonitor.start();
     }
+
+    initControllerChannel();
   }
   
   JobTracker(final JobConf conf, String identifier, Clock clock, QueueManager qm) 
@@ -2123,7 +2139,6 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
     
     this.initDone.set(conf.getBoolean(JT_INIT_CONFIG_KEY_FOR_TESTS, true));
     //start the connsender
-    connsender.start();
   }
 
   private static SimpleDateFormat getDateFormat() {
@@ -2996,9 +3011,16 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   @Override
   public void saveConnInfo(String localIP, int localport, String remoteIP, int remotePort,
                              int jobid, int jobpriority) {
+    FlowInstallRequest req = new FlowInstallRequest();
+    req.setSourceIP(utils.Utils.StringIPToInteger(localIP));
+    req.setDestinationIP(utils.Utils.StringIPToInteger(remoteIP));
+    req.setSourcePort((short) localport);
+    req.setDestinationPort((short) remotePort);
+    req.setJobid(jobid);
+    req.setJobpriority(jobpriority);
     synchronized (connList) {
-      connList.add(new ClientConnectionInfo(localIP, localport, remoteIP, remotePort,
-              jobid, jobpriority));
+      req.setIdx(connList.size());
+      connList.add(req);
     }
   }
 
