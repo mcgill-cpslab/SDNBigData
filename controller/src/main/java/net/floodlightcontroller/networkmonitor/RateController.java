@@ -12,14 +12,14 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.floodlightcontroller.devicemanager.internal.Entity;
+import net.floodlightcontroller.util.OFMessageDamper;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.openflow.protocol.OFFlowMod1;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFSwitchRateLimitingState;
 import org.openflow.protocol.OFType;
-import org.openflow.util.U8;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 import nettychannel.*;
+import utils.Utils;
 
 public class RateController implements IOFMessageListener, IFloodlightModule {
 
@@ -53,7 +54,6 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
 
     private RateController rateController;
     private ArrayList<AppAgentMsg> outBuffer;
-    private int outBufferSize;
 
     AppAgentChannelHandler (RateController controller) {
       rateController = controller;
@@ -78,21 +78,20 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     }
   }
 
+  protected static int OFMESSAGE_DAMPER_CAPACITY = 50000; // TODO: find sweet spot
+  protected static int OFMESSAGE_DAMPER_TIMEOUT = 250; // ms
+
   protected IFloodlightProviderService floodlightProvider;
   protected static Logger logger;
   private HashMap<IOFSwitch, SwitchRateLimiterStatus> switchRateLimitMap = null;
   private HashMap<String, IOFSwitch> switchMap = null;
   private HashMap<IOFSwitch, ArrayList<FlowInstallRequest>> flowtoInstallList = null;
-  private IOFSwitch coreSwitch = null;
   private AppAgentMsgFactory aamFactory = null;
   private AppAgentChannelHandler channelHandler = null;
   private int flowtablelimit = 200;
 
-
   private class SwitchRateLimiterStatus {
     private int tablesize;
-    private boolean alldeadlinebound;
-    private int ratelimitinglowerbound;
   }
 
   @Override
@@ -115,6 +114,11 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     bootstrap.bind(new InetSocketAddress(6634));
   }
 
+  //TODO
+  private OFFlowMod1 getFlowModFromInstallReq(FlowInstallRequest req) {
+
+    return null;
+  }
 
   @Override
   /**
@@ -125,71 +129,52 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
       case SWITCH_RATE_LIMITING_STATE:
         OFSwitchRateLimitingState slsmsg = (OFSwitchRateLimitingState) msg;
         SwitchRateLimiterStatus obj = new SwitchRateLimiterStatus();
-        obj.ratelimitinglowerbound = slsmsg.getDeadlinelowbound();
         obj.tablesize = slsmsg.getTablesize();
-        if (slsmsg.getAlldeadlinebound() == 1)
-          obj.alldeadlinebound = true;
-        else
-          obj.alldeadlinebound = false;
         switchRateLimitMap.put(sw, obj);
         //install the flows
         for (FlowInstallRequest request: flowtoInstallList.get(sw)) {
           //if (request)
-          //send FLOW_MOD
+          OFFlowMod1 flowmodmsg = getFlowModFromInstallReq(request);
+          try {
+            sw.write(flowmodmsg, cntx);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
         }
         break;
       case GET_CONFIG_REPLY:
-        flowtoInstallList.put(sw, new ArrayList<FlowInstallRequest>());
+        if (!flowtoInstallList.containsKey(sw))
+          flowtoInstallList.put(sw, new ArrayList<FlowInstallRequest>());
         break;
     }
     return null;
-  }
-
-  private Entity getSourceEntityFromInstallRequest(FlowInstallRequest request) {
-
-    return null;
-  }
-
-  private String ipToString(int ip) {
-    return Integer.toString(U8.f((byte) ((ip & 0xff000000) >> 24))) + "."
-            + Integer.toString((ip & 0x00ff0000) >> 16) + "."
-            + Integer.toString((ip & 0x0000ff00) >> 8) + "."
-            + Integer.toString(ip & 0x000000ff);
   }
 
   private boolean canInstall(IOFSwitch switchobj, FlowInstallRequest request) {
     SwitchRateLimiterStatus srlobj = switchRateLimitMap.get(switchobj);
     if (srlobj.tablesize + flowtoInstallList.get(switchobj).size()
             < flowtablelimit) {
-      if (request.getDeadline() != -1) {
-        //the request flow is deadline-bound
-        if (!srlobj.alldeadlinebound) return true;
-        //all flows currently in the switch are deadline-bound
-        return request.getDeadline() < srlobj.ratelimitinglowerbound;
-      }
-    } else {
-      //the request flow is not deadline-bound
-      if (srlobj.alldeadlinebound) return false;
-      return (request.getFlowsize() / request.getDeadline()) < srlobj.ratelimitinglowerbound;
+      return true;
     }
-    return true;
+    return false;
   }
 
   //TODO
   private boolean installFlowToSwitch(FlowInstallRequest request) {
     //get the ingress and egress switch
-    String sourceIP = ipToString(request.getSourceIP());
-    String dstIP = ipToString(request.getDestinationIP());
+    String sourceIP = Utils.IntIPToString(request.getSourceIP());
+    String dstIP = Utils.IntIPToString(request.getDestinationIP());
     String sourceRange = sourceIP.substring(0, sourceIP.lastIndexOf(".") + 1) + ".0";
     String dstRange = dstIP.substring(0, dstIP.lastIndexOf(".") + 1) + ".0";
     IOFSwitch ingressSwitch = switchMap.get(sourceRange);
     IOFSwitch egressSwitch = switchMap.get(dstRange);
-    boolean canInstall =  canInstall(ingressSwitch, request) && canInstall(egressSwitch, request) &&
-            canInstall(coreSwitch, request);
+    boolean canInstall =  canInstall(ingressSwitch, request) &&
+            canInstall(egressSwitch, request);
     if (canInstall) {
-      flowtoInstallList.get(ingressSwitch).add(request);
-      flowtoInstallList.get(egressSwitch).add(request);
-      flowtoInstallList.get(coreSwitch).add(request);
+      synchronized (flowtoInstallList) {
+        flowtoInstallList.get(ingressSwitch).add(request);
+        flowtoInstallList.get(egressSwitch).add(request);
+      }
     }
     return canInstall;
   }
@@ -198,11 +183,13 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   private void processAppMessage(AppAgentMsg msg) {
     switch (msg.getType()) {
       case FLOW_INSTALL_REQUEST:
-        boolean installSuccess = installFlowToSwitch((FlowInstallRequest) msg);
+        FlowInstallRequest req = (FlowInstallRequest) msg;
+        boolean installSuccess = installFlowToSwitch(req);
         byte installSuccessByte = 0;
         if (installSuccess) installSuccessByte = 1;
         FlowInstallResponse response = new FlowInstallResponse();
         response.setInstalledSuccessfully(installSuccessByte);
+        response.setIdx(req.getIdx());
         channelHandler.outBuffer.add(response);
         break;
       case FLOW_PROBING:
