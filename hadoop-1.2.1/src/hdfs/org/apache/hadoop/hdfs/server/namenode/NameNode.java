@@ -17,6 +17,12 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
+import com.sun.tools.javac.comp.Flow;
+import message.AppAgentMsg;
+import message.FlowInstallRequest;
+import message.FlowInstallResponse;
+import nettychannel.AppAgentMsgDecoder;
+import nettychannel.AppAgentMsgEncoder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -60,7 +66,11 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ServicePlugin;
 import org.apache.hadoop.util.StringUtils;
+import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import utils.Utils;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -68,6 +78,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
+import java.util.concurrent.Executors;
 
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_DELEGATION_TOKEN_ALWAYS_USE_DEFAULT;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_DELEGATION_TOKEN_ALWAYS_USE_KEY;
@@ -116,84 +127,70 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
   }
 
 
-
-  public class ConnectionInfoSender extends Thread {
-
-    private String controllerIP = conf.get("openflow.controller.ip", "192.168.55.110");
-    private String controllerPort = conf.get("openflow.controller.port", "6633");
+  public class AppAgentChannelHandler extends SimpleChannelHandler
+          implements Runnable {
 
 
-    private Socket socketToController = null;
 
-    public ConnectionInfoSender() {
-      try {
-        ChannelBuffer buffer;
-        socketToController = new Socket();
-        socketToController.connect(new InetSocketAddress(controllerIP,
-                Integer.parseInt(controllerPort)));
-        socketToController.setKeepAlive(true);
-        socketToController.setTcpNoDelay(true);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+    public AppAgentChannelHandler() {
+      new Thread(this).start();
     }
 
     @Override
     public void run() {
-
-      try {
-        while (true) {
-          if (connList.isEmpty()) {
-            ClientConnectionInfo conninfo = null;
-            synchronized (connList) {
-              conninfo = connList.get(0);
-              connList.remove(0);
-            }
-            OutputStream socketOutputStream = socketToController.getOutputStream();
-            socketOutputStream.write(conninfo.serialize());
-          } else {
-            Thread.sleep(50);
+      while (true) {
+        if (connList.isEmpty()) {
+          try {
+            Thread.sleep(10);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        } else {
+          //flush buffer
+          synchronized (connList) {
+            toControllerChannel.write(connList);
+            connList.clear();
           }
         }
-      } catch (Exception e) {
-        e.printStackTrace();
+      }
+    }
+
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent msgEvent) {
+      if (!(msgEvent.getMessage() instanceof List)) return;
+      List<AppAgentMsg> msglist = (List<AppAgentMsg>) msgEvent.getMessage();
+      for (AppAgentMsg msg : msglist) {
+        processAppMessage(msg);
+      }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent expEvent) {
+      expEvent.getCause().printStackTrace();
+    }
+
+    @Override
+    public void channelConnected (ChannelHandlerContext ctx, ChannelStateEvent e) {
+      toControllerChannel = e.getChannel();
+    }
+
+    private void processAppMessage(AppAgentMsg msg) {
+      switch (msg.getType()) {
+        case FLOW_INSTALL_RESPONSE:
+          FlowInstallResponse res = (FlowInstallResponse) msg;
+          if (res.isInstalledSuccessfully() == 1) {
+            synchronized (connList) {
+              connList.remove(res.getIdx());
+            }
+          }
+          break;
+        default:
+          break;
       }
     }
   }
 
-
-  public class ClientConnectionInfo implements Serializable {
-    public String remoteIP;
-    public String localIP;
-    public int remoteport;
-    public int localport;
-    public int jobid;//inbytes
-    public int jobpriority;
-    public ClientConnectionInfo(String lIP, int lport, String rIP,
-                                int rport, int jobid, int jobpriority) {
-      remoteIP = rIP;
-      remoteport = rport;
-      localIP = lIP;
-      localport = lport;
-      this.jobid = jobid;
-      this.jobpriority = jobpriority;
-    }
-
-    @Override
-    public String toString() {
-      return "<" + localIP + "," + localport + "," + remoteIP + "," +
-              remoteport + "," + jobid + " ," + jobpriority;
-    }
-
-    public byte[] serialize() throws IOException {
-      ByteArrayOutputStream b = new ByteArrayOutputStream();
-      ObjectOutputStream o = new ObjectOutputStream(b);
-      o.writeObject(this);
-      return b.toByteArray();
-    }
-  }
-  
-  public long getProtocolVersion(String protocol, 
+  public long getProtocolVersion(String protocol,
                                  long clientVersion) throws IOException {
     if (protocol.equals(ClientProtocol.class.getName())) {
       return ClientProtocol.versionID; 
@@ -240,7 +237,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
   /** Activated plug-ins. */
   private List<ServicePlugin> plugins;
 
-  private LinkedList<ClientConnectionInfo> connList;
+  private LinkedList<FlowInstallRequest> connList;
 
   private Configuration conf;
   
@@ -328,6 +325,28 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     setServiceAddress(conf, address);
   }
 
+  private Channel toControllerChannel = null;
+
+  private void initControllerChannle() {
+    NioClientSocketChannelFactory clientfactory = new NioClientSocketChannelFactory(
+            Executors.newCachedThreadPool(),
+            Executors.newCachedThreadPool());
+    ClientBootstrap clientBootstrap = new ClientBootstrap(clientfactory);
+    clientBootstrap.setOption("keepAlive", true);
+    clientBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+      @Override
+      public ChannelPipeline getPipeline() throws Exception {
+        ChannelPipeline p = Channels.pipeline();
+        p.addLast("msg decoder", new AppAgentMsgDecoder());
+        p.addLast("msg handler", new AppAgentChannelHandler());
+        p.addLast("msg encoder", new AppAgentMsgEncoder());
+        return p;
+      }
+    });
+    clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip"),
+            Integer.parseInt(conf.get("openflow.controller.port"))));
+  }
+
   /**
    * Initialize name-node.
    * 
@@ -336,8 +355,6 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
   private void initialize(Configuration conf) throws IOException {
     this.conf = conf;
     //start connsender
-    ConnectionInfoSender sender = new ConnectionInfoSender();
-    sender.start();
 
     InetSocketAddress socAddr = NameNode.getAddress(conf);
     UserGroupInformation.setConfiguration(conf);
@@ -346,7 +363,8 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     int handlerCount = conf.getInt("dfs.namenode.handler.count", 10);
 
     //initialize connection list
-    connList = new LinkedList<ClientConnectionInfo>();
+    connList = new LinkedList<FlowInstallRequest>();
+    initControllerChannle();
 
     // set service-level authorization security policy
     if (serviceAuthEnabled = 
@@ -752,10 +770,18 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
                                     String receiverip, int receiverport,
                                     int jobid, int jobpriority)
           throws IOException {
-    ClientConnectionInfo cci = new ClientConnectionInfo(senderip, senderport,
-            receiverip, receiverport, jobid, jobpriority);
-    connList.add(cci);
-    LOG.info("get the connection info:" + cci.toString());
+    FlowInstallRequest flowreq = new FlowInstallRequest();
+    flowreq.setSourceIP(Utils.StringIPToInteger(senderip));
+    flowreq.setDestinationIP(Utils.StringIPToInteger(receiverip));
+    flowreq.setSourcePort((short) senderport);
+    flowreq.setDestinationPort((short) receiverport);
+    flowreq.setJobid(jobid);
+    flowreq.setJobpriority(jobpriority);
+    synchronized (connList) {
+      flowreq.setIdx(connList.size());
+      connList.add(flowreq);
+    }
+    LOG.info("get the connection info:" + flowreq.toString());
     return true;
   }
 
