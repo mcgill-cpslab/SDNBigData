@@ -30,6 +30,7 @@ public class FlowInstallRequest extends AppAgentMsg {
     this.destinationPort = buffer.readShort();
     this.jobid = buffer.readInt();
     this.jobpriority = buffer.readInt();
+    this.idx = buffer.readInt();
   }
 
   public void writeTo(ChannelBuffer data) {
@@ -40,6 +41,7 @@ public class FlowInstallRequest extends AppAgentMsg {
     data.writeShort(destinationPort);
     data.writeInt(jobid);
     data.writeInt(jobpriority);
+    data.writeInt(idx);
   }
 
   public int getSourceIP() {

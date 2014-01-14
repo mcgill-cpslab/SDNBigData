@@ -23,7 +23,7 @@ public class AppAgentMsgEncoder extends OneToOneEncoder {
       size += aam.getLengthU();
     }
 
-    ChannelBuffer buf = ChannelBuffers.buffer(size);;
+    ChannelBuffer buf = ChannelBuffers.buffer(size);
     for (AppAgentMsg aam :  msglist) {
       aam.writeTo(buf);
     }

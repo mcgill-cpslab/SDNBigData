@@ -18,11 +18,13 @@ public class FlowInstallResponse extends AppAgentMsg {
   public void readFrom(ChannelBuffer buffer) {
     super.readFrom(buffer);
     installedSuccessfully = buffer.readByte();
+    idx = buffer.readInt();
   }
 
   public void writeTo(ChannelBuffer data) {
     super.writeTo(data);
     data.writeByte(installedSuccessfully);
+    data.writeInt(idx);
   }
 
   public byte isInstalledSuccessfully() {
