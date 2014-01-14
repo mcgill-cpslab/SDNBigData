@@ -9,6 +9,7 @@ public class FlowInstallRequest extends AppAgentMsg {
   private int sourceIP = 0;
   private int destinationIP = 0;
   private short sourcePort = 0;
+
   private short destinationPort = 0;
 
   private int jobid = 0;
@@ -92,4 +93,19 @@ public class FlowInstallRequest extends AppAgentMsg {
     this.jobpriority = jobpriority;
   }
 
+  public int getJobid() {
+    return jobid;
+  }
+
+  public int getJobpriority() {
+    return jobpriority;
+  }
+
+  public short getSourcePort() {
+    return sourcePort;
+  }
+
+  public short getDestinationPort() {
+    return destinationPort;
+  }
 }
