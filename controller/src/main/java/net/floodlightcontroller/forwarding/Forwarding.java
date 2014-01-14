@@ -283,7 +283,10 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule {
                                         & ~OFMatch.OFPFW_NW_DST_MASK;
                             }
 
-                            pushRoute(route, match, wildcard_hints, pi, sw.getId(), cookie, 
+                            //set wildcard to match network src/dst and tranport src/dst only
+                            wildcard_hints = OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_SRC_ALL &
+                                    ~OFMatch.OFPFW_NW_DST_ALL & ~OFMatch.OFPFW_TP_SRC & ~OFMatch.OFPFW_TP_DST;
+                            pushRoute(route, match, wildcard_hints, pi, sw.getId(), cookie,
                                       cntx, requestFlowRemovedNotifn, false,
                                       OFFlowMod.OFPFC_ADD);
                         }
