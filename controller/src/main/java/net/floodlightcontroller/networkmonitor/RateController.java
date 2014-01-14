@@ -17,6 +17,8 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.openflow.protocol.*;
+import org.openflow.protocol.action.OFAction;
+import org.openflow.protocol.action.OFActionOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +117,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   }
 
   //TODO
-  private OFFlowMod1 getFlowModFromInstallReq(FlowInstallRequest req) {
+  private OFFlowMod1 getFlowModFromInstallReq(FlowInstallRequest req, boolean exactIP) {
     OFFlowMod1 ret = new OFFlowMod1();
     OFMatch match = new OFMatch();
     match.setNetworkSource(req.getSourceIP());
@@ -123,12 +125,33 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     match.setTransportSource(req.getSourcePort());
     match.setTransportDestination(req.getDestinationPort());
     match.setWildcards(OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_SRC_ALL & ~OFMatch.OFPFW_NW_DST_ALL &
-            ~OFMatch.OFPFW_TP_DST & ~OFMatch.OFPFW_TP_SRC | OFMatch.OFPFW_IN_PORT);
+            ~OFMatch.OFPFW_TP_DST & ~OFMatch.OFPFW_TP_SRC);
     ret.setMatch(match);
+    OFActionOutput actionOutput = new OFActionOutput();
+    if (exactIP) {
+      actionOutput.setPort(mactable.get(match.getNetworkDestination()).shortValue());
+    } else {
+      String dstIP = Utils.IntIPToString(mactable.get(match.getNetworkDestination()));
+      String dstIPrange = getIPRange(dstIP);
+      actionOutput.setPort((short) Utils.StringIPToInteger(dstIPrange));
+    }
+    ArrayList<OFAction> list = new ArrayList<OFAction>();
+    list.add(actionOutput);
+    ret.setActions(list);
     ret.setBufferId(-1);
     ret.setJobid(req.getJobid());
     ret.setJobpriority(req.getJobpriority());
     return ret;
+  }
+
+  private String getIPRange(String ip) {
+    return ip.substring(0, ip.lastIndexOf(".")) + ".0";
+  }
+
+  private boolean sameIPRange(String ip1, String ip2) {
+    String range1 = ip1.substring(0, ip1.lastIndexOf(".")) + ".0";
+    String range2 = ip2.substring(0, ip2.lastIndexOf(".")) + ".0";
+    return range1.equals(range2);
   }
 
   @Override
@@ -141,18 +164,21 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
         OFPacketIn pi = (OFPacketIn) msg;
         OFMatch match = new OFMatch();
         match.loadFromPacket(pi.getPacketData(), pi.getInPort());
-        if (match.getDataLayerType() != 0x0806 || match.getDataLayerType() != 0x0800) {
+        if (match.getDataLayerType() != 0x0806 && match.getDataLayerType() != 0x0800) {
           break;
         } else {
           //must be in the same pod with the source ip
           InetSocketAddress swip = (InetSocketAddress) sw.getChannel().getRemoteAddress();
           String swipstring = swip.getAddress().toString().substring(1,
                   swip.getAddress().toString().length());
-          String swiprange = swipstring.substring(0, swipstring.lastIndexOf('.') + 1) + "0";
           String sourceIP = Utils.IntIPToString(match.getNetworkSource());
-          String sourceIPrange = sourceIP.substring(0, sourceIP.lastIndexOf('.') + 1) + "0";
-          if (swiprange.equals(sourceIPrange)) {
+          if (sameIPRange(swipstring, sourceIP)) {
             mactable.put(match.getNetworkSource(), (int) pi.getInPort());
+          } else {
+            mactable.put(
+                    Utils.StringIPToInteger(
+                      getIPRange(Utils.IntIPToString(match.getNetworkSource()))),
+                    (int) pi.getInPort());
           }
         }
         break;
@@ -164,8 +190,18 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
         //install the flows
         for (FlowInstallRequest request: flowtoInstallList.get(sw)) {
           //if (request)
-          OFFlowMod1 flowmodmsg = getFlowModFromInstallReq(request);
           try {
+            String sourceIP = Utils.IntIPToString(request.getSourceIP());
+            String destIP = Utils.IntIPToString(request.getDestinationIP());
+            InetSocketAddress swip = (InetSocketAddress) sw.getChannel().getRemoteAddress();
+            String swipstring = swip.getAddress().toString().substring(1,
+                    swip.getAddress().toString().length());
+            OFFlowMod1 flowmodmsg;
+            if (sameIPRange(sourceIP, swipstring) && !sameIPRange(destIP, swipstring)) {
+              flowmodmsg = getFlowModFromInstallReq(request, false);
+            } else {
+              flowmodmsg = getFlowModFromInstallReq(request, true);
+            }
             sw.write(flowmodmsg, cntx);
           } catch (Exception e) {
             e.printStackTrace();
