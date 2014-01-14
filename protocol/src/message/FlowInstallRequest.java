@@ -5,6 +5,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 public class FlowInstallRequest extends AppAgentMsg {
 
+
   private int sourceIP = 0;
   private int destinationIP = 0;
   private short sourcePort = 0;
@@ -55,5 +56,29 @@ public class FlowInstallRequest extends AppAgentMsg {
     return jobpriority;
   }
 
+
+  public void setSourceIP(int sourceIP) {
+    this.sourceIP = sourceIP;
+  }
+
+  public void setDestinationIP(int destinationIP) {
+    this.destinationIP = destinationIP;
+  }
+
+  public void setSourcePort(short sourcePort) {
+    this.sourcePort = sourcePort;
+  }
+
+  public void setDestinationPort(short destinationPort) {
+    this.destinationPort = destinationPort;
+  }
+
+  public void setJobid(int jobid) {
+    this.jobid = jobid;
+  }
+
+  public void setJobpriority(int jobpriority) {
+    this.jobpriority = jobpriority;
+  }
 
 }
