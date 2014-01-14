@@ -323,6 +323,7 @@ public class OFMatch implements Cloneable, Serializable {
         return Math
                 .max(32 - ((wildcards & OFPFW_NW_SRC_MASK) >> OFPFW_NW_SRC_SHIFT),
                         0);
+
     }
 
     /**

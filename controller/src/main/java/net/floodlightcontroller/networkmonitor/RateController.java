@@ -12,14 +12,10 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.floodlightcontroller.util.OFMessageDamper;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.openflow.protocol.OFFlowMod1;
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFSwitchRateLimitingState;
-import org.openflow.protocol.OFType;
+import org.openflow.protocol.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,8 +112,19 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
 
   //TODO
   private OFFlowMod1 getFlowModFromInstallReq(FlowInstallRequest req) {
-
-    return null;
+    OFFlowMod1 ret = new OFFlowMod1();
+    OFMatch match = new OFMatch();
+    match.setNetworkSource(req.getSourceIP());
+    match.setNetworkDestination(req.getDestinationIP());
+    match.setTransportSource(req.getSourcePort());
+    match.setTransportDestination(req.getDestinationPort());
+    match.setWildcards(OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_SRC_ALL & ~OFMatch.OFPFW_NW_DST_ALL &
+      ~OFMatch.OFPFW_TP_DST & ~OFMatch.OFPFW_TP_SRC | OFMatch.OFPFW_IN_PORT);
+    ret.setMatch(match);
+    ret.setBufferId(-1);
+    ret.setJobid(req.getJobid());
+    ret.setJobpriority(req.getJobpriority());
+    return ret;
   }
 
   @Override
