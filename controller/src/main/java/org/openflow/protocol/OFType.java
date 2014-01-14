@@ -128,12 +128,19 @@ public enum OFType {
                             public OFMessage instantiate() {
                                 return new OFBarrierReply();
                             }}),
-    SWITCH_RATE_LIMITING_STATE (20, OFSwitchRateLimitingState.class, new Instantiable<OFMessage>() {
+    SWITCH_RATE_LIMITING_STATE (31, OFSwitchRateLimitingState.class, new Instantiable<OFMessage>() {
       @Override
       public OFMessage instantiate() {
         return new OFSwitchRateLimitingState();
       }
+    }),
+    FLOW_MOD_1 (30, OFFlowMod1.class, new Instantiable<OFMessage>() {
+      @Override
+      public OFMessage instantiate() {
+        return new OFFlowMod1();
+      }
     });
+
 
     static OFType[] mapping;
 
