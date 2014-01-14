@@ -329,7 +329,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
 
   private void initControllerChannle() {
     NioClientSocketChannelFactory clientfactory = new NioClientSocketChannelFactory(
-            Executors.newCachedThreadPool(),
+            Executors.newSingleThreadExecutor(),
             Executors.newCachedThreadPool());
     ClientBootstrap clientBootstrap = new ClientBootstrap(clientfactory);
     clientBootstrap.setOption("keepAlive", true);
