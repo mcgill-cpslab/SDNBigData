@@ -9,22 +9,14 @@ public class OFSwitchRateLimitingState extends OFMessage {
 
 
   private int tablesize;
-  private int deadlinelowbound;
-  private byte alldeadlinebound;
 
   public OFSwitchRateLimitingState() {
     super();
     this.type = OFType.SWITCH_RATE_LIMITING_STATE;
-    this.length = U16.t(OFMessage.MINIMUM_LENGTH + 9);
+    this.length = U16.t(OFMessage.MINIMUM_LENGTH + 4);
   }
 
   public int getTablesize() {
     return tablesize;
   }
-
-  public int getDeadlinelowbound() {
-    return deadlinelowbound;
-  }
-
-  public byte getAlldeadlinebound() {return alldeadlinebound; }
 }
