@@ -12,6 +12,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.packet.Ethernet;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.*;
 import java.util.concurrent.Executors;
 
@@ -85,6 +87,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   private AppAgentMsgFactory aamFactory = null;
   private AppAgentChannelHandler channelHandler = null;
   private int flowtablelimit = 200;
+  private HashMap<Integer, Integer> mactable = null;
 
   private class SwitchRateLimiterStatus {
     private int tablesize;
@@ -93,6 +96,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   @Override
   public void init(FloodlightModuleContext context) throws FloodlightModuleException {
     floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+    mactable = new HashMap<Integer, Integer>();
     logger = LoggerFactory.getLogger(RateController.class);
     switchRateLimitMap = new HashMap<IOFSwitch, SwitchRateLimiterStatus>();
     switchMap = new HashMap<String, IOFSwitch>();//switch IP segment => IOFSwitch
@@ -119,7 +123,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     match.setTransportSource(req.getSourcePort());
     match.setTransportDestination(req.getDestinationPort());
     match.setWildcards(OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_SRC_ALL & ~OFMatch.OFPFW_NW_DST_ALL &
-      ~OFMatch.OFPFW_TP_DST & ~OFMatch.OFPFW_TP_SRC | OFMatch.OFPFW_IN_PORT);
+            ~OFMatch.OFPFW_TP_DST & ~OFMatch.OFPFW_TP_SRC | OFMatch.OFPFW_IN_PORT);
     ret.setMatch(match);
     ret.setBufferId(-1);
     ret.setJobid(req.getJobid());
@@ -133,6 +137,25 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
    */
   public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
     switch (msg.getType()) {
+      case PACKET_IN:
+        OFPacketIn pi = (OFPacketIn) msg;
+        OFMatch match = new OFMatch();
+        match.loadFromPacket(pi.getPacketData(), pi.getInPort());
+        if (match.getDataLayerType() != 0x0806 || match.getDataLayerType() != 0x0800) {
+          break;
+        } else {
+          //must be in the same pod with the source ip
+          InetSocketAddress swip = (InetSocketAddress) sw.getChannel().getRemoteAddress();
+          String swipstring = swip.getAddress().toString().substring(1,
+                  swip.getAddress().toString().length());
+          String swiprange = swipstring.substring(0, swipstring.lastIndexOf('.') + 1) + "0";
+          String sourceIP = Utils.IntIPToString(match.getNetworkSource());
+          String sourceIPrange = sourceIP.substring(0, sourceIP.lastIndexOf('.') + 1) + "0";
+          if (swiprange.equals(sourceIPrange)) {
+            mactable.put(match.getNetworkSource(), (int) pi.getInPort());
+          }
+        }
+        break;
       case SWITCH_RATE_LIMITING_STATE:
         OFSwitchRateLimitingState slsmsg = (OFSwitchRateLimitingState) msg;
         SwitchRateLimiterStatus obj = new SwitchRateLimiterStatus();
@@ -242,5 +265,6 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   public void startUp(FloodlightModuleContext context) {
     floodlightProvider.addOFMessageListener(OFType.GET_CONFIG_REPLY, this);
     floodlightProvider.addOFMessageListener(OFType.SWITCH_RATE_LIMITING_STATE, this);
+    floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
   }
 }
