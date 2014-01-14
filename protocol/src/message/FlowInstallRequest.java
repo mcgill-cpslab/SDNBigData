@@ -14,10 +14,12 @@ public class FlowInstallRequest extends AppAgentMsg {
   private int jobid = 0;
   private int jobpriority = 0;
 
+  private int idx = 0;
+
   public FlowInstallRequest() {
     super();
     type = AppMsgType.FLOW_INSTALL_REQUEST;
-    length += 28;
+    length += 24;
   }
 
   public void readFrom(ChannelBuffer buffer) {
@@ -56,6 +58,13 @@ public class FlowInstallRequest extends AppAgentMsg {
     return jobpriority;
   }
 
+  public int getIdx() {
+    return idx;
+  }
+
+  public void setIdx(int idx) {
+    this.idx = idx;
+  }
 
   public void setSourceIP(int sourceIP) {
     this.sourceIP = sourceIP;
