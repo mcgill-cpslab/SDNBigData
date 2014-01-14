@@ -268,6 +268,7 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule {
                                         .get(cntx,
                                                 IRoutingDecision.CONTEXT_DECISION);
                             }
+                          /*
                             if (decision != null) {
                                 wildcard_hints = decision.getWildcards();
                             } else {
@@ -281,7 +282,7 @@ public class Forwarding extends ForwardingBase implements IFloodlightModule {
                                         & ~OFMatch.OFPFW_DL_DST
                                         & ~OFMatch.OFPFW_NW_SRC_MASK
                                         & ~OFMatch.OFPFW_NW_DST_MASK;
-                            }
+                            }*/
 
                             //set wildcard to match network src/dst and tranport src/dst only
                             wildcard_hints = OFMatch.OFPFW_ALL & ~OFMatch.OFPFW_NW_SRC_ALL &
