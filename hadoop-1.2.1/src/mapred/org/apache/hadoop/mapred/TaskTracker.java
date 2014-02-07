@@ -3947,16 +3947,16 @@ public class TaskTracker implements MRConstants, TaskUmbilicalProtocol,
   static class LRUCache<K, V> {
     private int cacheSize;
     private LinkedHashMap<K, V> map;
-	
+
     public LRUCache(int cacheSize) {
       this.cacheSize = cacheSize;
       this.map = new LinkedHashMap<K, V>(cacheSize, 0.75f, true) {
-          protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-	    return size() > LRUCache.this.cacheSize;
-	  }
+        protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+          return size() > LRUCache.this.cacheSize;
+        }
       };
     }
-	
+
     public synchronized V get(K key) {
       return map.get(key);
     }

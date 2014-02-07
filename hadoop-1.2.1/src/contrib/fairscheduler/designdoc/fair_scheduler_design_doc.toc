@@ -1,0 +1,23 @@
+\contentsline {section}{\numberline {1}Introduction}{1}
+\contentsline {section}{\numberline {2}Fair Scheduler Goals}{1}
+\contentsline {section}{\numberline {3}Scheduler Features}{1}
+\contentsline {subsection}{\numberline {3.1}Pools}{2}
+\contentsline {subsection}{\numberline {3.2}Minimum Shares}{2}
+\contentsline {subsection}{\numberline {3.3}Preemption}{3}
+\contentsline {subsection}{\numberline {3.4}Running Job Limits}{3}
+\contentsline {subsection}{\numberline {3.5}Job Priorities}{3}
+\contentsline {subsection}{\numberline {3.6}Pool Weights}{3}
+\contentsline {subsection}{\numberline {3.7}Delay Scheduling}{4}
+\contentsline {subsection}{\numberline {3.8}Administration}{4}
+\contentsline {section}{\numberline {4}Implementation}{4}
+\contentsline {subsection}{\numberline {4.1}Hadoop Scheduling Background}{4}
+\contentsline {subsection}{\numberline {4.2}Fair Scheduler Basics}{5}
+\contentsline {subsection}{\numberline {4.3}The {\tt Schedulable} Class}{5}
+\contentsline {subsection}{\numberline {4.4}Fair Sharing Algorithm}{6}
+\contentsline {subsection}{\numberline {4.5}Preemption}{6}
+\contentsline {subsection}{\numberline {4.6}Fair Share Computation}{7}
+\contentsline {subsection}{\numberline {4.7}Running Job Limits}{8}
+\contentsline {subsection}{\numberline {4.8}Delay Scheduling}{8}
+\contentsline {subsection}{\numberline {4.9}Locking Order}{9}
+\contentsline {subsection}{\numberline {4.10}Unit Tests}{9}
+\contentsline {section}{\numberline {5}Code Guide}{10}

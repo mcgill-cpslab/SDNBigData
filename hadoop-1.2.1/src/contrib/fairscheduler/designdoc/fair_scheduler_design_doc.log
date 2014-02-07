@@ -1,0 +1,286 @@
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.5.30)  28 JAN 2014 09:19
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**fair_scheduler_design_doc.tex
+(./fair_scheduler_design_doc.tex
+LaTeX2e <2011/06/27>
+Babel <3.9f> and hyphenation patterns for 78 languages loaded.
+(/usr/local/texlive/2013/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+(/usr/local/texlive/2013/texmf-dist/tex/latex/base/size11.clo
+File: size11.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+(/usr/local/texlive/2013/texmf-dist/tex/latex/geometry/geometry.sty
+Package: geometry 2010/09/12 v5.6 Page Geometry
+
+(/usr/local/texlive/2013/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(/usr/local/texlive/2013/texmf-dist/tex/generic/oberdiek/ifpdf.sty
+Package: ifpdf 2011/01/30 v2.3 Provides the ifpdf switch (HO)
+Package ifpdf Info: pdfTeX in PDF mode is detected.
+)
+(/usr/local/texlive/2013/texmf-dist/tex/generic/oberdiek/ifvtex.sty
+Package: ifvtex 2010/03/01 v1.5 Detect VTeX and its facilities (HO)
+Package ifvtex Info: VTeX not detected.
+)
+(/usr/local/texlive/2013/texmf-dist/tex/generic/ifxetex/ifxetex.sty
+Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
+)
+\Gm@cnth=\count87
+\Gm@cntv=\count88
+\c@Gm@tempcnt=\count89
+\Gm@bindingoffset=\dimen103
+\Gm@wd@mp=\dimen104
+\Gm@odd@mp=\dimen105
+\Gm@even@mp=\dimen106
+\Gm@layoutwidth=\dimen107
+\Gm@layoutheight=\dimen108
+\Gm@layouthoffset=\dimen109
+\Gm@layoutvoffset=\dimen110
+\Gm@dimlist=\toks15
+)
+No file fair_scheduler_design_doc.aux.
+\openout1 = `fair_scheduler_design_doc.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: letterpaper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(92.14519pt, 430.00462pt, 92.14519pt)
+* v-part:(T,H,B)=(95.39737pt, 556.47656pt, 143.09605pt)
+* \paperwidth=614.295pt
+* \paperheight=794.96999pt
+* \textwidth=430.00462pt
+* \textheight=556.47656pt
+* \oddsidemargin=19.8752pt
+* \evensidemargin=19.8752pt
+* \topmargin=-13.87262pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=11.0pt
+* \footskip=30.0pt
+* \marginparwidth=59.0pt
+* \marginparsep=10.0pt
+* \columnsep=10.0pt
+* \skip\footins=10.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 25.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 25.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 25.
+No file fair_scheduler_design_doc.toc.
+\tf@toc=\write3
+\openout3 = `fair_scheduler_design_doc.toc'.
+
+[1
+
+{/usr/local/texlive/2013/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+[2]
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 89.
+ (/usr/local/texlive/2013/texmf-dist/tex/latex/base/omscmr.fd
+File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10.95> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 89.
+
+
+LaTeX Warning: Reference `sec:delay-scheduling' on page 3 undefined on input li
+ne 99.
+
+[3] [4]
+
+LaTeX Warning: Reference `sec:delay-scheduling' on page 5 undefined on input li
+ne 119.
+
+
+Overfull \hbox (30.91792pt too wide) in paragraph at lines 119--120
+\OT1/cmr/m/n/10.95 task on a node or rack that con-tains its in-put data. Nor-m
+ally, \OT1/cmtt/m/n/10.95 JobInProgress.obtainNewMapTask
+ []
+
+
+LaTeX Warning: Reference `sec:fair-sharing-alg' on page 5 undefined on input li
+ne 123.
+
+
+LaTeX Warning: Reference `sec:delay-scheduling' on page 5 undefined on input li
+ne 125.
+
+
+LaTeX Warning: Reference `sec:fair-share-computation' on page 5 undefined on in
+put line 127.
+
+
+LaTeX Warning: Reference `sec:preemption' on page 5 undefined on input line 127
+.
+
+[5]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <10.95> on input line 152.
+
+Overfull \hbox (56.01826pt too wide) in paragraph at lines 156--157
+[]\OT1/cmr/m/n/10.95 This fair shar-ing al-go-rithm is im-ple-mented in \OT1/cm
+tt/m/n/10.95 FairShareComparator \OT1/cmr/m/n/10.95 in the \OT1/cmtt/m/n/10.95 
+SchedulingAlgorithms
+ []
+
+
+Overfull \hbox (34.67415pt too wide) in paragraph at lines 156--157
+\OT1/cmr/m/n/10.95 class. The com-para-tor or-ders jobs by dis-tance be-low min
+ share and then by $\OML/cmm/m/it/10.95 runningTasks=weight$\OT1/cmr/m/n/10.95 
+. 
+ []
+
+[6]
+
+LaTeX Warning: Reference `sec:fair-share-computation' on page 7 undefined on in
+put line 165.
+
+
+LaTeX Warning: Reference `sec:fair-sharing-alg' on page 7 undefined on input li
+ne 170.
+
+
+LaTeX Warning: Reference `sec:fair-sharing-alg' on page 7 undefined on input li
+ne 170.
+
+[7]
+Overfull \hbox (13.7628pt too wide) in paragraph at lines 192--193
+\OT1/cmr/m/n/10.95 jobs sub-mit-ted by the same user or pool. This is done in \
+OT1/cmtt/m/n/10.95 FairScheduler.updateRunnability\OT1/cmr/m/n/10.95 .
+ []
+
+
+Overfull \hbox (14.44202pt too wide) in paragraph at lines 192--193
+\OT1/cmr/m/n/10.95 A job that is not runnable de-clares its de-mand as 0 and al
+-ways re-turns \OT1/cmtt/m/n/10.95 null \OT1/cmr/m/n/10.95 from \OT1/cmtt/m/n/1
+0.95 assignTasks\OT1/cmr/m/n/10.95 . 
+ []
+
+[8]
+Overfull \hbox (29.16336pt too wide) in paragraph at lines 209--210
+\OT1/cmr/m/n/10.95 lo-cal-ity level it is al-lowed to launch them at through \O
+T1/cmtt/m/n/10.95 FairScheduler.getAllowedLocalityLevel\OT1/cmr/m/n/10.95 .
+ []
+
+
+Overfull \hbox (37.31544pt too wide) in paragraph at lines 217--218
+\OT1/cmr/m/n/10.95 The Fair Sched-uler con-tains ex-ten-sive unit tests us-ing 
+mock \OT1/cmtt/m/n/10.95 TaskTrackerManager\OT1/cmr/m/n/10.95 , \OT1/cmtt/m/n/1
+0.95 JobInProgress\OT1/cmr/m/n/10.95 ,
+ []
+
+
+Overfull \hbox (14.24832pt too wide) in paragraph at lines 217--218
+\OT1/cmtt/m/n/10.95 TaskInProgress\OT1/cmr/m/n/10.95 , and \OT1/cmtt/m/n/10.95 
+Schedulable \OT1/cmr/m/n/10.95 ob-jects. Sched-uler tests are in \OT1/cmtt/m/n/
+10.95 TestFairScheduler.java\OT1/cmr/m/n/10.95 .
+ []
+
+[9]
+Underfull \hbox (badness 7362) in paragraph at lines 231--232
+[]\OT1/cmr/m/n/10.95 Definition of the \OT1/cmtt/m/n/10.95 Schedulable \OT1/cmr
+/m/n/10.95 class. Ex-tended by
+ []
+
+
+LaTeX Warning: Reference `sec:fair-share-computation' on page 10 undefined on i
+nput line 233.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--247
+[]\OT1/cmr/m/n/10.95 A plug-gable class re-spon-si-ble for de-ter-min-ing when
+ []
+
+
+Underfull \hbox (badness 4454) in paragraph at lines 246--247
+\OT1/cmr/m/n/10.95 to launch more tasks on a Task-Tracker. Cur-rently,
+ []
+
+
+Underfull \hbox (badness 3396) in paragraph at lines 246--247
+\OT1/cmtt/m/n/10.95 CapBasedLoadManager \OT1/cmr/m/n/10.95 uses slot counts, bu
+t this would
+ []
+
+
+Overfull \hbox (44.4632pt too wide) in paragraph at lines 225--251
+ [] 
+ []
+
+[10] (./fair_scheduler_design_doc.aux)
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 784 strings out of 493315
+ 10944 string characters out of 6137904
+ 72454 words of memory out of 5000000
+ 4287 multiletter control sequences out of 15000+600000
+ 9494 words of font info for 34 fonts, out of 8000000 for 9000
+ 957 hyphenation exceptions out of 8191
+ 23i,9n,19p,1418b,229s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
+></usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
+</usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><
+/usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></
+usr/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></us
+r/local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/
+local/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/lo
+cal/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/loca
+l/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local
+/texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/
+texlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/t
+exlive/2013/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
+Output written on fair_scheduler_design_doc.pdf (10 pages, 164824 bytes).
+PDF statistics:
+ 85 PDF objects out of 1000 (max. 8388607)
+ 60 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+

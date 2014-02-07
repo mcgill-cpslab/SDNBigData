@@ -1,0 +1,26 @@
+<configuration debug="true"> 
+	<appender name="TraceFileAppender" class="ch.qos.logback.core.FileAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>Trace</level>
+		</filter>
+		<file>testFile.log</file>
+		<append>false</append>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>Trace</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<root level="trace">
+		<appender-ref ref="TraceFileAppender" />
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>
