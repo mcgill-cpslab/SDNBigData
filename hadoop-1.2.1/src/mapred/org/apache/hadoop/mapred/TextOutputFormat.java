@@ -70,18 +70,18 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
      * @param o the object to print
      * @throws IOException if the write throws, we pass it on
      */
-    private void writeObject(Object o, long deadline) throws IOException {
+    private void writeObject(Object o, int type, long value) throws IOException {
       if (o instanceof Text) {
         Text to = (Text) o;
-        if (deadline == -1)
+        if (type == -1)
           out.write(to.getBytes(), 0, to.getLength());
         else
-          ((FSDataOutputStream) out).write(to.getBytes(), 0, to.getLength(), deadline);
+          ((FSDataOutputStream) out).write(to.getBytes(), 0, to.getLength(), type, value);
       } else {
-        if (deadline == -1)
+        if (type == -1)
           out.write(o.toString().getBytes(utf8));
         else
-          ((FSDataOutputStream) out).write(o.toString().getBytes(utf8), deadline);
+          ((FSDataOutputStream) out).write(o.toString().getBytes(utf8), type, value);
       }
     }
 
@@ -94,18 +94,18 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         return;
       }
       if (!nullKey) {
-        writeObject(key, -1);
+        writeObject(key, -1, -1);
       }
       if (!(nullKey || nullValue)) {
         out.write(keyValueSeparator);
       }
       if (!nullValue) {
-        writeObject(value, -1);
+        writeObject(value, -1, -1);
       }
       out.write(newline);
     }
 
-    public synchronized void write(K key, V value, long deadline)
+    public synchronized void write(K key, V value, int type, long reqvalue)
             throws IOException {
 
       boolean nullKey = key == null || key instanceof NullWritable;
@@ -114,15 +114,15 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         return;
       }
       if (!nullKey) {
-        writeObject(key, deadline);
+        writeObject(key, type, reqvalue);
       }
       if (!(nullKey || nullValue)) {
-        ((FSDataOutputStream) out).write(keyValueSeparator, deadline);
+        ((FSDataOutputStream) out).write(keyValueSeparator, type, reqvalue);
       }
       if (!nullValue) {
-        writeObject(value, deadline);
+        writeObject(value, type, reqvalue);
       }
-      ((FSDataOutputStream) out).write(newline, deadline);
+      ((FSDataOutputStream) out).write(newline, type, reqvalue);
     }
 
     public synchronized void close(Reporter reporter) throws IOException {

@@ -67,14 +67,15 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
   }
 
   /**
-   * get the recordreader with the deadline information
+   *
    * @param job
    * @param split
-   * @param deadline
+   * @param type
+   * @param value
    * @throws IOException
    */
   public LineRecordReader(Configuration job,
-                          FileSplit split, long deadline) throws IOException {
+                          FileSplit split, int type, long value) throws IOException {
     this.maxLineLength = job.getInt("mapred.linerecordreader.maxlength",
             Integer.MAX_VALUE);
     start = split.getStart();
@@ -111,7 +112,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
     // because we always (except the last split) read one extra line in
     // next() method.
     if (start != 0) {
-      start += in.readLine(new Text(), 0, maxBytesToConsume(start), deadline);
+      start += in.readLine(new Text(), 0, maxBytesToConsume(start), type, value);
     }
     this.pos = start;
   }
@@ -235,15 +236,16 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
     return false;
   }
 
-    /**
-     * go to next record with deadline requirement
-     * @param key
-     * @param value
-     * @param deadline
-     * @return
-     * @throws IOException
-     */
-    public synchronized boolean next(LongWritable key, Text value, long deadline)
+  /**
+   * 
+    * @param key
+   * @param value
+   * @param type
+   * @param reqvalue
+   * @return
+   * @throws IOException
+   */
+    public synchronized boolean next(LongWritable key, Text value, int type, long reqvalue)
             throws IOException {
 
         // We always read one extra line, which lies outside the upper
@@ -252,7 +254,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
             key.set(pos);
 
             int newSize = in.readLine(value, maxLineLength,
-                    Math.max(maxBytesToConsume(pos), maxLineLength), deadline);
+                    Math.max(maxBytesToConsume(pos), maxLineLength), type, reqvalue);
             if (newSize == 0) {
                 return false;
             }

@@ -36,9 +36,9 @@ public class FSDataInputStream extends DataInputStream
     }
   }
 
-  public int readWithDeadline(byte b[], long deadline) throws IOException {
+  public int readWithRivuai(byte b[], int type, long value) throws IOException {
     FSInputStream fins = (FSInputStream) in;
-    return fins.readwithdeadline(b, 0, b.length, deadline);
+    return fins.readWithRivuai(b, 0, b.length, type, value);
   }
 
   public synchronized void seek(long desired) throws IOException {

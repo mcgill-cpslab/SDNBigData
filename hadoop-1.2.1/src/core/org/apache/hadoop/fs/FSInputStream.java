@@ -75,7 +75,7 @@ public abstract class FSInputStream extends InputStream
     }
   }
 
-  public synchronized int readwithdeadline(byte[] buffer, int offset, int length, long deadline)
+  public synchronized int readWithRivuai(byte[] buffer, int offset, int length, int type, long value)
           throws IOException {
     //the default behavior is reading without deadline
     return read(buffer, offset, length);
@@ -92,7 +92,19 @@ public abstract class FSInputStream extends InputStream
     return null;
   }
 
-  public int readwithdeadline(long position, byte[] buffer, int offset, int length, long deadline)
+  /**
+   * by default do nothing
+   * @param position
+   * @param buffer
+   * @param offset
+   * @param length
+   * @param type
+   * @param value
+   * @return
+   * @throws IOException
+   */
+  public int readWithRivuai(long position, byte[] buffer, int offset, int length, int type,
+                            long value)
           throws IOException {
     return 0;
   }
