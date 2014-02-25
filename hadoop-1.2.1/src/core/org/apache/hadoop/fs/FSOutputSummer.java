@@ -37,8 +37,8 @@ abstract public class FSOutputSummer extends OutputStream {
   // The number of valid bytes in the buffer.
   private int count;
 
-  protected int jobid;
-  protected int jobpriority;
+  protected int requesttype;
+  protected long requestvalue;
 
   protected FSOutputSummer(Checksum sum, int maxChunkSize, int checksumSize) {
     this.sum = sum;
@@ -210,12 +210,12 @@ abstract public class FSOutputSummer extends OutputStream {
 
   }
 
-  public void setJobid(int id) {
-    jobid = id;
+  public void setRequestType(int type) {
+    requesttype = type;
   }
 
-  public void setJobpriority(int p) {
-    jobpriority = p;
+  public void setRequestValue(long v) {
+    requestvalue = v;
   }
 
   /**

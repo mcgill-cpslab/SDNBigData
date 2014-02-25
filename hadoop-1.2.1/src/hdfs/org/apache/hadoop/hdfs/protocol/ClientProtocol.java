@@ -595,25 +595,6 @@ public interface ClientProtocol extends VersionedProtocol {
       throws IOException;
 
   /**
-   * called by the client to send the connection information, including
-   * remote/local address, ports, flow size and the deadline
-   */
-  public boolean sendConnectionInfo(String localip, int localport, String remoteip,
-                                    int remoteport, long deadline, long flowsize)
-          throws IOException;
-
-  /**
-   * called by the client to send connection information to the namenode
-   * @param jobid
-   * @param jobpriority
-   * @return
-   * @throws IOException
-   */
-  public boolean sendConnectionInfo(String localip, int localport, String remoteip,
-                                    int remoteport, int jobid, int jobpriority)
-          throws IOException;
-
-  /**
    *
    * @param localip
    * @param localport

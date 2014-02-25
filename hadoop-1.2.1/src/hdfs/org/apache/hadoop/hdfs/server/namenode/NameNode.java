@@ -738,50 +738,6 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
     namesystem.cancelDelegationToken(token);
   }
 
-  /**
-   * called by the client to send the connection information, including
-   * remote/local address, ports, flow size and the deadline
-   */
-  @Override
-  public boolean sendConnectionInfo(String senderip, int senderport,
-                                    String receiverip, int receiverport,
-                                    long deadline, long flowsize)
-          throws IOException {
-    //add to the list
-  /*  ClientConnectionInfo cci = new ClientConnectionInfo(senderip, senderport, receiverip,
-            receiverport, deadline, flowsize);
-    connList.add(cci);
-    LOG.info("get the connection info:" + cci.toString());*/
-    //TODO: send the connection information to the openflow controller
-    return true;
-  }
-
-  /**
-   * called by the client to send connection information to the namenode
-   * @param jobid
-   * @param jobpriority
-   * @return
-   * @throws IOException
-   */
-  public boolean sendConnectionInfo(String senderip, int senderport,
-                                    String receiverip, int receiverport,
-                                    int jobid, int jobpriority)
-          throws IOException {
-   /* FlowInstallRequest flowreq = new FlowInstallRequest();
-    flowreq.setSourceIP(Utils.StringIPToInteger(senderip));
-    flowreq.setDestinationIP(Utils.StringIPToInteger(receiverip));
-    flowreq.setSourcePort((short) senderport);
-    flowreq.setDestinationPort((short) receiverport);
-    //flowreq.setJobid(jobid);
-    //flowreq.setJobpriority(jobpriority);
-    synchronized (connList) {
-      flowreq.setIdx(connList.size());
-      connList.add(flowreq);
-    }
-    LOG.info("get the connection info:" + flowreq.toString());*/
-    return true;
-  }
-
   @Override
   public boolean sendConnectionInfo(String senderip, int senderport,
                                     String remoteip, int remoteport, int type, long value) throws IOException {

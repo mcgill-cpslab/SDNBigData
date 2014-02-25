@@ -4136,8 +4136,8 @@ public class DFSClient implements FSConstants, java.io.Closeable {
                 s.getLocalPort(),
                 s.getInetAddress().getHostAddress(),
                 s.getPort(),
-                jobid,
-                jobpriority);//writing process in HDFS is actually pipelined
+                requesttype,
+                requestvalue);//writing process in HDFS is actually pipelined
         System.out.println("sent connection information");
         LOG.debug("Send buf size " + s.getSendBufferSize());
         long writeTimeout = (datanodeWriteTimeout > 0) ?

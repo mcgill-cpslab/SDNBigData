@@ -237,7 +237,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
   }
 
   /**
-   * 
+   *
     * @param key
    * @param value
    * @param type

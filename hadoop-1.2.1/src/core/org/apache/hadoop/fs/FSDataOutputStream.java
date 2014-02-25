@@ -143,15 +143,15 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
     }
   }
 
-  public void setJobid(int id) {
+  public void setRequestType(int type) {
     if (wrappedStream instanceof FSOutputSummer) {
-      ((FSOutputSummer) wrappedStream).setJobid(id);
+      ((FSOutputSummer) wrappedStream).setRequestType(type);
     }
   }
 
-  public void setJobpriority(int p) {
+  public void setRequestValue(long value) {
     if (wrappedStream instanceof FSOutputSummer) {
-      ((FSOutputSummer) wrappedStream).setJobpriority(p);
+      ((FSOutputSummer) wrappedStream).setRequestValue(value);
     }
   }
 }

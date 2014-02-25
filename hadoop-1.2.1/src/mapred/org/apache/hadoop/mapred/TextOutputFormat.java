@@ -154,8 +154,8 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
                                            name + codec.getDefaultExtension());
       FileSystem fs = file.getFileSystem(job);
       FSDataOutputStream fileOut = fs.create(file, progress);
-      fileOut.setJobid(job.getJobName().hashCode());
-      fileOut.setJobpriority(job.getJobPriority().value());
+      fileOut.setRequestType(job.getJobName().hashCode());
+      fileOut.setRequestValue(job.getJobPriority().value());
       return new LineRecordWriter<K, V>(new DataOutputStream
                                         (codec.createOutputStream(fileOut)),
                                         keyValueSeparator);
