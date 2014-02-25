@@ -1,5 +1,6 @@
 package message;
 
+
 import org.openflow.protocol.Instantiable;
 
 public enum AppMsgType {
@@ -21,7 +22,7 @@ public enum AppMsgType {
     }
   });
 
-  static AppMsgType[] mapping;
+  static AppMsgType[] mapping = null;
   protected Instantiable<AppAgentMsg> instantiator = null;
   private byte type = -1;
 
@@ -33,6 +34,8 @@ public enum AppMsgType {
   }
 
   public static void addMapping(byte i, AppMsgType type) {
+    if (mapping == null)
+      mapping = new AppMsgType[255];
     mapping[i] = type;
   }
 

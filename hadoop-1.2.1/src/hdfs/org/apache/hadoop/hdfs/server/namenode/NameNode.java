@@ -340,8 +340,8 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
         return p;
       }
     });
-    clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip"),
-            Integer.parseInt(conf.get("openflow.controller.port"))));
+    clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip", "127.0.0.1"),
+            Integer.parseInt(conf.get("openflow.controller.port", "6635"))));
   }
 
   /**
