@@ -8,7 +8,6 @@ public class FlowInstallResponse extends AppAgentMsg {
 
   private int idx = 0;
 
-
   public FlowInstallResponse() {
     super();
     length += 5;
@@ -35,7 +34,6 @@ public class FlowInstallResponse extends AppAgentMsg {
     this.installedSuccessfully = installedSuccessfully;
   }
 
-
   public int getIdx() {
     return idx;
   }
@@ -43,6 +41,5 @@ public class FlowInstallResponse extends AppAgentMsg {
   public void setIdx(int idx) {
     this.idx = idx;
   }
-
 
 }

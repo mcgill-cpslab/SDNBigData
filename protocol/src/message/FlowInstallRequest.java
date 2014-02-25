@@ -12,10 +12,9 @@ public class FlowInstallRequest extends AppAgentMsg {
 
   private short destinationPort = 0;
 
-  private int jobid = 0;
-  private int jobpriority = 0;
-
   private int idx = 0;
+  private int reqtype = 0;
+  private long value = 0;
 
   public FlowInstallRequest() {
     super();
@@ -29,8 +28,8 @@ public class FlowInstallRequest extends AppAgentMsg {
     this.destinationIP = buffer.readInt();
     this.sourcePort = buffer.readShort();
     this.destinationPort = buffer.readShort();
-    this.jobid = buffer.readInt();
-    this.jobpriority = buffer.readInt();
+    this.reqtype = buffer.readInt();
+    this.value = buffer.readLong();
     this.idx = buffer.readInt();
   }
 
@@ -40,8 +39,8 @@ public class FlowInstallRequest extends AppAgentMsg {
     data.writeInt(destinationIP);
     data.writeShort(sourcePort);
     data.writeShort(destinationPort);
-    data.writeInt(jobid);
-    data.writeInt(jobpriority);
+    data.writeInt(reqtype);
+    data.writeLong(value);
     data.writeInt(idx);
   }
 
@@ -51,22 +50,6 @@ public class FlowInstallRequest extends AppAgentMsg {
 
   public int getDestinationIP() {
     return destinationIP;
-  }
-
-  public int getDeadline() {
-    return jobid;
-  }
-
-  public int getFlowsize() {
-    return jobpriority;
-  }
-
-  public int getIdx() {
-    return idx;
-  }
-
-  public void setIdx(int idx) {
-    this.idx = idx;
   }
 
   public void setSourceIP(int sourceIP) {
@@ -85,20 +68,16 @@ public class FlowInstallRequest extends AppAgentMsg {
     this.destinationPort = destinationPort;
   }
 
-  public void setJobid(int jobid) {
-    this.jobid = jobid;
+  public void setReqtype(int reqtype) {
+    this.reqtype = reqtype;
   }
 
-  public void setJobpriority(int jobpriority) {
-    this.jobpriority = jobpriority;
+  public void setValue(long v) {
+    value = v;
   }
 
-  public int getJobid() {
-    return jobid;
-  }
-
-  public int getJobpriority() {
-    return jobpriority;
+  public long getValue() {
+    return value;
   }
 
   public short getSourcePort() {
@@ -107,5 +86,13 @@ public class FlowInstallRequest extends AppAgentMsg {
 
   public short getDestinationPort() {
     return destinationPort;
+  }
+
+  public int getIdx() {
+    return idx;
+  }
+
+  public void setIdx(int idx) {
+    this.idx = idx;
   }
 }
