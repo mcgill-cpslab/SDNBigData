@@ -1654,14 +1654,13 @@ class ReduceTask extends Task {
         while (true) {
           try {
             connection.connect();
-            String [] connInfo = getConnectionInfoFromHttpConn((HttpURLConnection) connection);
-            //TODO:report to jobtracker
+            /*String [] connInfo = getConnectionInfoFromHttpConn((HttpURLConnection) connection);
             umbilical.sendConnectionInfo(connInfo[0],
                     Integer.parseInt(connInfo[1]),
                     connInfo[2],
                     Integer.parseInt(connInfo[3]),
                     conf.getJobName().hashCode(),
-                    Integer.parseInt(conf.getJobPriority().toString()));
+                    Integer.parseInt(conf.getJobPriority().toString()));*/
             break;
           } catch (IOException ioe) {
             // update the total remaining connect-timeout
