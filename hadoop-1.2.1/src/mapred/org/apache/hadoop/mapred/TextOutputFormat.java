@@ -154,8 +154,15 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
                                            name + codec.getDefaultExtension());
       FileSystem fs = file.getFileSystem(job);
       FSDataOutputStream fileOut = fs.create(file, progress);
-      fileOut.setRequestType(job.getJobName().hashCode());
-      fileOut.setRequestValue(job.getJobPriority().value());
+      int requesttype = Integer.parseInt(job.get("mapred.job.flowreqtype"));
+      fileOut.setRequestType(requesttype);
+      if (requesttype == 0)
+        fileOut.setRequestValue(Integer.parseInt(job.get("mapred.job.priority")));
+      else
+      if (requesttype == 1)
+        fileOut.setRequestValue(Long.parseLong(job.get("mapred.job.minbw")));
+
+
       return new LineRecordWriter<K, V>(new DataOutputStream
                                         (codec.createOutputStream(fileOut)),
                                         keyValueSeparator);
