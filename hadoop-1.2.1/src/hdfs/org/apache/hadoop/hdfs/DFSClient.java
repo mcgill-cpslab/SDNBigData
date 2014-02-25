@@ -2230,10 +2230,11 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     /**
      * Open a DataInputStream to a DataNode so that it can be read from.
      * We get block ID and the IDs of the destinations at startup, from the namenode.
-     * deadline aware
+     * value aware
      */
-    private synchronized DatanodeInfo blockSeekTo(long target, long deadline) throws IOException {
-      System.out.println("in blockSeekTo(long target, long deadline) ");
+    private synchronized DatanodeInfo blockSeekTo(long target, int type, long value)
+            throws IOException {
+      System.out.println("in blockSeekTo(long target, long value) ");
 
       if (target >= getFileLength()) {
         throw new IOException("Attempted to read past end of file");
@@ -2251,7 +2252,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         s.close();
         s = null;
       }
-      System.out.println("in blockSeekTo(long target, long deadline)");
+      System.out.println("in blockSeekTo(long target, long value)");
       //
       // Connect to best DataNode for desired Block, with potential offset
       //
@@ -2303,7 +2304,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
           NetUtils.connect(s, targetAddr, getRandomLocalInterfaceAddr(),
                   socketTimeout);
           s.setSoTimeout(socketTimeout);
-          //make namenode known about the deadline
+          //make namenode known about the value
           //NOTICE: it should be a sync call
           System.out.println("sending connection information");
           namenode.sendConnectionInfo(
@@ -2311,8 +2312,8 @@ public class DFSClient implements FSConstants, java.io.Closeable {
                   s.getLocalPort(),
                   s.getInetAddress().getHostAddress(),
                   s.getPort(),
-                  deadline,
-                  blk.getNumBytes() - offsetIntoBlock);
+                  type,
+                  value);
           System.out.println("sent connection information");
           blockReader = RemoteBlockReader.newBlockReader(s, src, blk.getBlockId(),
                   accessToken,
@@ -2536,7 +2537,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     }
 
     @Override
-    public int readwithdeadline(long position, byte[] buffer, int offset, int length, long deadline)
+    public int readWithRivuai(long position, byte[] buffer, int offset, int length, int type, long value)
             throws IOException {
       // sanity checks
       checkOpen();
@@ -2560,10 +2561,10 @@ public class DFSClient implements FSConstants, java.io.Closeable {
       for (LocatedBlock blk : blockRange) {
         long targetStart = position - blk.getStartOffset();
         long bytesToRead = Math.min(remaining, blk.getBlockSize() - targetStart);
-        //fetchBlockByRange with deadline requirement
+        //fetchBlockByRange with value requirement
         //within fetchBlockByRange, the socket to datanode would be established
         fetchBlockByteRange(blk, targetStart,
-                targetStart + bytesToRead - 1, buffer, offset, deadline);
+                targetStart + bytesToRead - 1, buffer, offset, type, value);
         remaining -= bytesToRead;
         position += bytesToRead;
         offset += bytesToRead;
@@ -2576,9 +2577,10 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     }
 
     @Override
-    public synchronized int readwithdeadline(byte buf[], int off, int len, long deadline)
+    public synchronized int readWithRivuai(byte buf[], int off, int len, int type,
+                                             long value)
             throws IOException {
-      System.out.println("in DFSClient int readwithdeadline(byte buf[], int off, int len, long deadline)");
+      System.out.println("in DFSClient int readWithRivuai(byte buf[], int off, int len, int type, long value)");
       checkOpen();
       if (closed) {
         throw new IOException("Stream closed");
@@ -2590,9 +2592,9 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         while (retries > 0) {
           try {
             if (pos > blockEnd) {
-              //blockSeekTo with deadline
+              //blockSeekTo with value
               //within blockSeekTo, the socket to datanode would be built
-              currentNode = blockSeekTo(pos, deadline);
+              currentNode = blockSeekTo(pos, type, value);
             }
             int realLen = (int) Math.min((long) len, (blockEnd - pos + 1L));
             int result = readBuffer(buf, off, realLen);
@@ -2621,7 +2623,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
           }
         }
       }
-      System.out.println("return -1 at int readwithdeadline(byte buf[], int off, int len, long deadline)");
+      System.out.println("return -1 at int readWithRivuai(byte buf[], int off, int len, long value)");
       return -1;
     }
 
@@ -2788,7 +2790,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     }
 
     private void fetchBlockByteRange(LocatedBlock block, long start,
-                                     long end, byte[] buf, int offset, long deadline) throws IOException {
+                                     long end, byte[] buf, int offset, int type, long value) throws IOException {
       //
       // Connect to best DataNode for desired Block, with potential offset
       //
@@ -2826,15 +2828,14 @@ public class DFSClient implements FSConstants, java.io.Closeable {
             LOG.debug("Connecting to " + targetAddr);
             NetUtils.connect(dn, targetAddr, getRandomLocalInterfaceAddr(),
                     socketTimeout);
-            //make namenode known about the deadline
+            //make namenode known about the value
             //NOTICE: it should be a sync call
             namenode.sendConnectionInfo(
                     s.getLocalAddress().toString(),
                     s.getLocalPort(),
                     s.getInetAddress().getHostAddress(),
                     s.getPort(),
-                    len,
-                    deadline);
+                    type, value);
             dn.setSoTimeout(socketTimeout);
             reader = RemoteBlockReader.newBlockReader(dn, src,
                     block.getBlock().getBlockId(), accessToken,
@@ -3285,7 +3286,8 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     private class DataStreamer extends Daemon {
 
       private volatile boolean closed = false;
-      private long deadline = -1;
+      private int type = -1;
+      private long value = -1;
   
       public void run() {
         long lastPacket = 0;
@@ -3343,13 +3345,13 @@ public class DFSClient implements FSConstants, java.io.Closeable {
               if (blockStream == null) {
                 LOG.debug("Allocating new block");
                 /**
-                 * deadline should be set out of box if you want to call
-                 * deadline related functions
+                 * value should be set out of box if you want to call
+                 * value related functions
                  */
-                if (deadline == -1)
+                if (value == -1)
                   nodes = nextBlockOutputStream();
                 else
-                  nodes = nextBlockOutputStream(deadline);
+                  nodes = nextBlockOutputStream(type, value);
                 this.setName("DataStreamer for file " + src +
                              " block " + block);
                 response = new ResponseProcessor(nodes);
@@ -3936,12 +3938,13 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     }
 
     /**
-     * get the nextBlockOutputStream with the deadline requirement
-     * @param deadline
+     *
+     * @param type
+     * @param value
      * @return
      * @throws IOException
      */
-    private DatanodeInfo[] nextBlockOutputStream(long deadline) throws IOException {
+    private DatanodeInfo[] nextBlockOutputStream(int type, long value) throws IOException {
       LocatedBlock lb = null;
       boolean retry = false;
       DatanodeInfo[] nodes;
@@ -3966,7 +3969,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         //
         // Connect to first DataNode in the list.
         //
-        success = createBlockOutputStream(nodes, clientName, false, deadline);
+        success = createBlockOutputStream(nodes, clientName, false, type, value);
 
         if (!success) {
           LOG.info("Abandoning " + block);
@@ -3993,7 +3996,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     // Returns true if success, otherwise return failure.
     //
     private boolean createBlockOutputStream(DatanodeInfo[] nodes, String client,
-                                            boolean recoveryFlag, long deadline) {
+                                            boolean recoveryFlag, int type, long value) {
       short pipelineStatus = (short)DataTransferProtocol.OP_STATUS_SUCCESS;
       String firstBadLink = "";
       if (LOG.isDebugEnabled()) {
@@ -4024,8 +4027,8 @@ public class DFSClient implements FSConstants, java.io.Closeable {
                 s.getLocalPort(),
                 s.getInetAddress().getHostAddress(),
                 s.getPort(),
-                deadline,
-                blockSize);//writing process in HDFS is actually pipelined
+                type,
+                value);//writing process in HDFS is actually pipelined
         System.out.println("sent connection information");
         long writeTimeout = (datanodeWriteTimeout > 0) ?
                 (HdfsConstants.WRITE_TIMEOUT_EXTENSION * nodes.length +
@@ -4273,22 +4276,12 @@ public class DFSClient implements FSConstants, java.io.Closeable {
       } 
     }
 
-    /**
-     * write chunk with deadline requirement, we set deadline variable in streamer
-     * so that it will report deadline adn flow size of each connection to the
-     * namenode
-     * @param b
-     * @param offset
-     * @param len
-     * @param checksum
-     * @param deadline
-     * @throws IOException
-     */
     @Override
-    protected synchronized void writeChunk(byte[] b, int offset, int len, byte[] checksum, long deadline)
+    protected synchronized void writeChunk(byte[] b, int offset, int len, byte[] checksum,
+                                           int type, long value)
             throws IOException {
-      System.out.println("set streamer.deadline as " + deadline);
-      streamer.deadline = deadline;
+      streamer.type = type;
+      streamer.value = value;
       writeChunk(b, offset, len, checksum);
     }
 

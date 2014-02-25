@@ -54,15 +54,16 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
     }
 
     /**
-     * write with deadline
+     *
      * @param b
      * @param off
      * @param len
-     * @param deadline
+     * @param type
+     * @param value
      * @throws IOException
      */
-    public void write(byte b[], int off, int len, long deadline) throws IOException {
-      ((FSOutputSummer) out).write(b, off, len, deadline);
+    public void write(byte b[], int off, int len, int type, long value) throws IOException {
+      ((FSOutputSummer) out).write(b, off, len, type, value);
       position += len;                            // update position
       if (statistics != null) {
         statistics.incrementBytesWritten(len);
@@ -110,10 +111,10 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
     return wrappedStream;
   }
 
-  public void write(byte b[], int off, int len, long deadline) throws IOException {
+  public void write(byte b[], int off, int len, int type, long value) throws IOException {
     //FSOutputSummer overrides it
-    System.out.println("in write(byte b[], int off, int len, long deadline) @FSDataOutputStream");
-    ((PositionCache) out).write(b, off, len, deadline);
+    System.out.println("in write(byte b[], int off, int len, int type, long value) @FSDataOutputStream");
+    ((PositionCache) out).write(b, off, len, type, value);
     //reimplement incCount,
     int temp = written + len;
     if (temp < 0) {
@@ -123,13 +124,14 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
   }
 
   /**
-   * deadline aware writing
+   *
    * @param b
-   * @param deadline
+   * @param type
+   * @param value
    * @throws IOException
    */
-  public void write(byte b[], long deadline) throws IOException {
-    write(b, 0, b.length, deadline);
+  public void write(byte b[], int type, long value) throws IOException {
+    write(b, 0, b.length, type, value);
   }
 
   /** {@inheritDoc} */

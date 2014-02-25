@@ -612,4 +612,19 @@ public interface ClientProtocol extends VersionedProtocol {
   public boolean sendConnectionInfo(String localip, int localport, String remoteip,
                                     int remoteport, int jobid, int jobpriority)
           throws IOException;
+
+  /**
+   *
+   * @param localip
+   * @param localport
+   * @param remoteip
+   * @param remoteport
+   * @param type
+   * @param value
+   * @return
+   * @throws IOException
+   */
+  public boolean sendConnectionInfo(String localip, int localport, String remoteip,
+                                    int remoteport, int type, long value)
+          throws IOException;
 }

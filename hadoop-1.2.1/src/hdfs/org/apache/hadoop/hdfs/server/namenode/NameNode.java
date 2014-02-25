@@ -767,13 +767,31 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
                                     String receiverip, int receiverport,
                                     int jobid, int jobpriority)
           throws IOException {
-    FlowInstallRequest flowreq = new FlowInstallRequest();
+   /* FlowInstallRequest flowreq = new FlowInstallRequest();
     flowreq.setSourceIP(Utils.StringIPToInteger(senderip));
     flowreq.setDestinationIP(Utils.StringIPToInteger(receiverip));
     flowreq.setSourcePort((short) senderport);
     flowreq.setDestinationPort((short) receiverport);
-    flowreq.setJobid(jobid);
-    flowreq.setJobpriority(jobpriority);
+    //flowreq.setJobid(jobid);
+    //flowreq.setJobpriority(jobpriority);
+    synchronized (connList) {
+      flowreq.setIdx(connList.size());
+      connList.add(flowreq);
+    }
+    LOG.info("get the connection info:" + flowreq.toString());*/
+    return true;
+  }
+
+  @Override
+  public boolean sendConnectionInfo(String senderip, int senderport,
+                                    String remoteip, int remoteport, int type, long value) throws IOException {
+    FlowInstallRequest flowreq = new FlowInstallRequest();
+    flowreq.setSourceIP(Utils.StringIPToInteger(senderip));
+    flowreq.setDestinationIP(Utils.StringIPToInteger(remoteip));
+    flowreq.setSourcePort((short) senderport);
+    flowreq.setDestinationPort((short) remoteport);
+    flowreq.setReqtype(type);
+    flowreq.setValue(value);
     synchronized (connList) {
       flowreq.setIdx(connList.size());
       connList.add(flowreq);
