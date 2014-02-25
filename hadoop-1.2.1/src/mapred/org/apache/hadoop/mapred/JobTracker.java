@@ -3011,17 +3011,17 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   @Override
   public void saveConnInfo(String localIP, int localport, String remoteIP, int remotePort,
                              int jobid, int jobpriority) {
-    FlowInstallRequest req = new FlowInstallRequest();
+  /*  FlowInstallRequest req = new FlowInstallRequest();
     req.setSourceIP(utils.Utils.StringIPToInteger(localIP));
     req.setDestinationIP(utils.Utils.StringIPToInteger(remoteIP));
     req.setSourcePort((short) localport);
     req.setDestinationPort((short) remotePort);
-    req.setJobid(jobid);
-    req.setJobpriority(jobpriority);
+    //req.setJobid(jobid);
+    //req.setJobpriority(jobpriority);
     synchronized (connList) {
       req.setIdx(connList.size());
       connList.add(req);
-    }
+    }*/
   }
 
   public String getBuildVersion() throws IOException {
