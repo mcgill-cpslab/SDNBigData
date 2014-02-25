@@ -130,18 +130,18 @@ public class FsShell extends Configured implements Tool {
     if (srcs.length == 1 && srcs[0].toString().equals("-"))
       copyFromStdin(dstPath, dstFs);
     else
-      dstFs.copyFromLocalFile(false, false, srcs, dstPath, -1);
+      dstFs.copyFromLocalFile(false, false, srcs, dstPath, -1, -1);
   }
 
   /**
    * Add local files to the indicated FileSystem name. src is kept
    * with the deadline requirement
    */
-  void copyFromLocal(Path[] srcs, String dstf, long deadline) throws IOException {
+  void copyFromLocal(Path[] srcs, String dstf, int reqtype, long reqvalue) throws IOException {
     Path dstPath = new Path(dstf);
     FileSystem dstFs = dstPath.getFileSystem(getConf());
     System.out.println("copyFromLocal");
-    dstFs.copyFromLocalFile(false, false, srcs, dstPath, deadline);
+    dstFs.copyFromLocalFile(false, false, srcs, dstPath, reqtype, reqvalue);
   }
   
   /**
@@ -175,13 +175,16 @@ public class FsShell extends Configured implements Tool {
     
     String srcstr = null;
     String dststr = null;
-    long deadline = -1;
+    int reqtype = 0;
+    long reqvalue = 0;
     try {
       List<String> parameters = cf.parse(argv, pos);
       srcstr = parameters.get(0);
       dststr = parameters.get(1);
-      if (parameters.size() > 2)
-        deadline = Long.parseLong(parameters.get(2));
+      if (parameters.size() > 3) {
+        reqtype = Integer.parseInt(parameters.get(2));
+        reqvalue = Long.parseLong(parameters.get(3));
+      }
     }
     catch(IllegalArgumentException iae) {
       System.err.println("Usage: java FsShell " + GET_SHORT_USAGE);
@@ -215,10 +218,10 @@ public class FsShell extends Configured implements Tool {
       for (FileStatus status : srcs) {
         Path p = status.getPath();
         File f = dstIsDir? new File(dst, p.getName()): dst;
-        if (deadline == -1)
+        if (reqtype == -1)
           copyToLocal(srcFS, p, f, copyCrc);
         else
-          copyToLocal(srcFS, p, f, copyCrc, deadline);
+          copyToLocal(srcFS, p, f, copyCrc, reqtype, reqvalue);
       }
     }
   }
@@ -251,7 +254,7 @@ public class FsShell extends Configured implements Tool {
    * @exception IOException If some IO failed
    */
   private void copyToLocal(final FileSystem srcFS, final Path src,
-                           final File dst, final boolean copyCrc, long deadline)
+                           final File dst, final boolean copyCrc, int reqtype, long reqvalue)
           throws IOException {
     /* Keep the structure similar to ChecksumFileSystem.copyToLocal().
      * Ideal these two should just invoke FileUtil.copy() and not repeat
@@ -268,7 +271,7 @@ public class FsShell extends Configured implements Tool {
       // use absolute name so that tmp file is always created under dest dir
       File tmp = FileUtil.createLocalTempFile(dst.getAbsoluteFile(),
               COPYTOLOCAL_PREFIX, true);
-      if (!FileUtil.copy(srcFS, src, tmp, false, srcFS.getConf(), deadline)) {
+      if (!FileUtil.copy(srcFS, src, tmp, false, srcFS.getConf(), reqtype, reqvalue)) {
         throw new IOException("Failed to copy " + src + " to " + dst);
       }
 
@@ -286,14 +289,14 @@ public class FsShell extends Configured implements Tool {
         File dstcs = FileSystem.getLocal(srcFS.getConf())
                 .pathToFile(csfs.getChecksumFile(new Path(dst.getCanonicalPath())));
         copyToLocal(csfs.getRawFileSystem(), csfs.getChecksumFile(src),
-                dstcs, false, deadline);
+                dstcs, false, reqtype, reqvalue);
       }
     } else {
       // once FileUtil.copy() supports tmp file, we don't need to mkdirs().
       dst.mkdirs();
       for(FileStatus path : srcFS.listStatus(src)) {
         copyToLocal(srcFS, path.getPath(),
-                new File(dst, path.getPath().getName()), copyCrc, deadline);
+                new File(dst, path.getPath().getName()), copyCrc, reqtype, reqvalue);
       }
     }
   }
@@ -1859,7 +1862,7 @@ public class FsShell extends Configured implements Tool {
         String dst = argv[i++];
         //the third parameter is deadline
         System.out.println("put urgent");
-        copyFromLocal(srcs, dst, Long.parseLong(argv[i++]));
+        copyFromLocal(srcs, dst, Integer.parseInt(argv[i++]), Long.parseLong(argv[i++]));
       } else if ("-moveFromLocal".equals(cmd)) {
         Path[] srcs = new Path[argv.length-2];
         for (int j=0 ; i < argv.length-1 ;) 

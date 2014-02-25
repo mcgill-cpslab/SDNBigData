@@ -1184,7 +1184,7 @@ public abstract class FileSystem extends Configured implements Closeable {
    */
   public void moveFromLocalFile(Path[] srcs, Path dst)
     throws IOException {
-    copyFromLocalFile(true, true, srcs, dst, -1);
+    copyFromLocalFile(true, true, srcs, dst, -1, -1);
   }
 
   /**
@@ -1213,12 +1213,12 @@ public abstract class FileSystem extends Configured implements Closeable {
    * copy file from local file system with the deadline requirement
    */
   public void copyFromLocalFile(boolean delSrc, boolean overwrite, 
-                                Path[] srcs, Path dst, long deadline)
+                                Path[] srcs, Path dst, int reqtype, long reqvalue)
     throws IOException {
     Configuration conf = getConf();
-    System.out.println("copyFromLocalFile, deadline is " + deadline);
-    if (deadline != -1)
-      FileUtil.copy(getLocal(conf), srcs, this, dst, delSrc, overwrite, conf, deadline);
+    System.out.println("copyFromLocalFile, reqtype is " + reqtype);
+    if (reqtype != -1)
+      FileUtil.copy(getLocal(conf), srcs, this, dst, delSrc, overwrite, conf, reqtype, reqvalue);
     else
       FileUtil.copy(getLocal(conf), srcs, this, dst, delSrc, overwrite, conf);
   }
