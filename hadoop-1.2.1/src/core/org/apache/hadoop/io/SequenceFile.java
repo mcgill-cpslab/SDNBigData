@@ -974,8 +974,13 @@ public class SequenceFile {
         this.compressedValSerializer.open(deflateOut);
       }
       //job id and priority
-      out.setRequestType(conf.get("mapred.job.name").hashCode());
-      out.setRequestValue(Integer.parseInt(conf.get("mapred.job.priority")));
+      int requesttype = Integer.parseInt(conf.get("mapred.job.flowreqtype"));
+      out.setRequestType(requesttype);
+      if (requesttype == 0)
+        out.setRequestValue(Integer.parseInt(conf.get("mapred.job.priority")));
+      else
+        if (requesttype == 1)
+          out.setRequestValue(Long.parseLong(conf.get("mapred.job.minbw")));
     }
     
     /** Returns the class of keys in this file. */
