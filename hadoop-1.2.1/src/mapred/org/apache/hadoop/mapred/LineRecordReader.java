@@ -49,6 +49,9 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
   private CompressionCodec codec;
   private Decompressor decompressor;
 
+  private int flowreqtype = -1;
+  private long flowreqvalue = -1;
+
   /**
    * A class that provides a line reader from an input stream.
    * @deprecated Use {@link org.apache.hadoop.util.LineReader} instead.
@@ -83,6 +86,10 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
     final Path file = split.getPath();
     compressionCodecs = new CompressionCodecFactory(job);
     codec = compressionCodecs.getCodec(file);
+
+    // Rivuai
+    this.flowreqtype = type;
+    this.flowreqvalue = value;
 
     // open the file and seek to the start of the split
     FileSystem fs = file.getFileSystem(job);
@@ -220,7 +227,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
       key.set(pos);
 
       int newSize = in.readLine(value, maxLineLength,
-          Math.max(maxBytesToConsume(pos), maxLineLength));
+          Math.max(maxBytesToConsume(pos), maxLineLength), flowreqtype, flowreqvalue);
       if (newSize == 0) {
         return false;
       }
@@ -235,40 +242,6 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
 
     return false;
   }
-
-  /**
-   *
-    * @param key
-   * @param value
-   * @param type
-   * @param reqvalue
-   * @return
-   * @throws IOException
-   */
-    public synchronized boolean next(LongWritable key, Text value, int type, long reqvalue)
-            throws IOException {
-
-        // We always read one extra line, which lies outside the upper
-        // split limit i.e. (end - 1)
-        while (getFilePosition() <= end) {
-            key.set(pos);
-
-            int newSize = in.readLine(value, maxLineLength,
-                    Math.max(maxBytesToConsume(pos), maxLineLength), type, reqvalue);
-            if (newSize == 0) {
-                return false;
-            }
-            pos += newSize;
-            if (newSize < maxLineLength) {
-                return true;
-            }
-
-            // line too long. try again
-            LOG.info("Skipped line of size " + newSize + " at pos " + (pos - newSize));
-        }
-
-        return false;
-    }
 
   /**
    * Get the progress within the split

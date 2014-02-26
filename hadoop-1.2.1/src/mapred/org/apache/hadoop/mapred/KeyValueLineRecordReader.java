@@ -51,8 +51,17 @@ public class KeyValueLineRecordReader implements RecordReader<Text, Text> {
   }
 
   public KeyValueLineRecordReader(Configuration job, FileSplit split)
-    throws IOException {
+          throws IOException {
     lineRecordReader = new LineRecordReader(job, split);
+    dummyKey = lineRecordReader.createKey();
+    innerValue = lineRecordReader.createValue();
+    String sepStr = job.get("key.value.separator.in.input.line", "\t");
+    this.separator = (byte) sepStr.charAt(0);
+  }
+
+  public KeyValueLineRecordReader(Configuration job, FileSplit split, int reqtype, int reqvalue)
+    throws IOException {
+    lineRecordReader = new LineRecordReader(job, split, reqtype, reqvalue);
     dummyKey = lineRecordReader.createKey();
     innerValue = lineRecordReader.createValue();
     String sepStr = job.get("key.value.separator.in.input.line", "\t");
