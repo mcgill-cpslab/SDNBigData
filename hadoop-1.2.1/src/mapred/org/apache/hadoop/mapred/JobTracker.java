@@ -1814,8 +1814,8 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
         return p;
       }
     });
-    clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip"),
-            Integer.parseInt(conf.get("openflow.controller.port"))));
+    clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip", "127.0.0.1"),
+            Integer.parseInt(conf.get("openflow.controller.port", "6635"))));
   }
   
   @InterfaceAudience.Private
@@ -1867,7 +1867,7 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
             try {
               recoveryManager.checkAndAddJob(status);
             } catch (Throwable t) {
-              LOG.warn("Failed to add the job " + status.getPath().getName(), 
+              LOG.warn("Failed to add the job " + status.getPath().getName(),
                        t);
             }
           }
