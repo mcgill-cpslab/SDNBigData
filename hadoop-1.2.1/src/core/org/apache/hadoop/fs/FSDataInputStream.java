@@ -24,8 +24,8 @@ import java.io.*;
 public class FSDataInputStream extends DataInputStream
     implements Seekable, PositionedReadable, Closeable, HasFileDescriptor {
 
-  protected int jobid = -1;
-  protected int jobpriority = -1;
+  protected int reqtype = -1;
+  protected long reqvalue = -1;
 
   public FSDataInputStream(InputStream in)
     throws IOException {
@@ -85,11 +85,11 @@ public class FSDataInputStream extends DataInputStream
 
 
 
-  public void setJobPriority(int p) {
-    jobpriority = p;
+  public void setReqType(int p) {
+    reqtype = p;
   }
 
-  public void setJobid(int id) {
-    jobid = id;
+  public void setReqValue(long v) {
+    reqvalue = v;
   }
 }

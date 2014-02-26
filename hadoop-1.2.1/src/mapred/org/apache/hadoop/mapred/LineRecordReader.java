@@ -62,7 +62,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
       super(in, bufferSize);
     }
     public LineReader(InputStream in, Configuration conf) throws IOException {
-      super(in, conf);
+      super(in, conf, -1, -1);
     }
   }
 

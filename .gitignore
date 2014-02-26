@@ -4,6 +4,7 @@
 native/
 *.swp
 *.iml
+*.jar
 .idea/
 .settings
 .cache

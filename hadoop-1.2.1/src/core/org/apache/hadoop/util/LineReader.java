@@ -41,8 +41,8 @@ import java.io.InputStream;
 public class LineReader {
   private static final Log LOG
           = LogFactory.getLog(LineReader.class.getName());
-  private int jobid = -1;
-  private int jobpriority = -1;
+  private int reqtype = -1;
+  private long reqvalue = -1;
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
   private int bufferSize = DEFAULT_BUFFER_SIZE;
   private InputStream in;
@@ -90,13 +90,11 @@ public class LineReader {
    * @param conf configuration
    * @throws IOException
    */
-  public LineReader(InputStream in, Configuration conf) throws IOException {
+  public LineReader(InputStream in, Configuration conf, int reqtype, long reqvalue) throws IOException {
     this(in, conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE));
-    jobid = conf.get("mapred.job.name").hashCode();
-    jobpriority = Integer.parseInt(conf.get("mapred.job.priority"));
     if (in instanceof FSDataInputStream) {
-      ((FSDataInputStream) in).setJobid(jobid);
-      ((FSDataInputStream) in).setJobPriority(jobpriority);
+      ((FSDataInputStream) in).setReqType(reqtype);
+      ((FSDataInputStream) in).setReqValue(reqvalue);
     }
   }
 

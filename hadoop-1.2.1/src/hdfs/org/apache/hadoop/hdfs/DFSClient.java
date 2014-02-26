@@ -2418,14 +2418,6 @@ public class DFSClient implements FSConstants, java.io.Closeable {
               socketTimeout);
           s.setSoTimeout(socketTimeout);
           System.out.println("sending connection information");
-          namenode.sendConnectionInfo(
-                  s.getLocalAddress().getHostAddress(),
-                  s.getLocalPort(),
-                  s.getInetAddress().getHostAddress(),
-                  s.getPort(),
-                  conf.get("mapred.job.name").hashCode(),
-                  Integer.parseInt(conf.get("mapred.job.priority")));
-          System.out.println("sent connection information");
           blockReader = RemoteBlockReader.newBlockReader(s, src, blk.getBlockId(),
               accessToken, 
               blk.getGenerationStamp(),
