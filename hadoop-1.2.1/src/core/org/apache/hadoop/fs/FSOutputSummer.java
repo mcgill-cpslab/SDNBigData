@@ -241,4 +241,12 @@ abstract public class FSOutputSummer extends OutputStream {
     this.buf = new byte[size];
     this.count = 0;
   }
+
+  public int getRequesttype() {
+    return requesttype;
+  }
+
+  public long getRequestvalue() {
+    return requestvalue;
+  }
 }

@@ -36,11 +36,32 @@ public class SequenceFileRecordReader<K, V> implements RecordReader<K, V> {
   private boolean more = true;
   protected Configuration conf;
 
+  // Rivuai
+  private int flowreqtype = -1;
+  private int flowreqvalue = -1;
+
   public SequenceFileRecordReader(Configuration conf, FileSplit split)
     throws IOException {
     Path path = split.getPath();
     FileSystem fs = path.getFileSystem(conf);
 
+    this.in = new SequenceFile.Reader(fs, path, conf);
+    this.end = split.getStart() + split.getLength();
+    this.conf = conf;
+
+    if (split.getStart() > in.getPosition())
+      in.sync(split.getStart());                  // sync to start
+
+    this.start = in.getPosition();
+    more = start < end;
+  }
+
+  public SequenceFileRecordReader(Configuration conf, FileSplit split, int reqtype, int reqvalue)
+          throws IOException {
+    Path path = split.getPath();
+    FileSystem fs = path.getFileSystem(conf);
+    this.flowreqtype = reqtype;
+    this.flowreqvalue = reqvalue;
     this.in = new SequenceFile.Reader(fs, path, conf);
     this.end = split.getStart() + split.getLength();
     this.conf = conf;

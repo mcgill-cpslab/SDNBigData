@@ -1495,8 +1495,8 @@ public class SequenceFile {
       this.conf = conf;
       seek(start);
       this.end = in.getPos() + length;
-      in.setReqValue(conf.get("mapred.job.name").hashCode());
-      in.setReqType(Integer.parseInt(conf.get("mapred.job.priority")));
+      in.setReqValue(conf.get("mapred.job.flowreqtype").hashCode());
+      in.setReqType(Integer.parseInt(conf.get("mapred.job.flowreqvalue")));
       init(tempReader);
     }
 

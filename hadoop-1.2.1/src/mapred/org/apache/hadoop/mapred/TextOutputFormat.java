@@ -40,6 +40,10 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
     implements RecordWriter<K, V> {
     private static final String utf8 = "UTF-8";
     private static final byte[] newline;
+
+    private int reqtype = -1;
+    private int reqvalue = -1;
+
     static {
       try {
         newline = "\n".getBytes(utf8);
@@ -102,27 +106,8 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       if (!nullValue) {
         writeObject(value, -1, -1);
       }
-      out.write(newline);
-    }
-
-    public synchronized void write(K key, V value, int type, long reqvalue)
-            throws IOException {
-
-      boolean nullKey = key == null || key instanceof NullWritable;
-      boolean nullValue = value == null || value instanceof NullWritable;
-      if (nullKey && nullValue) {
-        return;
-      }
-      if (!nullKey) {
-        writeObject(key, type, reqvalue);
-      }
-      if (!(nullKey || nullValue)) {
-        ((FSDataOutputStream) out).write(keyValueSeparator, type, reqvalue);
-      }
-      if (!nullValue) {
-        writeObject(value, type, reqvalue);
-      }
-      ((FSDataOutputStream) out).write(newline, type, reqvalue);
+      if (reqtype == -1) out.write(newline);
+      else out.write(newline, reqtype, reqvalue);
     }
 
     public synchronized void close(Reporter reporter) throws IOException {
@@ -154,18 +139,16 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
                                            name + codec.getDefaultExtension());
       FileSystem fs = file.getFileSystem(job);
       FSDataOutputStream fileOut = fs.create(file, progress);
-      int requesttype = Integer.parseInt(job.get("mapred.job.flowreqtype"));
+      int requesttype = Integer.parseInt(job.get("mapred.job.flowreqtype", "-1"));
+      int requestvalue = Integer.parseInt(job.get("mapred.job.flowreqvalue", "-1"));
       fileOut.setRequestType(requesttype);
-      if (requesttype == 0)
-        fileOut.setRequestValue(Integer.parseInt(job.get("mapred.job.priority")));
-      else
-      if (requesttype == 1)
-        fileOut.setRequestValue(Long.parseLong(job.get("mapred.job.minbw")));
-
-
-      return new LineRecordWriter<K, V>(new DataOutputStream
+      fileOut.setRequestValue(requestvalue);
+      LineRecordWriter writer =  new LineRecordWriter<K, V>(new DataOutputStream
                                         (codec.createOutputStream(fileOut)),
                                         keyValueSeparator);
+      writer.reqtype = requesttype;
+      writer.reqvalue = requestvalue;
+      return writer;
     }
   }
 }

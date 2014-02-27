@@ -154,4 +154,12 @@ public class FSDataOutputStream extends DataOutputStream implements Syncable {
       ((FSOutputSummer) wrappedStream).setRequestValue(value);
     }
   }
+
+  public long getRequestValue() {
+    return ((FSOutputSummer) wrappedStream).getRequestvalue();
+  }
+
+  public int getRequestType() {
+    return ((FSOutputSummer) wrappedStream).getRequesttype();
+  }
 }

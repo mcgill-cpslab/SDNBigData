@@ -56,7 +56,10 @@ public class SequenceFileInputFormat<K, V> extends FileInputFormat<K, V> {
 
     reporter.setStatus(split.toString());
 
-    return new SequenceFileRecordReader<K, V>(job, (FileSplit) split);
+    int reqtype = Integer.parseInt(job.get("mapred.job.flowreqtype", "-1"));
+    int reqvalue = Integer.parseInt(job.get("mapred.job.flowreqvalue", "-1"));
+
+    return new SequenceFileRecordReader<K, V>(job, (FileSplit) split, reqtype, reqvalue);
   }
 
 }
