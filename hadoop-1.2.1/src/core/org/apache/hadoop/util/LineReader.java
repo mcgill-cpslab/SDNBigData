@@ -83,11 +83,11 @@ public class LineReader {
   }
 
   /**
-   * Create a line reader that reads from the given stream using the
-   * <code>io.file.buffer.size</code> specified in the given
-   * <code>Configuration</code>.
-   * @param in input stream
-   * @param conf configuration
+   * 
+   * @param in
+   * @param conf
+   * @param reqtype
+   * @param reqvalue
    * @throws IOException
    */
   public LineReader(InputStream in, Configuration conf, int reqtype, long reqvalue) throws IOException {
@@ -96,6 +96,18 @@ public class LineReader {
       ((FSDataInputStream) in).setReqType(reqtype);
       ((FSDataInputStream) in).setReqValue(reqvalue);
     }
+  }
+
+  /**
+   * Create a line reader that reads from the given stream using the
+   * <code>io.file.buffer.size</code> specified in the given
+   * <code>Configuration</code>.
+   * @param in input stream
+   * @param conf configuration
+   * @throws IOException
+   */
+  public LineReader(InputStream in, Configuration conf) throws IOException {
+    this(in, conf.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE));
   }
 
   /**
