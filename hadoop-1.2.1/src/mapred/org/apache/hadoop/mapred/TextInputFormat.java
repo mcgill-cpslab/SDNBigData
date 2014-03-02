@@ -55,8 +55,8 @@ public class TextInputFormat extends FileInputFormat<LongWritable, Text>
     throws IOException {
     
     reporter.setStatus(genericSplit.toString());
-    int type = Integer.parseInt(job.get("mapred.job.flowreqtype", "-1"));
-    int value = Integer.parseInt(job.get("mapred.job.flowreqvalue", "-1"));
+    int type = Integer.parseInt(job.get("mapred.job.readflowreqtype", "-1"));
+    int value = Integer.parseInt(job.get("mapred.job.readflowreqvalue", "-1"));
     return new LineRecordReader(job, (FileSplit) genericSplit, type, value);
   }
 }
