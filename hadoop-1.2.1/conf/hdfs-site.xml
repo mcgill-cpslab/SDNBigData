@@ -4,10 +4,12 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-	<configuration>
-		<property>
-			<name>dfs.replication</name>
-			<value>1</value>
-		</property>
-	</configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>hdfs.controller.port</name>
+    <value>10003</value>
+  </property>
 </configuration>

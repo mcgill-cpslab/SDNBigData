@@ -54,7 +54,10 @@ public class ThreadPool implements IThreadPoolService, IFloodlightModule {
     @Override
     public void init(FloodlightModuleContext context)
                                  throws FloodlightModuleException {
-        executor = Executors.newScheduledThreadPool(15);
+        Map<String, String> configOptions = context.getConfigParams(this);
+        System.out.println("thread pool size:" + configOptions.get("threadpoolsize"));
+        executor = Executors.newScheduledThreadPool(
+                Integer.parseInt(configOptions.get("threadpoolsize")));
     }
 
     @Override

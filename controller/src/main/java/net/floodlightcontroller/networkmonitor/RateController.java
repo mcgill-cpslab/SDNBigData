@@ -109,7 +109,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     bootstrap.setPipelineFactory(aamFactory);
     bootstrap.setOption("child.tcpNoDelay", true);
     bootstrap.setOption("child.keepAlive", true);
-    bootstrap.bind(new InetSocketAddress(6634));
+    bootstrap.bind(new InetSocketAddress(10003));
     logger.info("start Rivuai Rate Controller successfully");
   }
 

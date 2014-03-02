@@ -1816,13 +1816,15 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
     });
     try {
       InetSocketAddress remoteAddr = new InetSocketAddress(
-              conf.get("openflow.controller.ip", "127.0.0.1"),
-              Integer.parseInt(conf.get("openflow.controller.port", "6634")));
+              conf.get("mapred.controller.ip", "127.0.0.1"),
+              Integer.parseInt(conf.get("mapred.controller.port", "6634")));
       InetSocketAddress localAddr = new InetSocketAddress(
               InetAddress.getLocalHost().getHostAddress(),
               10001);
       clientBootstrap.connect(remoteAddr, localAddr);
-      LOG.info("toController channel initialized successfully at " + localAddr.getPort());
+      LOG.info("toController channel initialized successfully at " + localAddr.getPort() +
+              ", connecting to " + remoteAddr.getAddress().getHostName() + ":" +
+              remoteAddr.getPort());
     } catch (Exception e) {
       e.printStackTrace();
     }

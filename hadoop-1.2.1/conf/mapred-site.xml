@@ -7,5 +7,9 @@
   <property>
     <name>mapred.job.tracker</name>
     <value>localhost:9001</value>
-    </property>
+  </property>
+  <property>
+    <name>mapred.controller.port</name>
+    <value>10003</value>
+  </property>
 </configuration>
