@@ -93,6 +93,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
 
   private void initAppPool() {
     //bind to a new port to communicate with the application agents
+    logger.info("starting Rivuai Rate Controller");
     ChannelFactory factory = new NioServerSocketChannelFactory(
             Executors.newCachedThreadPool(),
             Executors.newCachedThreadPool());
@@ -102,6 +103,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     bootstrap.setOption("child.tcpNoDelay", true);
     bootstrap.setOption("child.keepAlive", true);
     bootstrap.bind(new InetSocketAddress(6634));
+    logger.info("start Rivuai Rate Controller successfully");
   }
 
   @Override
