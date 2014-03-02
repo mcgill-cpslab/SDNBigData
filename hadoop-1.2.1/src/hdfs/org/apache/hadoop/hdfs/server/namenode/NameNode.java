@@ -325,6 +325,7 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
   private Channel toControllerChannel = null;
 
   private void initControllerChannel() {
+    LOG.info("initializing communication channel to Controller");
     NioClientSocketChannelFactory clientfactory = new NioClientSocketChannelFactory(
             Executors.newSingleThreadExecutor(),
             Executors.newCachedThreadPool());
@@ -341,7 +342,8 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
       }
     });
     clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip", "127.0.0.1"),
-            Integer.parseInt(conf.get("openflow.controller.port", "6635"))));
+            Integer.parseInt(conf.get("openflow.controller.port", "6634"))));
+    LOG.info("toController channel initialized successfully");
   }
 
   /**

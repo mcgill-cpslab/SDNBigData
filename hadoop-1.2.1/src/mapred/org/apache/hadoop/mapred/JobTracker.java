@@ -1797,6 +1797,7 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   }
 
   private void initControllerChannel() {
+    LOG.info("initializing communication channel to Controller");
     NioClientSocketChannelFactory clientfactory = new NioClientSocketChannelFactory(
             Executors.newSingleThreadExecutor(),
             Executors.newCachedThreadPool());
@@ -1813,7 +1814,8 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
       }
     });
     clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip", "127.0.0.1"),
-            Integer.parseInt(conf.get("openflow.controller.port", "6635"))));
+            Integer.parseInt(conf.get("openflow.controller.port", "6634"))));
+    LOG.info("toController channel initialized successfully");
   }
   
   @InterfaceAudience.Private
