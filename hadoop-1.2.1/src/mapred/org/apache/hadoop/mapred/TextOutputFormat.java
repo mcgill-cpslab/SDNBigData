@@ -139,8 +139,8 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
                                            name + codec.getDefaultExtension());
       FileSystem fs = file.getFileSystem(job);
       FSDataOutputStream fileOut = fs.create(file, progress);
-      int requesttype = Integer.parseInt(job.get("mapred.job.flowreqtype", "-1"));
-      int requestvalue = Integer.parseInt(job.get("mapred.job.flowreqvalue", "-1"));
+      int requesttype = Integer.parseInt(job.get("mapred.job.writeflowreqtype", "-1"));
+      int requestvalue = Integer.parseInt(job.get("mapred.job.writeflowreqvalue", "-1"));
       fileOut.setRequestType(requesttype);
       fileOut.setRequestValue(requestvalue);
       LineRecordWriter writer =  new LineRecordWriter<K, V>(new DataOutputStream

@@ -189,7 +189,7 @@ abstract public class FSOutputSummer extends OutputStream {
     if (type == -1)
       writeChunk(b, off, len, checksum);
     else {
-      System.out.println("write chunk with deadline");
+      System.out.println("write chunk with Rivuai");
       writeChunk(b, off, len, checksum, type, value);
     }
   }
@@ -204,11 +204,9 @@ abstract public class FSOutputSummer extends OutputStream {
    * @param value
    * @throws IOException
    */
-  protected synchronized void writeChunk(byte[] b, int offset, int len, byte[] checksum,
+  protected abstract void writeChunk(byte[] b, int offset, int len, byte[] checksum,
                                          int type, long value)
-          throws IOException {
-
-  }
+          throws IOException ;
 
   public void setRequestType(int type) {
     requesttype = type;

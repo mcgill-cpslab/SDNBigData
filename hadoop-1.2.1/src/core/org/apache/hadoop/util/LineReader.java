@@ -83,7 +83,7 @@ public class LineReader {
   }
 
   /**
-   * 
+   *
    * @param in
    * @param conf
    * @param reqtype

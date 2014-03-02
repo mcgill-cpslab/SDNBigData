@@ -131,8 +131,6 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
   public class AppAgentChannelHandler extends SimpleChannelHandler
           implements Runnable {
 
-
-
     public AppAgentChannelHandler() {
       new Thread(this).start();
     }
