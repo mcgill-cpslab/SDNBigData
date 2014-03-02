@@ -71,6 +71,7 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import utils.Utils;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
@@ -341,9 +342,18 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
         return p;
       }
     });
-    clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip", "127.0.0.1"),
-            Integer.parseInt(conf.get("openflow.controller.port", "6634"))));
-    LOG.info("toController channel initialized successfully");
+    try {
+      InetSocketAddress toControllerSocket = new InetSocketAddress(
+              conf.get("openflow.controller.ip", "127.0.0.1"),
+              Integer.parseInt(conf.get("openflow.controller.port", "6634")));
+      InetSocketAddress localAddr = new InetSocketAddress(
+              InetAddress.getLocalHost().getHostAddress(),
+              10000);
+      clientBootstrap.connect(toControllerSocket, localAddr);
+      LOG.info("toController channel initialized successfully at " + localAddr.getPort());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   /**

@@ -21,6 +21,7 @@ package org.apache.hadoop.mapred;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.BindException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.security.PrivilegedExceptionAction;
@@ -1813,9 +1814,18 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
         return p;
       }
     });
-    clientBootstrap.connect(new InetSocketAddress(conf.get("openflow.controller.ip", "127.0.0.1"),
-            Integer.parseInt(conf.get("openflow.controller.port", "6634"))));
-    LOG.info("toController channel initialized successfully");
+    try {
+      InetSocketAddress remoteAddr = new InetSocketAddress(
+              conf.get("openflow.controller.ip", "127.0.0.1"),
+              Integer.parseInt(conf.get("openflow.controller.port", "6634")));
+      InetSocketAddress localAddr = new InetSocketAddress(
+              InetAddress.getLocalHost().getHostAddress(),
+              10001);
+      clientBootstrap.connect(remoteAddr, localAddr);
+      LOG.info("toController channel initialized successfully at " + localAddr.getPort());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
   
   @InterfaceAudience.Private

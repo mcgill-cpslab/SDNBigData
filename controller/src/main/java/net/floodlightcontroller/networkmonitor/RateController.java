@@ -72,6 +72,13 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     }
 
     @Override
+    public void channelConnected (ChannelHandlerContext ctx, ChannelStateEvent e) {
+      String host = ((InetSocketAddress) e.getChannel().getRemoteAddress()).getAddress().getHostName();
+      int port = ((InetSocketAddress) e.getChannel().getRemoteAddress()).getPort();
+      logger.debug(host + ":" + port + " connected");
+    }
+
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent expEvent) {
       expEvent.getCause().printStackTrace();
     }
@@ -95,7 +102,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     //bind to a new port to communicate with the application agents
     logger.info("starting Rivuai Rate Controller");
     ChannelFactory factory = new NioServerSocketChannelFactory(
-            Executors.newCachedThreadPool(),
+            Executors.newSingleThreadExecutor(),
             Executors.newCachedThreadPool());
     ServerBootstrap bootstrap = new ServerBootstrap(factory);
     aamFactory = new AppAgentMsgFactory(this);
