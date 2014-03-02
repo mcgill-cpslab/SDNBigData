@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.*;
 import java.util.concurrent.Executors;
 
@@ -78,9 +77,6 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     }
   }
 
-  protected static int OFMESSAGE_DAMPER_CAPACITY = 50000; // TODO: find sweet spot
-  protected static int OFMESSAGE_DAMPER_TIMEOUT = 250; // ms
-
   protected IFloodlightProviderService floodlightProvider;
   protected static Logger logger;
   private HashMap<IOFSwitch, SwitchRateLimiterStatus> switchRateLimitMap = null;
@@ -95,15 +91,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     private int tablesize;
   }
 
-  @Override
-  public void init(FloodlightModuleContext context) throws FloodlightModuleException {
-    floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
-    mactable = new HashMap<Integer, Integer>();
-    logger = LoggerFactory.getLogger(RateController.class);
-    switchRateLimitMap = new HashMap<IOFSwitch, SwitchRateLimiterStatus>();
-    switchMap = new HashMap<String, IOFSwitch>();//switch IP segment => IOFSwitch
-    channelHandler = new AppAgentChannelHandler(this);
-    flowtoInstallList = new HashMap<IOFSwitch, ArrayList<FlowInstallRequest>>();
+  private void initAppPool() {
     //bind to a new port to communicate with the application agents
     ChannelFactory factory = new NioServerSocketChannelFactory(
             Executors.newCachedThreadPool(),
@@ -114,6 +102,18 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     bootstrap.setOption("child.tcpNoDelay", true);
     bootstrap.setOption("child.keepAlive", true);
     bootstrap.bind(new InetSocketAddress(6634));
+  }
+
+  @Override
+  public void init(FloodlightModuleContext context) throws FloodlightModuleException {
+    floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+    mactable = new HashMap<Integer, Integer>();
+    logger = LoggerFactory.getLogger(RateController.class);
+    switchRateLimitMap = new HashMap<IOFSwitch, SwitchRateLimiterStatus>();
+    switchMap = new HashMap<String, IOFSwitch>();//switch IP segment => IOFSwitch
+    channelHandler = new AppAgentChannelHandler(this);
+    flowtoInstallList = new HashMap<IOFSwitch, ArrayList<FlowInstallRequest>>();
+    initAppPool();
   }
 
   //TODO
@@ -229,17 +229,16 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   private boolean installFlowToSwitch(FlowInstallRequest request) {
     //get the ingress and egress switch
     String sourceIP = Utils.IntIPToString(request.getSourceIP());
-    String dstIP = Utils.IntIPToString(request.getDestinationIP());
+    //String dstIP = Utils.IntIPToString(request.getDestinationIP());
     String sourceRange = sourceIP.substring(0, sourceIP.lastIndexOf(".") + 1) + ".0";
-    String dstRange = dstIP.substring(0, dstIP.lastIndexOf(".") + 1) + ".0";
+    //String dstRange = dstIP.substring(0, dstIP.lastIndexOf(".") + 1) + ".0";
     IOFSwitch ingressSwitch = switchMap.get(sourceRange);
-    IOFSwitch egressSwitch = switchMap.get(dstRange);
-    boolean canInstall =  canInstall(ingressSwitch, request) &&
-            canInstall(egressSwitch, request);
+    //IOFSwitch egressSwitch = switchMap.get(dstRange);
+    boolean canInstall =  canInstall(ingressSwitch, request); //&&canInstall(egressSwitch, request);
     if (canInstall) {
       synchronized (flowtoInstallList) {
         flowtoInstallList.get(ingressSwitch).add(request);
-        flowtoInstallList.get(egressSwitch).add(request);
+        //flowtoInstallList.get(egressSwitch).add(request);
       }
     }
     return canInstall;
