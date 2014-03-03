@@ -207,7 +207,7 @@ abstract public class FSOutputSummer extends OutputStream {
   protected void writeChunk(byte[] b, int offset, int len, byte[] checksum,
                                          int type, long value)
           throws IOException {
-    //default behaviour: do nothing   
+    //default behaviour: do nothing
   }
 
   public void setRequestType(int type) {

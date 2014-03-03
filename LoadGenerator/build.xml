@@ -109,22 +109,6 @@
     <pathelement location="${basedir}/libs/jackson-mapper-asl-1.0.1.jar"/>
   </path>
   
-  <path id="library.loadweaver.classpath">
-    <pathelement location="${basedir}/loadweaver.jar"/>
-  </path>
-  <!-- Register Custom Compiler Taskdefs -->
-  <property name="javac2.home" value="${idea.home}/lib"/>
-  <path id="javac2.classpath">
-    <pathelement location="${javac2.home}/javac2.jar"/>
-    <pathelement location="${javac2.home}/jdom.jar"/>
-    <pathelement location="${javac2.home}/asm4-all.jar"/>
-    <pathelement location="${javac2.home}/jgoodies-forms.jar"/>
-  </path>
-  <target name="register.custom.compilers">
-    <taskdef name="javac2" classname="com.intellij.ant.Javac2" classpathref="javac2.classpath"/>
-    <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="javac2.classpath"/>
-  </target>
-  
   <!-- Modules -->
   
   
@@ -148,27 +132,23 @@
   
   <path id="loadgenerator.module.production.classpath">
     <path refid="${module.jdk.classpath.loadgenerator}"/>
-    <path refid="library.loadweaver.classpath"/>
     <path refid="library.libs.classpath"/>
   </path>
   
   <path id="loadgenerator.runtime.production.module.classpath">
     <pathelement location="${loadgenerator.output.dir}"/>
-    <path refid="library.loadweaver.classpath"/>
     <path refid="library.libs.classpath"/>
   </path>
   
   <path id="loadgenerator.module.classpath">
     <path refid="${module.jdk.classpath.loadgenerator}"/>
     <pathelement location="${loadgenerator.output.dir}"/>
-    <path refid="library.loadweaver.classpath"/>
     <path refid="library.libs.classpath"/>
   </path>
   
   <path id="loadgenerator.runtime.module.classpath">
     <pathelement location="${loadgenerator.testoutput.dir}"/>
     <pathelement location="${loadgenerator.output.dir}"/>
-    <path refid="library.loadweaver.classpath"/>
     <path refid="library.libs.classpath"/>
   </path>
   
@@ -190,15 +170,15 @@
   
   <target name="compile.module.loadgenerator" depends="compile.module.loadgenerator.production,compile.module.loadgenerator.tests" description="Compile module LoadGenerator"/>
   
-  <target name="compile.module.loadgenerator.production" depends="register.custom.compilers" description="Compile module LoadGenerator; production classes">
+  <target name="compile.module.loadgenerator.production" description="Compile module LoadGenerator; production classes">
     <mkdir dir="${loadgenerator.output.dir}"/>
-    <javac2 destdir="${loadgenerator.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.loadgenerator}/javac">
+    <javac destdir="${loadgenerator.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.loadgenerator}/javac">
       <compilerarg line="${compiler.args.loadgenerator}"/>
       <bootclasspath refid="loadgenerator.module.bootclasspath"/>
       <classpath refid="loadgenerator.module.production.classpath"/>
       <src refid="loadgenerator.module.sourcepath"/>
       <patternset refid="excluded.from.compilation.loadgenerator"/>
-    </javac2>
+    </javac>
     
     <copy todir="${loadgenerator.output.dir}">
       <fileset dir="${module.loadgenerator.basedir}/src">
@@ -208,7 +188,7 @@
     </copy>
   </target>
   
-  <target name="compile.module.loadgenerator.tests" depends="register.custom.compilers,compile.module.loadgenerator.production" description="compile module LoadGenerator; test classes" unless="skip.tests"/>
+  <target name="compile.module.loadgenerator.tests" depends="compile.module.loadgenerator.production" description="compile module LoadGenerator; test classes" unless="skip.tests"/>
   
   <target name="clean.module.loadgenerator" description="cleanup module">
     <delete dir="${loadgenerator.output.dir}"/>
@@ -223,5 +203,32 @@
   
   <target name="build.modules" depends="init, clean, compile.module.loadgenerator" description="build all modules"/>
   
-  <target name="all" depends="build.modules" description="build all"/>
+  <target name="init.artifacts">
+    <property name="artifacts.temp.dir" value="${basedir}/__artifacts_temp"/>
+    <property name="artifact.output.loadgenerator" value="${basedir}"/>
+    <mkdir dir="${artifacts.temp.dir}"/>
+    <property name="temp.jar.path.LoadGenerator.jar" value="${artifacts.temp.dir}/LoadGenerator.jar"/>
+  </target>
+  
+  <target name="artifact.loadgenerator" depends="init.artifacts, compile.module.loadgenerator" description="Build &#39;LoadGenerator&#39; artifact">
+    <property name="artifact.temp.output.loadgenerator" value="${artifacts.temp.dir}/LoadGenerator"/>
+    <mkdir dir="${artifact.temp.output.loadgenerator}"/>
+    <jar destfile="${temp.jar.path.LoadGenerator.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <zipfileset dir="${loadgenerator.output.dir}"/>
+      <zipfileset file="${basedir}/META-INF/MANIFEST.MF" prefix="META-INF"/>
+    </jar>
+    <copy file="${temp.jar.path.LoadGenerator.jar}" tofile="${artifact.temp.output.loadgenerator}/LoadGenerator.jar"/>
+  </target>
+  
+  <target name="build.all.artifacts" depends="artifact.loadgenerator" description="Build all artifacts">
+    <mkdir dir="${artifact.output.loadgenerator}"/>
+    <copy todir="${artifact.output.loadgenerator}">
+      <fileset dir="${artifact.temp.output.loadgenerator}"/>
+    </copy>
+    
+    <!-- Delete temporary files -->
+    <delete dir="${artifacts.temp.dir}"/>
+  </target>
+  
+  <target name="all" depends="build.modules, build.all.artifacts" description="build all"/>
 </project>
