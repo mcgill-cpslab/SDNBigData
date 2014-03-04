@@ -101,7 +101,6 @@
     <pathelement location="${basedir}/libs/commons-configuration-1.6.jar"/>
     <pathelement location="${basedir}/libs/commons-lang-2.4.jar"/>
     <pathelement location="${basedir}/libs/commons-logging-1.1.1.jar"/>
-    <pathelement location="${basedir}/libs/hadoop-client-1.0.3.jar"/>
     <pathelement location="${basedir}/libs/hadoop-core-1.0.3.jar"/>
     <pathelement location="${basedir}/libs/hadoop-examples-1.0.3.jar"/>
     <pathelement location="${basedir}/libs/hadoop-test-1.0.3.jar"/>
@@ -203,5 +202,32 @@
   
   <target name="build.modules" depends="init, clean, compile.module.loadgenerator" description="build all modules"/>
   
-  <target name="all" depends="build.modules" description="build all"/>
+  <target name="init.artifacts">
+    <property name="artifacts.temp.dir" value="${basedir}/__artifacts_temp"/>
+    <property name="artifact.output.loadgenerator" value="${basedir}"/>
+    <mkdir dir="${artifacts.temp.dir}"/>
+    <property name="temp.jar.path.LoadGenerator.jar" value="${artifacts.temp.dir}/LoadGenerator.jar"/>
+  </target>
+  
+  <target name="artifact.loadgenerator" depends="init.artifacts, compile.module.loadgenerator" description="Build &#39;LoadGenerator&#39; artifact">
+    <property name="artifact.temp.output.loadgenerator" value="${artifacts.temp.dir}/LoadGenerator"/>
+    <mkdir dir="${artifact.temp.output.loadgenerator}"/>
+    <jar destfile="${temp.jar.path.LoadGenerator.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <zipfileset dir="${loadgenerator.output.dir}"/>
+      <zipfileset file="${basedir}/META-INF/MANIFEST.MF" prefix="META-INF"/>
+    </jar>
+    <copy file="${temp.jar.path.LoadGenerator.jar}" tofile="${artifact.temp.output.loadgenerator}/LoadGenerator.jar"/>
+  </target>
+  
+  <target name="build.all.artifacts" depends="artifact.loadgenerator" description="Build all artifacts">
+    <mkdir dir="${artifact.output.loadgenerator}"/>
+    <copy todir="${artifact.output.loadgenerator}">
+      <fileset dir="${artifact.temp.output.loadgenerator}"/>
+    </copy>
+    
+    <!-- Delete temporary files -->
+    <delete dir="${artifacts.temp.dir}"/>
+  </target>
+  
+  <target name="all" depends="build.modules, build.all.artifacts" description="build all"/>
 </project>
