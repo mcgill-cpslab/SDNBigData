@@ -6,5 +6,5 @@ package workloadgen.loadgen;
  */
 public abstract class LoadTraceGenerator {
 
-	public abstract LoadSubmissionPlan getSubmissionPlan(); 
+  public abstract LoadSubmissionPlan getSubmissionPlan();
 }
