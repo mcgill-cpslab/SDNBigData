@@ -17,10 +17,11 @@ import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapred.lib.LongSumReducer;
 import org.apache.hadoop.mapred.lib.RegexMapper;
 
+
 import workloadgen.WorkloadRunner;
 import workloadgen.utils.WorkloadGenConfParser;
 
-public class LoadJobCreator extends GenericMRLoadGenerator{
+public class LoadJobCreator extends GenericMRLoadGenerator {
 	private static Configuration config = initConfig();
 	private static FileSystem fs = initFs(config);
 	private static boolean MULTIQUEUE = false;
