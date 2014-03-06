@@ -181,14 +181,15 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
           String swipstring = swip.getAddress().toString().substring(1,
                   swip.getAddress().toString().length());
           String sourceIP = Utils.IntIPToString(match.getNetworkSource());
-          if (sameIPRange(swipstring, sourceIP)) {
+          /*if (sameIPRange(swipstring, sourceIP)) {
             mactable.put(match.getNetworkSource(), (int) pi.getInPort());
           } else {
             mactable.put(
                     Utils.StringIPToInteger(
                       getIPRange(Utils.IntIPToString(match.getNetworkSource()))),
                     (int) pi.getInPort());
-          }
+          }*/
+          mactable.put(match.getNetworkSource(), (int) pi.getInPort());
         }
         break;
       case SWITCH_RATE_LIMITING_STATE:
@@ -206,11 +207,12 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
             String swipstring = swip.getAddress().toString().substring(1,
                     swip.getAddress().toString().length());
             OFFlowMod1 flowmodmsg;
-            if (sameIPRange(sourceIP, swipstring) && !sameIPRange(destIP, swipstring)) {
+            /*if (sameIPRange(sourceIP, swipstring) && !sameIPRange(destIP, swipstring)) {
               flowmodmsg = getFlowModFromInstallReq(request, false);
             } else {
               flowmodmsg = getFlowModFromInstallReq(request, true);
-            }
+            }*/
+            flowmodmsg = getFlowModFromInstallReq(request, true);
             sw.write(flowmodmsg, cntx);
           } catch (Exception e) {
             e.printStackTrace();
