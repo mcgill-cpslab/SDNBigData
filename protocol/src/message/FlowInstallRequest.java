@@ -13,8 +13,8 @@ public class FlowInstallRequest extends AppAgentMsg {
   private short destinationPort = 0;
 
   private int idx = 0;
-  private int reqtype = 0;
-  private long value = 0;
+  private long reqtype = 0;
+  private int value = 0;
 
   public FlowInstallRequest() {
     super();
@@ -28,8 +28,8 @@ public class FlowInstallRequest extends AppAgentMsg {
     this.destinationIP = buffer.readInt();
     this.sourcePort = buffer.readShort();
     this.destinationPort = buffer.readShort();
-    this.reqtype = buffer.readInt();
-    this.value = buffer.readLong();
+    this.reqtype = buffer.readLong();
+    this.value = buffer.readInt();
     this.idx = buffer.readInt();
   }
 
@@ -39,8 +39,8 @@ public class FlowInstallRequest extends AppAgentMsg {
     data.writeInt(destinationIP);
     data.writeShort(sourcePort);
     data.writeShort(destinationPort);
-    data.writeInt(reqtype);
-    data.writeLong(value);
+    data.writeLong(reqtype);
+    data.writeInt(value);
     data.writeInt(idx);
   }
 
@@ -68,15 +68,17 @@ public class FlowInstallRequest extends AppAgentMsg {
     this.destinationPort = destinationPort;
   }
 
-  public void setReqtype(int reqtype) {
+  public void setReqtype(long reqtype) {
     this.reqtype = reqtype;
   }
 
-  public void setValue(long v) {
+  public long getReqtype() {return this.reqtype;}
+
+  public void setValue(int v) {
     value = v;
   }
 
-  public long getValue() {
+  public int getValue() {
     return value;
   }
 

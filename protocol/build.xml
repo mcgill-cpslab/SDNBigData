@@ -101,10 +101,6 @@
     <pathelement location="${basedir}/lib/floodlight.jar"/>
   </path>
   
-  <path id="library.protocol.classpath">
-    <pathelement location="${basedir}/out/protocol/protocol.jar"/>
-  </path>
-  
   <!-- Modules -->
   
   
@@ -129,27 +125,23 @@
   <path id="protocol.module.production.classpath">
     <path refid="${module.jdk.classpath.protocol}"/>
     <path refid="library.floodlight.classpath"/>
-    <path refid="library.protocol.classpath"/>
   </path>
   
   <path id="protocol.runtime.production.module.classpath">
     <pathelement location="${protocol.output.dir}"/>
     <path refid="library.floodlight.classpath"/>
-    <path refid="library.protocol.classpath"/>
   </path>
   
   <path id="protocol.module.classpath">
     <path refid="${module.jdk.classpath.protocol}"/>
     <pathelement location="${protocol.output.dir}"/>
     <path refid="library.floodlight.classpath"/>
-    <path refid="library.protocol.classpath"/>
   </path>
   
   <path id="protocol.runtime.module.classpath">
     <pathelement location="${protocol.testoutput.dir}"/>
     <pathelement location="${protocol.output.dir}"/>
     <path refid="library.floodlight.classpath"/>
-    <path refid="library.protocol.classpath"/>
   </path>
   
   
@@ -216,7 +208,6 @@
     <jar destfile="${temp.jar.path.protocol.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
       <zipfileset file="${basedir}/META-INF/MANIFEST.MF" prefix="META-INF"/>
       <zipfileset dir="${protocol.output.dir}"/>
-      <zipfileset src="${basedir}/lib/floodlight.jar"/>
     </jar>
     <copy file="${temp.jar.path.protocol.jar}" tofile="${artifact.temp.output.protocol}/protocol.jar"/>
   </target>
