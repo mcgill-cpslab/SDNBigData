@@ -1960,7 +1960,7 @@ public class JobTracker implements MRConstants, InterTrackerProtocol,
       hdfsMonitor.start();
     }
 
-    initControllerChannel();
+    //initControllerChannel();
   }
   
   JobTracker(final JobConf conf, String identifier, Clock clock, QueueManager qm) 

@@ -130,18 +130,18 @@ public class FsShell extends Configured implements Tool {
     if (srcs.length == 1 && srcs[0].toString().equals("-"))
       copyFromStdin(dstPath, dstFs);
     else
-      dstFs.copyFromLocalFile(false, false, srcs, dstPath, -1, -1);
+      dstFs.copyFromLocalFile(false, false, srcs, dstPath, -1, -1, -1);
   }
 
   /**
    * Add local files to the indicated FileSystem name. src is kept
    * with the deadline requirement
    */
-  void copyFromLocal(Path[] srcs, String dstf, int reqtype, long reqvalue) throws IOException {
+  void copyFromLocal(Path[] srcs, String dstf, int jobid, int reqtype, long reqvalue) throws IOException {
     Path dstPath = new Path(dstf);
     FileSystem dstFs = dstPath.getFileSystem(getConf());
     System.out.println("copyFromLocal");
-    dstFs.copyFromLocalFile(false, false, srcs, dstPath, reqtype, reqvalue);
+    dstFs.copyFromLocalFile(false, false, srcs, dstPath, jobid, reqtype, reqvalue);
   }
   
   /**
@@ -221,7 +221,7 @@ public class FsShell extends Configured implements Tool {
         if (reqtype == -1)
           copyToLocal(srcFS, p, f, copyCrc);
         else
-          copyToLocal(srcFS, p, f, copyCrc, reqtype, reqvalue);
+          copyToLocal(srcFS, p, f, copyCrc, -1, reqtype, reqvalue);
       }
     }
   }
@@ -254,7 +254,7 @@ public class FsShell extends Configured implements Tool {
    * @exception IOException If some IO failed
    */
   private void copyToLocal(final FileSystem srcFS, final Path src,
-                           final File dst, final boolean copyCrc, int reqtype, long reqvalue)
+                           final File dst, final boolean copyCrc, int jobid, int reqtype, long reqvalue)
           throws IOException {
     /* Keep the structure similar to ChecksumFileSystem.copyToLocal().
      * Ideal these two should just invoke FileUtil.copy() and not repeat
@@ -271,7 +271,7 @@ public class FsShell extends Configured implements Tool {
       // use absolute name so that tmp file is always created under dest dir
       File tmp = FileUtil.createLocalTempFile(dst.getAbsoluteFile(),
               COPYTOLOCAL_PREFIX, true);
-      if (!FileUtil.copy(srcFS, src, tmp, false, srcFS.getConf(), reqtype, reqvalue)) {
+      if (!FileUtil.copy(srcFS, src, tmp, false, srcFS.getConf(), jobid, reqtype, reqvalue)) {
         throw new IOException("Failed to copy " + src + " to " + dst);
       }
 
@@ -289,14 +289,14 @@ public class FsShell extends Configured implements Tool {
         File dstcs = FileSystem.getLocal(srcFS.getConf())
                 .pathToFile(csfs.getChecksumFile(new Path(dst.getCanonicalPath())));
         copyToLocal(csfs.getRawFileSystem(), csfs.getChecksumFile(src),
-                dstcs, false, reqtype, reqvalue);
+                dstcs, false, jobid, reqtype, reqvalue);
       }
     } else {
       // once FileUtil.copy() supports tmp file, we don't need to mkdirs().
       dst.mkdirs();
       for(FileStatus path : srcFS.listStatus(src)) {
         copyToLocal(srcFS, path.getPath(),
-                new File(dst, path.getPath().getName()), copyCrc, reqtype, reqvalue);
+                new File(dst, path.getPath().getName()), copyCrc, jobid, reqtype, reqvalue);
       }
     }
   }
@@ -1862,7 +1862,7 @@ public class FsShell extends Configured implements Tool {
         String dst = argv[i++];
         //the third parameter is deadline
         System.out.println("put urgent");
-        copyFromLocal(srcs, dst, Integer.parseInt(argv[i++]), Long.parseLong(argv[i++]));
+        copyFromLocal(srcs, dst, -1, Integer.parseInt(argv[i++]), Long.parseLong(argv[i++]));
       } else if ("-moveFromLocal".equals(cmd)) {
         Path[] srcs = new Path[argv.length-2];
         for (int j=0 ; i < argv.length-1 ;) 

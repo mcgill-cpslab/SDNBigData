@@ -2232,7 +2232,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
      * We get block ID and the IDs of the destinations at startup, from the namenode.
      * value aware
      */
-    private synchronized DatanodeInfo blockSeekTo(long target, int type, long value)
+    private synchronized DatanodeInfo blockSeekTo(long target, int jobid, int type, long value)
             throws IOException {
       System.out.println("in blockSeekTo(long target, long value) ");
 
@@ -2312,6 +2312,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
                   s.getLocalPort(),
                   s.getInetAddress().getHostAddress(),
                   s.getPort(),
+                  jobid,
                   type,
                   value);
           System.out.println("sent connection information");
@@ -2529,7 +2530,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     }
 
     @Override
-    public int readWithRivuai(long position, byte[] buffer, int offset, int length, int type, long value)
+    public int readWithRivuai(long position, byte[] buffer, int offset, int length, int jobid, int type, long value)
             throws IOException {
       // sanity checks
       checkOpen();
@@ -2556,7 +2557,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         //fetchBlockByRange with value requirement
         //within fetchBlockByRange, the socket to datanode would be established
         fetchBlockByteRange(blk, targetStart,
-                targetStart + bytesToRead - 1, buffer, offset, type, value);
+                targetStart + bytesToRead - 1, buffer, offset, jobid, type, value);
         remaining -= bytesToRead;
         position += bytesToRead;
         offset += bytesToRead;
@@ -2569,7 +2570,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     }
 
     @Override
-    public synchronized int readWithRivuai(byte buf[], int off, int len, int type,
+    public synchronized int readWithRivuai(byte buf[], int off, int len, int jobid, int type,
                                              long value)
             throws IOException {
       System.out.println("in DFSClient int readWithRivuai(byte buf[], int off, int len, int type, long value)");
@@ -2586,7 +2587,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
             if (pos > blockEnd) {
               //blockSeekTo with value
               //within blockSeekTo, the socket to datanode would be built
-              currentNode = blockSeekTo(pos, type, value);
+              currentNode = blockSeekTo(pos, jobid, type, value);
             }
             int realLen = (int) Math.min((long) len, (blockEnd - pos + 1L));
             int result = readBuffer(buf, off, realLen);
@@ -2782,7 +2783,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
     }
 
     private void fetchBlockByteRange(LocatedBlock block, long start,
-                                     long end, byte[] buf, int offset, int type, long value) throws IOException {
+                                     long end, byte[] buf, int offset, int jobid, int type, long value) throws IOException {
       //
       // Connect to best DataNode for desired Block, with potential offset
       //
@@ -2827,7 +2828,7 @@ public class DFSClient implements FSConstants, java.io.Closeable {
                     s.getLocalPort(),
                     s.getInetAddress().getHostAddress(),
                     s.getPort(),
-                    type, value);
+                    jobid, type, value);
             dn.setSoTimeout(socketTimeout);
             reader = RemoteBlockReader.newBlockReader(dn, src,
                     block.getBlock().getBlockId(), accessToken,
@@ -4014,13 +4015,13 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         s.setSendBufferSize(DEFAULT_DATA_SOCKET_SIZE);
         LOG.debug("Send buf size " + s.getSendBufferSize());
         //yes, here should be a sync call
-        namenode.sendConnectionInfo(
+        /*namenode.sendConnectionInfo(
                 s.getLocalAddress().getHostAddress(),
                 s.getLocalPort(),
                 s.getInetAddress().getHostAddress(),
                 s.getPort(),
                 type,
-                value);//writing process in HDFS is actually pipelined
+                value);//writing process in HDFS is actually pipelined*/
         System.out.println("sent connection information");
         long writeTimeout = (datanodeWriteTimeout > 0) ?
                 (HdfsConstants.WRITE_TIMEOUT_EXTENSION * nodes.length +
@@ -4123,13 +4124,13 @@ public class DFSClient implements FSConstants, java.io.Closeable {
         s.setSoTimeout(timeoutValue);
         s.setSendBufferSize(DEFAULT_DATA_SOCKET_SIZE);
         //yes, here should be a sync call
-        namenode.sendConnectionInfo(
+        /*namenode.sendConnectionInfo(
                 s.getLocalAddress().getHostAddress(),
                 s.getLocalPort(),
                 s.getInetAddress().getHostAddress(),
                 s.getPort(),
                 requesttype,
-                requestvalue);//writing process in HDFS is actually pipelined
+                requestvalue);//writing process in HDFS is actually pipelined*/
         System.out.println("sent connection information");
         LOG.debug("Send buf size " + s.getSendBufferSize());
         long writeTimeout = (datanodeWriteTimeout > 0) ?

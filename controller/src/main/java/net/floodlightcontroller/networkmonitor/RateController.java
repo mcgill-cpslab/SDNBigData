@@ -148,8 +148,9 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     list.add(actionOutput);
     ret.setActions(list);
     ret.setBufferId(-1);
-    ret.setJobid(req.getJobid());
-    ret.setJobpriority(req.getJobpriority());
+    ret.setJobid(req.getIdx());
+    ret.setReqvalue(req.getValue());
+    ret.setReqtype(req.getReqtype());
     return ret;
   }
 

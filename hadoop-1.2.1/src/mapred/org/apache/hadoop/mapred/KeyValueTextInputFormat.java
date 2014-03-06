@@ -56,9 +56,10 @@ public class KeyValueTextInputFormat extends FileInputFormat<Text, Text>
     throws IOException {
     
     reporter.setStatus(genericSplit.toString());
+    int jobid = job.getJobPriority().ordinal();
     int type = Integer.parseInt(job.get("mapred.job.readflowreqtype", "-1"));
     int value = Integer.parseInt(job.get("mapred.job.readflowreqvalue", "-1"));
-    return new KeyValueLineRecordReader(job, (FileSplit) genericSplit, type, value);
+    return new KeyValueLineRecordReader(job, (FileSplit) genericSplit, jobid, type, value);
   }
 
 }

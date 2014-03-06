@@ -41,6 +41,7 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
     private static final String utf8 = "UTF-8";
     private static final byte[] newline;
 
+    private int jobid = -1;
     private int reqtype = -1;
     private int reqvalue = -1;
 
@@ -57,6 +58,7 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
     public LineRecordWriter(DataOutputStream out, String keyValueSeparator) {
       this.out = out;
+
       try {
         this.keyValueSeparator = keyValueSeparator.getBytes(utf8);
       } catch (UnsupportedEncodingException uee) {
@@ -66,6 +68,14 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
     public LineRecordWriter(DataOutputStream out) {
       this(out, "\t");
+    }
+
+    public void setOut() {
+      if (out instanceof FSDataOutputStream) {
+        ((FSDataOutputStream) out).jobid = jobid;
+        ((FSDataOutputStream) out).reqtype = reqtype;
+        ((FSDataOutputStream) out).reqvalue = reqvalue;
+      }
     }
 
     /**
@@ -106,8 +116,7 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       if (!nullValue) {
         writeObject(value, -1, -1);
       }
-      if (reqtype == -1) out.write(newline);
-      else out.write(newline, reqtype, reqvalue);
+      out.write(newline);
     }
 
     public synchronized void close(Reporter reporter) throws IOException {
@@ -139,6 +148,7 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
                                            name + codec.getDefaultExtension());
       FileSystem fs = file.getFileSystem(job);
       FSDataOutputStream fileOut = fs.create(file, progress);
+      int jobid = job.getJobPriority().ordinal();
       int requesttype = Integer.parseInt(job.get("mapred.job.writeflowreqtype", "-1"));
       int requestvalue = Integer.parseInt(job.get("mapred.job.writeflowreqvalue", "-1"));
       fileOut.setRequestType(requesttype);
@@ -146,8 +156,10 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       LineRecordWriter writer =  new LineRecordWriter<K, V>(new DataOutputStream
                                         (codec.createOutputStream(fileOut)),
                                         keyValueSeparator);
+      writer.jobid = jobid;
       writer.reqtype = requesttype;
       writer.reqvalue = requestvalue;
+      writer.setOut();
       return writer;
     }
   }

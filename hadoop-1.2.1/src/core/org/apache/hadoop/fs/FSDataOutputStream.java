@@ -25,6 +25,10 @@ import java.io.*;
 public class FSDataOutputStream extends DataOutputStream implements Syncable {
   private OutputStream wrappedStream;
 
+  public int jobid;
+  public int reqtype;
+  public int reqvalue;
+
   private static class PositionCache extends FilterOutputStream {
     private FileSystem.Statistics statistics;
     long position;

@@ -49,6 +49,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
   private CompressionCodec codec;
   private Decompressor decompressor;
 
+  private int jobid = -1;
   private int flowreqtype = -1;
   private long flowreqvalue = -1;
 
@@ -78,7 +79,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
    * @throws IOException
    */
   public LineRecordReader(Configuration job,
-                          FileSplit split, int type, long value) throws IOException {
+                          FileSplit split, int jobid, int type, long value) throws IOException {
     this.maxLineLength = job.getInt("mapred.linerecordreader.maxlength",
             Integer.MAX_VALUE);
     start = split.getStart();
@@ -88,6 +89,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
     codec = compressionCodecs.getCodec(file);
 
     // Rivuai
+    this.jobid = jobid;
     this.flowreqtype = type;
     this.flowreqvalue = value;
 
@@ -119,7 +121,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
     // because we always (except the last split) read one extra line in
     // next() method.
     if (start != 0) {
-      start += in.readLine(new Text(), 0, maxBytesToConsume(start), type, value);
+      start += in.readLine(new Text(), 0, maxBytesToConsume(start), jobid, type, value);
     }
     this.pos = start;
   }
@@ -227,7 +229,7 @@ public class LineRecordReader implements RecordReader<LongWritable, Text> {
       key.set(pos);
 
       int newSize = in.readLine(value, maxLineLength,
-          Math.max(maxBytesToConsume(pos), maxLineLength), flowreqtype, flowreqvalue);
+          Math.max(maxBytesToConsume(pos), maxLineLength), jobid, flowreqtype, flowreqvalue);
       if (newSize == 0) {
         return false;
       }

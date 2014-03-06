@@ -206,14 +206,14 @@ public class FileUtil {
   public static boolean copy(FileSystem srcFS, Path[] srcs,
                              FileSystem dstFS, Path dst,
                              boolean deleteSource,
-                             boolean overwrite, Configuration conf, int type, long value)
+                             boolean overwrite, Configuration conf, int jobid, int type, long value)
           throws IOException {
     boolean gotException = false;
     boolean returnVal = true;
     StringBuffer exceptions = new StringBuffer();
 
     if (srcs.length == 1)
-      return copy(srcFS, srcs[0], dstFS, dst, deleteSource, overwrite, conf, type, value);
+      return copy(srcFS, srcs[0], dstFS, dst, deleteSource, overwrite, conf, jobid, type, value);
 
     // Check if dest is directory
     if (!dstFS.exists(dst)) {
@@ -228,7 +228,7 @@ public class FileUtil {
 
     for (Path src : srcs) {
       try {
-        if (!copy(srcFS, src, dstFS, dst, deleteSource, overwrite, conf, type, value))
+        if (!copy(srcFS, src, dstFS, dst, deleteSource, overwrite, conf, jobid, type, value))
           returnVal = false;
       } catch (IOException e) {
         gotException = true;
@@ -248,6 +248,7 @@ public class FileUtil {
                              boolean deleteSource,
                              boolean overwrite,
                              Configuration conf,
+                             int jobid,
                              int reqtype,
                              long reqvalue) throws IOException {
     dst = checkDest(src.getName(), dstFS, dst, overwrite);
@@ -261,7 +262,7 @@ public class FileUtil {
       for (int i = 0; i < contents.length; i++) {
         copy(srcFS, contents[i].getPath(), dstFS,
                 new Path(dst, contents[i].getPath().getName()),
-                deleteSource, overwrite, conf, reqtype, reqvalue);
+                deleteSource, overwrite, conf, jobid, reqtype, reqvalue);
       }
     } else if (srcFS.isFile(src)) {
       InputStream in=null;
@@ -269,7 +270,7 @@ public class FileUtil {
       try {
         in = srcFS.open(src);
         out = dstFS.create(dst, overwrite);
-        IOUtils.copyBytes(in, out, conf, true, reqtype, reqvalue);
+        IOUtils.copyBytes(in, out, conf, true, jobid, reqtype, reqvalue);
       } catch (IOException e) {
         IOUtils.closeStream(out);
         IOUtils.closeStream(in);
@@ -411,7 +412,7 @@ public class FileUtil {
    * the deadline requirement */
   public static boolean copy(FileSystem srcFS, Path src,
                              File dst, boolean deleteSource,
-                             Configuration conf, int type, long value) throws IOException {
+                             Configuration conf, int jobid, int type, long value) throws IOException {
     if (srcFS.getFileStatus(src).isDir()) {
       if (!dst.mkdirs()) {
         return false;
@@ -420,11 +421,11 @@ public class FileUtil {
       for (int i = 0; i < contents.length; i++) {
         copy(srcFS, contents[i].getPath(),
                 new File(dst, contents[i].getPath().getName()),
-                deleteSource, conf, type, value);
+                deleteSource, conf, jobid, type, value);
       }
     } else if (srcFS.isFile(src)) {
       InputStream in = srcFS.open(src);
-      IOUtils.copyBytes(in, new FileOutputStream(dst), conf, type, value);
+      IOUtils.copyBytes(in, new FileOutputStream(dst), conf, jobid, type, value);
     } else {
       throw new IOException(src.toString() +
               ": No such file or directory");

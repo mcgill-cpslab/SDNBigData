@@ -1,14 +1,17 @@
 package org.openflow.protocol;
 
 
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.openflow.protocol.action.OFAction;
 
 public class OFFlowMod1 extends OFFlowMod {
 
   public static int MINIMUM_LENGTH = 80;//
 
 
+  protected long reqtype;
   protected int jobid;
-  protected int jobpriority;
+  protected int value;
 
   public OFFlowMod1() {
     super();
@@ -24,12 +27,20 @@ public class OFFlowMod1 extends OFFlowMod {
     this.jobid = jobid;
   }
 
-  public int getJobpriority() {
-    return jobpriority;
+  public long getReqtype() {
+    return reqtype;
   }
 
-  public void setJobpriority(int jobpriority) {
-    this.jobpriority = jobpriority;
+  public void setReqtype(long t) {
+    this.reqtype = t;
+  }
+
+  public int getReqvalue() {
+    return value;
+  }
+
+  public void setReqvalue(int v) {
+    this.value = v;
   }
 
   @Override
@@ -46,8 +57,9 @@ public class OFFlowMod1 extends OFFlowMod {
     result = prime * result + ((match == null) ? 0 : match.hashCode());
     result = prime * result + outPort;
     result = prime * result + priority;
+    result = prime * result + (int) reqtype;
     result = prime * result + jobid;
-    result = prime * result + jobpriority;
+    result = prime * result + value;
     return result;
   }
 
@@ -55,8 +67,9 @@ public class OFFlowMod1 extends OFFlowMod {
   public boolean equals(Object obj) {
     if (!super.equals(obj)) return false;
     OFFlowMod1 flowMod1 = (OFFlowMod1) obj;
+    if (reqtype != flowMod1.getReqtype()) return false;
     if (jobid != flowMod1.getJobid()) return false;
-    if (jobpriority != flowMod1.getJobpriority()) return false;
+    if (value != flowMod1.getReqvalue()) return false;
     return true;
   }
 
@@ -67,8 +80,25 @@ public class OFFlowMod1 extends OFFlowMod {
   public OFFlowMod clone() throws CloneNotSupportedException {
     OFFlowMod1 flowMod1= (OFFlowMod1) super.clone();
     flowMod1.setJobid(jobid);
-    flowMod1.setJobpriority(jobpriority);
+    flowMod1.setReqvalue(value);
+    flowMod1.setReqtype(reqtype);
     return flowMod1;
+  }
+
+  @Override
+  public void readFrom(ChannelBuffer data) {
+    super.readFrom(data);
+    this.reqtype = data.readLong();
+    this.jobid = data.readInt();
+    this.value = data.readInt();
+  }
+
+  @Override
+  public void writeTo(ChannelBuffer data) {
+    super.writeTo(data);
+    data.writeLong(reqtype);
+    data.writeInt(jobid);
+    data.writeInt(value);
   }
 
   /* (non-Javadoc)
@@ -76,6 +106,6 @@ public class OFFlowMod1 extends OFFlowMod {
    */
   @Override
   public String toString() {
-    return super.toString() + "," + jobid + "," + jobpriority;
+    return super.toString() + "," + jobid + "," + reqtype + "," + value;
   }
 }

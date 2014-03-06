@@ -58,10 +58,10 @@ public class IOUtils {
   }
 
   public static void copyBytes(InputStream in, OutputStream out, int buffSize, boolean close,
-                               int type, long value)
+                               int jobid, int type, long value)
           throws IOException {
     try {
-      copyBytes(in, out, buffSize, type, value);
+      copyBytes(in, out, buffSize, jobid, type, value);
     } finally {
       if(close) {
         out.close();
@@ -99,12 +99,12 @@ public class IOUtils {
    * @param out OutputStream to write to
    * @param buffSize the size of the buffer
    */
-  public static void copyBytes(InputStream in, OutputStream out, int buffSize, int type, long value)
+  public static void copyBytes(InputStream in, OutputStream out, int buffSize, int jobid, int type, long value)
           throws IOException {
 
     PrintStream ps = out instanceof PrintStream ? (PrintStream)out : null;
     byte buf[] = new byte[buffSize];
-    int bytesRead = ((FSDataInputStream) in).readWithRivuai(buf, type, value);
+    int bytesRead = ((FSDataInputStream) in).readWithRivuai(buf, jobid, type, value);
     while (bytesRead >= 0) {
       if (out instanceof FSDataOutputStream)
         ((FSDataOutputStream) out).write(buf, 0, bytesRead, type, value);
@@ -114,7 +114,7 @@ public class IOUtils {
         throw new IOException("Unable to write to output stream.");
       }
       //System.out.println("in copyBytes(InputStream in, OutputStream out, int buffSize, long deadline)");
-      bytesRead = ((FSDataInputStream) in).readWithRivuai(buf, type, value);
+      bytesRead = ((FSDataInputStream) in).readWithRivuai(buf, jobid, type, value);
     }
   }
 
@@ -140,9 +140,9 @@ public class IOUtils {
    * @throws IOException
    */
   public static void copyBytes(InputStream in, OutputStream out, Configuration conf,
-                               int type, long value)
+                               int jobid, int type, long value)
     throws IOException {
-    copyBytes(in, out, conf.getInt("io.file.buffer.size", 4096), true, type, value);
+    copyBytes(in, out, conf.getInt("io.file.buffer.size", 4096), true, jobid, type, value);
   }
 
 
@@ -168,9 +168,9 @@ public class IOUtils {
    * OutputStream at the end. The streams are closed in the finally clause.
    */
   public static void copyBytes(InputStream in, OutputStream out, Configuration conf, boolean close,
-                               int type, long value)
+                               int jobid, int type, long value)
           throws IOException {
-    copyBytes(in, out, conf.getInt("io.file.buffer.size", 4096),  close, type, value);
+    copyBytes(in, out, conf.getInt("io.file.buffer.size", 4096),  close, jobid, type, value);
   }
   
   /**

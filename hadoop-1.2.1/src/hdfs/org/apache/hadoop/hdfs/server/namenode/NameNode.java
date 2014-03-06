@@ -754,14 +754,15 @@ public class NameNode implements ClientProtocol, DatanodeProtocol,
 
   @Override
   public boolean sendConnectionInfo(String senderip, int senderport,
-                                    String remoteip, int remoteport, int type, long value) throws IOException {
+                                    String remoteip, int remoteport, int jobid, int type, long value) throws IOException {
     FlowInstallRequest flowreq = new FlowInstallRequest();
     flowreq.setSourceIP(Utils.StringIPToInteger(senderip));
     flowreq.setDestinationIP(Utils.StringIPToInteger(remoteip));
     flowreq.setSourcePort((short) senderport);
     flowreq.setDestinationPort((short) remoteport);
+    flowreq.setIdx(jobid);
     flowreq.setReqtype(type);
-    flowreq.setValue(value);
+    flowreq.setValue((int) value);
     synchronized (connList) {
       flowreq.setIdx(connList.size());
       connList.add(flowreq);
