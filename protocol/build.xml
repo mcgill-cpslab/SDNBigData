@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="protocol" default="all">
+  
+  
+  <property file="build.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="128m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/.pyc/**"/>
+    <exclude name="**/.pyo/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/*.lib/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/.bundle/**"/>
+    <exclude name="**/*.rbc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.jar"/>
+    <include name="*.war"/>
+    <include name="*.ear"/>
+    <include name="*.apk"/>
+    <include name="*.zip"/>
+    <include name="*.swc"/>
+    <include name="*.ane"/>
+    <include name="*.egg"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <exclude name="**/?*.java"/>
+    <exclude name="**/?*.form"/>
+    <exclude name="**/?*.class"/>
+    <exclude name="**/?*.groovy"/>
+    <exclude name="**/?*.scala"/>
+    <exclude name="**/?*.flex"/>
+    <exclude name="**/?*.kt"/>
+    <exclude name="**/?*.clj"/>
+  </patternset>
+  
+  <!-- JDK definitions -->
+  
+  <property name="jdk.bin.1.7" value="${jdk.home.1.7}/bin"/>
+  <path id="jdk.classpath.1.7">
+    <fileset dir="${jdk.home.1.7}">
+      <include name="lib/ant-javafx.jar"/>
+      <include name="lib/dt.jar"/>
+      <include name="lib/javafx-doclet.jar"/>
+      <include name="lib/javafx-mx.jar"/>
+      <include name="lib/jconsole.jar"/>
+      <include name="lib/sa-jdi.jar"/>
+      <include name="lib/tools.jar"/>
+      <include name="jre/lib/charsets.jar"/>
+      <include name="jre/lib/deploy.jar"/>
+      <include name="jre/lib/htmlconverter.jar"/>
+      <include name="jre/lib/javaws.jar"/>
+      <include name="jre/lib/jce.jar"/>
+      <include name="jre/lib/jfr.jar"/>
+      <include name="jre/lib/jfxrt.jar"/>
+      <include name="jre/lib/JObjC.jar"/>
+      <include name="jre/lib/jsse.jar"/>
+      <include name="jre/lib/management-agent.jar"/>
+      <include name="jre/lib/plugin.jar"/>
+      <include name="jre/lib/resources.jar"/>
+      <include name="jre/lib/rt.jar"/>
+      <include name="jre/lib/ext/dnsns.jar"/>
+      <include name="jre/lib/ext/localedata.jar"/>
+      <include name="jre/lib/ext/sunec.jar"/>
+      <include name="jre/lib/ext/sunjce_provider.jar"/>
+      <include name="jre/lib/ext/sunpkcs11.jar"/>
+      <include name="jre/lib/ext/zipfs.jar"/>
+    </fileset>
+  </path>
+  
+  <property name="project.jdk.home" value="${jdk.home.1.7}"/>
+  <property name="project.jdk.bin" value="${jdk.bin.1.7}"/>
+  <property name="project.jdk.classpath" value="jdk.classpath.1.7"/>
+  
+  
+  <!-- Project Libraries -->
+  
+  <path id="library.floodlight.classpath">
+    <pathelement location="${basedir}/lib/floodlight.jar"/>
+  </path>
+  
+  <path id="library.protocol.classpath">
+    <pathelement location="${basedir}/out/protocol/protocol.jar"/>
+  </path>
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module protocol -->
+  
+  <dirname property="module.protocol.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.protocol" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.protocol" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.protocol" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.protocol" value="-encoding UTF-8 -source 1.6 ${compiler.args}"/>
+  
+  <property name="protocol.output.dir" value="${module.protocol.basedir}/out/production/protocol"/>
+  <property name="protocol.testoutput.dir" value="${module.protocol.basedir}/out/test/protocol"/>
+  
+  <path id="protocol.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="protocol.module.production.classpath">
+    <path refid="${module.jdk.classpath.protocol}"/>
+    <path refid="library.floodlight.classpath"/>
+    <path refid="library.protocol.classpath"/>
+  </path>
+  
+  <path id="protocol.runtime.production.module.classpath">
+    <pathelement location="${protocol.output.dir}"/>
+    <path refid="library.floodlight.classpath"/>
+    <path refid="library.protocol.classpath"/>
+  </path>
+  
+  <path id="protocol.module.classpath">
+    <path refid="${module.jdk.classpath.protocol}"/>
+    <pathelement location="${protocol.output.dir}"/>
+    <path refid="library.floodlight.classpath"/>
+    <path refid="library.protocol.classpath"/>
+  </path>
+  
+  <path id="protocol.runtime.module.classpath">
+    <pathelement location="${protocol.testoutput.dir}"/>
+    <pathelement location="${protocol.output.dir}"/>
+    <path refid="library.floodlight.classpath"/>
+    <path refid="library.protocol.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.protocol">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.protocol">
+    <patternset refid="excluded.from.module.protocol"/>
+  </patternset>
+  
+  <path id="protocol.module.sourcepath">
+    <dirset dir="${module.protocol.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.protocol" depends="compile.module.protocol.production,compile.module.protocol.tests" description="Compile module protocol"/>
+  
+  <target name="compile.module.protocol.production" description="Compile module protocol; production classes">
+    <mkdir dir="${protocol.output.dir}"/>
+    <javac destdir="${protocol.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.protocol}/javac">
+      <compilerarg line="${compiler.args.protocol}"/>
+      <bootclasspath refid="protocol.module.bootclasspath"/>
+      <classpath refid="protocol.module.production.classpath"/>
+      <src refid="protocol.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.protocol"/>
+    </javac>
+    
+    <copy todir="${protocol.output.dir}">
+      <fileset dir="${module.protocol.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.protocol.tests" depends="compile.module.protocol.production" description="compile module protocol; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.protocol" description="cleanup module">
+    <delete dir="${protocol.output.dir}"/>
+    <delete dir="${protocol.testoutput.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.protocol" description="cleanup all"/>
+  
+  <target name="build.modules" depends="init, clean, compile.module.protocol" description="build all modules"/>
+  
+  <target name="init.artifacts">
+    <property name="artifacts.temp.dir" value="${basedir}/__artifacts_temp"/>
+    <property name="artifact.output.protocol" value="${basedir}/out/protocol"/>
+    <mkdir dir="${artifacts.temp.dir}"/>
+    <property name="temp.jar.path.protocol.jar" value="${artifacts.temp.dir}/protocol.jar"/>
+  </target>
+  
+  <target name="artifact.protocol" depends="init.artifacts, compile.module.protocol" description="Build &#39;protocol&#39; artifact">
+    <property name="artifact.temp.output.protocol" value="${artifacts.temp.dir}/protocol"/>
+    <mkdir dir="${artifact.temp.output.protocol}"/>
+    <jar destfile="${temp.jar.path.protocol.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <zipfileset file="${basedir}/META-INF/MANIFEST.MF" prefix="META-INF"/>
+      <zipfileset dir="${protocol.output.dir}"/>
+      <zipfileset src="${basedir}/lib/floodlight.jar"/>
+    </jar>
+    <copy file="${temp.jar.path.protocol.jar}" tofile="${artifact.temp.output.protocol}/protocol.jar"/>
+  </target>
+  
+  <target name="build.all.artifacts" depends="artifact.protocol" description="Build all artifacts">
+    <mkdir dir="${artifact.output.protocol}"/>
+    <copy todir="${artifact.output.protocol}">
+      <fileset dir="${artifact.temp.output.protocol}"/>
+    </copy>
+    
+    <!-- Delete temporary files -->
+    <delete dir="${artifacts.temp.dir}"/>
+  </target>
+  
+  <target name="all" depends="build.modules, build.all.artifacts" description="build all"/>
+</project>
