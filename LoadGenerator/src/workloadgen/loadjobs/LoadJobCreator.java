@@ -193,12 +193,16 @@ public class LoadJobCreator extends GenericMRLoadGenerator {
     String inputDir = null;
     if (size.equals("small")) {
       inputDir = GREP_SMALL_INPUT;
-    }
-    if (size.equals("medium")) {
-      inputDir = GREP_MEDIUM_INPUT;
-    }
-    if (size.equals("large")) {
-      inputDir = GREP_LARGE_INPUT;
+    } else {
+      if (size.equals("medium")) {
+        inputDir = GREP_MEDIUM_INPUT;
+      } else {
+        if (size.equals("large")) {
+          inputDir = GREP_LARGE_INPUT;
+        } else {
+          inputDir = size;
+        }
+      }
     }
     Path outDir = new Path("grep_out"
             + Integer.toString(new Random().nextInt(Integer.MAX_VALUE)));
