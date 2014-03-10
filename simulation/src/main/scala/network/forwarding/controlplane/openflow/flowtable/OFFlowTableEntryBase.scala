@@ -11,14 +11,14 @@ import scalasem.network.forwarding.controlplane.openflow.OFFlowCount
 
 // implement OpenFlow 1.0 definition
 class OFFlowTableEntryBase (private[openflow] val table: OFFlowTable) {
-  private [openflow] var ofmatch : OFMatch = null
-  private [openflow] val counter : OFFlowCount = new OFFlowCount
-  private [controlplane] val actions : ListBuffer[OFAction] = new ListBuffer[OFAction]
-  private var lastAccessPoint : Int = SimulationEngine.currentTime.toInt
-  private [openflow] var flowHardExpireMoment : Int = 0
-  private [openflow] var flowIdleDuration : Int = 0
-  private [openflow] var priority : Short = 0
-  private [openflow] var expireEvent : OFFlowTableEntryExpireEvent = null
+  protected[openflow] var ofmatch : OFMatch = null
+  protected[openflow] val counter : OFFlowCount = new OFFlowCount
+  protected[controlplane] val actions : ListBuffer[OFAction] = new ListBuffer[OFAction]
+  protected var lastAccessPoint : Int = SimulationEngine.currentTime.toInt
+  protected[openflow] var flowHardExpireMoment : Int = 0
+  protected[openflow] var flowIdleDuration : Int = 0
+  protected[openflow] var priority : Short = 0
+  protected[openflow] var expireEvent : OFFlowTableEntryExpireEvent = null
 
   def getLastAccessPoint = lastAccessPoint
 

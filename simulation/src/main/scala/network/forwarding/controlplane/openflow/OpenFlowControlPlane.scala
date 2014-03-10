@@ -31,15 +31,13 @@ import scalasem.simengine.SimulationEngine
  * this class implement the functions for routers to contact with
  * controller
  */
-class OpenFlowControlPlane (private [openflow] val node : Node)
+class OpenFlowControlPlane (private [openflow] val node : Router)
   extends DefaultControlPlane(node) with MessageListener {
 
   private val controllerIP = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
   private val controllerPort = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
   private var floodedflows = List[Flow]()
 
-
-  private var lldpcnt = 0
 
   private [network] var toControllerChannel : Channel = null
 
@@ -124,7 +122,6 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     assert(ofinterfacemanager.linkphysicalportsMap.contains(l))
     val port = ofinterfacemanager.linkphysicalportsMap(l)
     //send out packet_in
-    lldpcnt += 1
     ofmsgsender.sendMessageToController(toControllerChannel,
       generatePacketIn(-1, port.getPortNumber, lldpData, OFPacketIn.OFPacketInReason.ACTION))
   }

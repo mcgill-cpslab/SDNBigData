@@ -11,6 +11,7 @@ import scalasem.util.{XmlParser, Logging}
 import scalasem.network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
 import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
 import scalasem.simengine.SimulationEngine
+import network.forwarding.controlplane.openflow.RivuaiControlPlane
 
 /**
  *  the trait representing the functionalities to calculate
@@ -145,7 +146,13 @@ object RoutingProtocol {
       case "openflow" => {
         node.nodetype match {
           case HostType => new DefaultControlPlane(node)
-          case _ => new OpenFlowControlPlane(node)
+          case _ => new OpenFlowControlPlane(node.asInstanceOf[Router])
+        }
+      }
+      case "rivuai" => {
+        node.nodetype match {
+          case HostType => new DefaultControlPlane(node)
+          case _ => new RivuaiControlPlane(node.asInstanceOf[Router])
         }
       }
       case _ => null
