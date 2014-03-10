@@ -1,16 +1,19 @@
-package network.forwarding.interface
+package scalasem.network.forwarding.interface
 
-import network.topology.{HostType, GlobalDeviceManager, Link, Node}
-import scala.collection.mutable.HashMap
-import org.openflow.protocol._
-import org.openflow.util.HexString
-import network.forwarding.controlplane.openflow.{OpenFlowControlPlane, OFPortCount, MessageListener}
+import java.util
+
 import scala.collection.JavaConversions._
 import scala.Some
+import scala.collection.mutable.HashMap
+
+import org.openflow.protocol._
 import org.openflow.protocol.statistics.{OFStatistics, OFPortStatisticsReply, OFPortStatisticsRequest, OFStatisticsType}
 import org.openflow.protocol.factory.BasicFactory
-import java.util
-import simengine.utils.Logging
+import org.openflow.util.HexString
+
+import scalasem.network.topology.{HostType, GlobalDeviceManager, Link, Node}
+import scalasem.network.forwarding.controlplane.openflow.{OpenFlowControlPlane, OFPortCount, MessageListener}
+import scalasem.util.Logging
 
 
 class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
@@ -46,11 +49,11 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
 
   private def addOFPhysicalPort(l : Link, portID : Short) {
     val port = new OFPhysicalPort
-    GlobalDeviceManager.globaldevicecounter += 1
+    GlobalDeviceManager.globalDeviceCounter += 1
     //port number
     port.setPortNumber(portID)
     //port hardware address
-    val hwaddrhexstr = HexString.toHexString(GlobalDeviceManager.globaldevicecounter, 6)
+    val hwaddrhexstr = HexString.toHexString(GlobalDeviceManager.globalDeviceCounter, 6)
     port.setHardwareAddress(HexString.fromHexString(hwaddrhexstr))
     //port name
     port.setName(hwaddrhexstr.replaceAll(":", ""))
@@ -72,7 +75,8 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
     linkphysicalportsMap += l -> port
     physicalportsMap += (port.getPortNumber -> port)
     portcounters += (port.getPortNumber -> new OFPortCount(port.getPortNumber))
-    logDebug("add physical port " + port.getPortNumber + " as " + l.toString + " at node " + node.ip_addr(0))
+    logDebug("add physical port " + port.getPortNumber + " as " + l.toString +
+      " at node " + node.ip_addr(0))
   }
 
   override def registerOutgoingLink(l : Link) {
@@ -150,4 +154,6 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
       case _ => {}
     }
   }
+
+  serveNode = node
 }

@@ -1,4 +1,4 @@
-package network.traffic
+package scalasem.network.traffic
 
 import scala.collection.mutable.HashSet
 

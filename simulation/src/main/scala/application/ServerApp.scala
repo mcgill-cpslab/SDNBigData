@@ -1,7 +1,7 @@
-package application
+package scalasem.application
 
-import network.topology.HostContainer
-import simengine.utils.Logging
+import scalasem.network.topology.HostContainer
+import scalasem.util.Logging
 
 abstract class ServerApp(protected val servers : HostContainer) extends Logging {
   def run()

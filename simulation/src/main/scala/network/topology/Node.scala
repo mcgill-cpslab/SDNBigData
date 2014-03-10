@@ -1,10 +1,10 @@
-package network.topology
+package scalasem.network.topology
 
 import scala.collection.mutable.ListBuffer
-import network.forwarding.dataplane.ResourceAllocator
-import network.forwarding.interface.InterfacesManager
-import network.forwarding.controlplane.RoutingProtocol
-import org.openflow.util.HexString
+
+import scalasem.network.forwarding.dataplane.ResourceAllocator
+import scalasem.network.forwarding.interface.InterfacesManager
+import scalasem.network.forwarding.controlplane.RoutingProtocol
 
 abstract class NodeType
 
@@ -16,7 +16,7 @@ case object HostType extends NodeType
 class Node (val nodetype : NodeType,
   val globalDeviceId : Int) {
 
-  def id_gen(pid : Int, swid: Int, hostid: Int) = {
+  def id_gen(pid : Int, swid: Int, hostid: Int): Long = {
     pod_id = pid
     sw_id = swid
     host_id = hostid

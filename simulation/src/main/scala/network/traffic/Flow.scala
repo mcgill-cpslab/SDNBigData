@@ -1,15 +1,14 @@
-package network.traffic
+package scalasem.network.traffic
 
-import network.topology.{HostType, Node, Link}
-import simengine.utils.{XmlParser, Logging}
-import network.events.CompleteFlowEvent
-import simengine.SimulationEngine
 import scala.collection.mutable.ListBuffer
-import network.forwarding.controlplane.openflow.OpenFlowControlPlane
-import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
-import org.openflow.protocol.OFMatch
-import network.forwarding.interface.OpenFlowPortManager
-import scala.concurrent.Lock
+
+import scalasem.network.topology.{HostType, Node, Link}
+import scalasem.network.events.CompleteFlowEvent
+import scalasem.network.forwarding.controlplane.openflow.OpenFlowControlPlane
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.interface.OpenFlowPortManager
+import scalasem.simengine.SimulationEngine
+import scalasem.util.{XmlParser, Logging}
 
 /**
  *
@@ -62,6 +61,8 @@ class Flow (
     logDebug("bind completeEvent for " + this)
     bindedCompleteEvent = ce
   }
+
+  def hasBindedCompleteEvent = bindedCompleteEvent != null
 
   private def updateCounters(additionalPacket : Long, additionalBytes : Long,
                                       additionalDuration : Int) {
@@ -151,7 +152,8 @@ class Flow (
    * @param newRateValue new rate value
    */
   def changeRate(newRateValue : Double) {
-    logDebug("old rate : " + rate + " new rate : " + newRateValue + ", lastChangePoint = " + lastChangePoint +
+    logDebug("old rate : " + rate + " new rate : " + newRateValue +
+      ", lastChangePoint = " + lastChangePoint +
       " remainingAppData: " + remainingAppData)
     updateTransferredData()
     logTrace("change " + this + "'s lastChangePoint to " + SimulationEngine.currentTime +
@@ -165,7 +167,7 @@ class Flow (
     }
   }
 
-  def setTempRate(tr : Double) {tempRate = tr}
+  def setTempRate(tr: Double) {tempRate = tr}
 
   def AppDataSize = remainingAppData
 
@@ -178,22 +180,24 @@ class Flow (
    * @param newlink, the link to be added
    * @param lastlink, we need to know this parameter to track the last link of newlink
    */
-  def addTrace(newlink : Link, lastlink : Link) {
+  def addTrace(newlink: Link, lastlink : Link): Boolean =  {
     var lastlinkindex = -1
     if (lastlink != null) lastlinkindex = trace.indexOf(lastlink)
+    //if (lastlink != null && lastlinkindex == -1) return false
     logDebug("add trace, currentlink:" + newlink + ", lastlink:" + lastlink +
-      ", flow:" + this.toString)
+      ", flow:" + this.toString + ", lastlinkindex:" + lastlinkindex)
     this.synchronized {
       trace_laststeptrack = trace_laststeptrack :+ (newlink, lastlinkindex)
       trace = trace :+ newlink
     }
+    true
   }
 
-  def getLastHop(curlink : Link) : Link = {
+  def getLastHop(curlink: Link) : Link = {
     logDebug("get the link " + curlink + "'s last step, flow:" + this.toString)
     val laststepindex = trace_laststeptrack(trace.indexOf(curlink))._2
     if (laststepindex < 0) {
-      logDebug("last link index is smaller than 0")
+      logDebug("last link index is smaller than 0, currentlink:" + curlink)
       return null
     }
     trace(laststepindex)
@@ -214,7 +218,8 @@ class Flow (
     if (bindedCompleteEvent != null) {
       logTrace("reschedule " + toString + " completeEvent to " +
         (SimulationEngine.currentTime + remainingAppData / rate) +
-        " current time:" + SimulationEngine.currentTime + " rate :" + rate + " appDataSize:" + remainingAppData)
+        " current time:" + SimulationEngine.currentTime + " rate :" + rate +
+        " appDataSize:" + remainingAppData)
       SimulationEngine.reschedule(bindedCompleteEvent,
         SimulationEngine.currentTime + remainingAppData / rate)
     }

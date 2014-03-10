@@ -1,9 +1,9 @@
-package network.forwarding.controlplane.openflow
+package scalasem.network.forwarding.controlplane.openflow
+
+import scala.collection.immutable.ListSet
 
 import org.openflow.protocol.OFMessage
 import org.jboss.netty.channel.Channel
-import scala.collection.immutable.ListSet
-import scala.concurrent.Lock
 
 
 class OpenFlowMsgSender () {
@@ -33,9 +33,7 @@ class OpenFlowMsgSender () {
         ioBatchBuffer = new ListSet[OFMessage]
       }
     } catch {
-      case e: Exception => {
-        System.out.println("\n\n\n\nFUCK!!!!!\n\n\n\n")
-      }
+      case e: Exception => e.printStackTrace()
     }
   }
 }

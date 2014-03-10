@@ -1,15 +1,16 @@
-package network.forwarding.controlplane
+package scalasem.network.forwarding.controlplane
 
-import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.collection.mutable
+
 import org.openflow.protocol.OFMatch
-import network.topology._
-import network.traffic.Flow
-import simengine.utils.{XmlParser, Logging}
-import network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
-import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+
 import utils.IPAddressConvertor
-import simengine.SimulationEngine
+import scalasem.network.topology._
+import scalasem.network.traffic.Flow
+import scalasem.util.{XmlParser, Logging}
+import scalasem.network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.simengine.SimulationEngine
 
 /**
  *  the trait representing the functionalities to calculate
@@ -97,32 +98,29 @@ trait RoutingProtocol extends Logging {
    */
   def floodoutFlow(localnode: Node, flow : Flow, matchfield : OFMatchField, inlink : Link) {
     //remove duplicate flow (when flooding)
-    if (!RIBIn.contains(matchfield)) {
+    if (!flow.hasBindedCompleteEvent) {
       //it's a flood flow
-      logTrace("flow " + flow + " is flooded out at " + localnode)
+      logDebug("flow " + flow + " is flooded out at " + localnode)
       val nextlinks = localnode.interfacesManager.getfloodLinks(localnode, inlink)
       //TODO : openflow flood handling in which nextlinks can be null?
       nextlinks.foreach(l => {
-        flow.addTrace(l, inlink)
-        Link.otherEnd(l, localnode).controlplane.routing(Link.otherEnd(l, localnode), flow, matchfield, l)
+        if (flow.addTrace(l, inlink)) {
+          Link.otherEnd(l, localnode).controlplane.routing(
+            Link.otherEnd(l, localnode), flow, matchfield, l)
+        }
       })
       if (inlink != null) insertInPath(matchfield, inlink)
-    } else {
-      //TODO: should allow duplicate flow
-      SimulationEngine.queueReadingLock.release()
     }
   }
 
-  def forward (localnode: Node, olink : Link, inlink : Link, flow : Flow, matchfield : OFMatchField) {
-    if (!RIBIn.contains(matchfield)) {
+  def forward (localnode: Node, olink: Link, inlink : Link, flow: Flow, matchfield: OFMatchField) {
+    if (!flow.hasBindedCompleteEvent) {
       val nextnode = Link.otherEnd(olink, localnode)
-      logDebug("send through " + olink)
-      flow.addTrace(olink, inlink)
-      nextnode.controlplane.routing(nextnode, flow, matchfield, olink)
-      if (inlink != null) insertInPath(matchfield, inlink)
-    } else {
-      //TODO: should allow duplicate flow
-      SimulationEngine.queueReadingLock.release()
+      if (flow.addTrace(olink, inlink)) {
+        logDebug("send through " + olink)
+        nextnode.controlplane.routing(nextnode, flow, matchfield, olink)
+        if (inlink != null) insertInPath(matchfield, inlink)
+      }
     }
   }
 

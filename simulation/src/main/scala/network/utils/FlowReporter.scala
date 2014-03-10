@@ -1,7 +1,7 @@
-package network.utils
+package scalasem.network.utils
 
-import simengine.{SimulationEngine, Reporter}
-import network.traffic.Flow
+import scalasem.simengine.{SimulationEngine, Reporter}
+import scalasem.network.traffic.Flow
 import scala.collection.mutable
 
 

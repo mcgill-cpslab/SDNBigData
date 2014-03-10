@@ -1,10 +1,11 @@
-package network.events
+package scalasem.network.events
 
 import org.openflow.protocol.OFMatch
-import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
-import simengine.utils.Logging
-import network.forwarding.controlplane.openflow.OFMatchField
-import simengine.EventOfTwoEntities
+
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.OFMatchField
+import scalasem.simengine.EventOfTwoEntities
+import scalasem.util.Logging
 
 final class OFFlowTableEntryExpireEvent (offlowTable : OFFlowTable,
                                          matchfield : OFMatchField, t : Double)

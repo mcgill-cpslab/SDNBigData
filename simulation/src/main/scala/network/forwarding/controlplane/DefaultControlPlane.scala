@@ -1,16 +1,16 @@
-package network.forwarding.controlplane
+package scalasem.network.forwarding.controlplane
 
 import org.openflow.protocol.OFMatch
-import network.topology._
-import simengine.utils.Logging
-import network.traffic.Flow
+
 import utils.IPAddressConvertor
-import network.forwarding.controlplane.openflow.OFMatchField
-import org.openflow.util.HexString
+import scalasem.network.topology._
+import scalasem.util.Logging
+import scalasem.network.traffic.Flow
+import scalasem.network.forwarding.controlplane.openflow.OFMatchField
 
 /**
  * the class representing the default process to get/calculate the
- * routing path of packets/flow, that is depended on the symmetric topology
+ * routing path of packets/flow, that is depended on the symmetric dummyTopo
  * without support of any functions like VLAN, etc.
  */
 class DefaultControlPlane (node : Node) extends RoutingProtocol with Logging {
@@ -48,7 +48,8 @@ class DefaultControlPlane (node : Node) extends RoutingProtocol with Logging {
       node.nodetype match {
         case ToRRouterType => {
           if (dstRange == localRange) {
-            assert(node.interfacesManager.inlinks.contains(dstIP))
+            assert(node.interfacesManager.inlinks.contains(dstIP),
+              "the topology is broken, dstip:" + dstIP + " nodeIP:" + node.ip_addr(0))
             olink = node.interfacesManager.inlinks(dstIP)
           } else {
             olink = selectRandomOutlink(matchfield)
@@ -65,10 +66,11 @@ class DefaultControlPlane (node : Node) extends RoutingProtocol with Logging {
         }
         case CoreRouterType => {
           val routepaths =
-            node.interfacesManager.inlinks.keySet.filter(podip => (getCellID(podip) == dstCellID)).toList
+            node.interfacesManager.inlinks.keySet.filter(podip =>
+              (getCellID(podip) == dstCellID)).toList
           assert(routepaths.size > 0)
-          val selectIdx = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination).hashCode %
-              routepaths.size
+          val selectIdx = IPAddressConvertor.IntToDecimalString(
+            matchfield.getNetworkDestination).hashCode % routepaths.size
           olink = node.interfacesManager.inlinks(routepaths(Math.max(selectIdx, selectIdx * -1)))
         }
       }

@@ -1,14 +1,15 @@
-package network.forwarding.dataplane
+package scalasem.network.forwarding.dataplane
 
-import network.topology.{Node, Link}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import network.traffic._
-import simengine.utils.{Logging, XmlParser}
-import network.events.CompleteFlowEvent
-import simengine.SimulationEngine
+
 import org.openflow.protocol.OFMatch
-import network.forwarding.controlplane.openflow.OFMatchField
+
+import scalasem.network.topology.{Node, Link}
+import scalasem.network.traffic._
+import scalasem.util.{Logging, XmlParser}
+import scalasem.network.events.CompleteFlowEvent
+import scalasem.simengine.SimulationEngine
 
 /**
  * class representing the functionalities on the bandwidth allocation among flows
@@ -92,14 +93,14 @@ trait ResourceAllocator extends Logging {
         SimulationEngine.currentTime + flow.AppDataSize / flow.getTempRate)
       logTrace("schedule complete event " + completeEvent + " for " + flow + " at " +
         (SimulationEngine.currentTime + flow.AppDataSize / flow.getTempRate))
-      flow.bindEvent(completeEvent)
       SimulationEngine.addEvent(completeEvent)
+      flow.bindEvent(completeEvent)
       //has found the destination, change the property
       if (flow.floodflag) flow.floodflag = false
     }
     flow.run()
     SimulationEngine.queueReadingLock.release()
-    logDebug("release lock at ControlPlane")
+    logDebug("release lock at DataPlane")
   }
 
   /**

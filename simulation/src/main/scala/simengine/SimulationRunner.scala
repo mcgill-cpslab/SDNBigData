@@ -1,19 +1,16 @@
-package root
+package scalasem.simengine
 
-import network.topology.{Host, Core, Pod, GlobalDeviceManager}
-import simengine.{PeriodicalEventManager, SimulationEngine}
-import _root_.simengine.utils.XmlParser
-import application.ApplicationRunner
-import network.utils.FlowReporter
-import network.events.{StartNewFlowEvent, UpdateFlowPropertyEvent}
-import network.topology.builder.FatTreeNetworkBuilder
-import network.traffic.Flow
+import scalasem.application.ApplicationRunner
+import scalasem.network.topology.builder.FatTreeNetworkBuilder
+import scalasem.network.topology.GlobalDeviceManager
+import scalasem.network.utils.FlowReporter
+import scalasem.util.XmlParser
 
 
 object SimulationRunner {
 
   def reset() {
-    GlobalDeviceManager.globaldevicecounter = 0
+    GlobalDeviceManager.globalDeviceCounter = 0
     SimulationEngine.reset()
     ApplicationRunner.reset()
     XmlParser.reset()
@@ -34,14 +31,6 @@ object SimulationRunner {
     ApplicationRunner.setResource(FatTreeNetworkBuilder.getAllHosts)
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
-    /*val flow1 = Flow(GlobalDeviceManager.getNode("10.0.0.2").toString,
-      GlobalDeviceManager.getNode("10.3.1.2").toString,
-      GlobalDeviceManager.getNode("10.0.0.2").mac_addr(0),
-      GlobalDeviceManager.getNode("10.3.1.2").mac_addr(0), appDataSize = 1)
-    SimulationEngine.addEvent(new StartNewFlowEvent(flow1,
-      GlobalDeviceManager.getNode("10.0.0.2").asInstanceOf[Host], 0))*/
-    //SimulationEngine.run
-   // PeriodicalEventManager.event = new UpdateFlowPropertyEvent(0)
     SimulationEngine.startTime = 0.0
     SimulationEngine.endTime = 10000.0
     SimulationEngine.reporter = FlowReporter

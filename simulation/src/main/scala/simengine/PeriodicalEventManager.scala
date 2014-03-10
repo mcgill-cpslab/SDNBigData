@@ -1,4 +1,4 @@
-package simengine
+package scalasem.simengine
 
 
 object PeriodicalEventManager {

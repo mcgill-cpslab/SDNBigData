@@ -1,6 +1,6 @@
-package network.topology
+package scalasem.network.topology
 
-import network.forwarding.controlplane.openflow.OpenFlowControlPlane
+import scalasem.network.forwarding.controlplane.openflow.OpenFlowControlPlane
 
 class Router (nodetype : NodeType, globaldevid : Int)
   extends Node(nodetype, globaldevid) {
@@ -26,8 +26,8 @@ class Router (nodetype : NodeType, globaldevid : Int)
 class RouterContainer () extends NodeContainer {
   def create(nodeN : Int, rtype : NodeType) {
     for (i <- 0 until nodeN) {
-      nodecontainer += new Router(rtype, GlobalDeviceManager.globaldevicecounter)
-      GlobalDeviceManager.globaldevicecounter += 1
+      nodecontainer += new Router(rtype, GlobalDeviceManager.globalDeviceCounter)
+      GlobalDeviceManager.globalDeviceCounter += 1
       this(i).setrid(i)
     }
   }

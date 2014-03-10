@@ -1,9 +1,10 @@
-package simengine
+package scalasem.simengine
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
 import scala.concurrent.Lock
-import simengine.utils.Logging
+
+import scalasem.util.Logging
 
 
 object SimulationEngine extends Logging {
@@ -13,7 +14,8 @@ object SimulationEngine extends Logging {
   var reporter : Reporter = null
 
   //TODO:any more performant implementation?
-  private var eventqueue : ArrayBuffer[Event] = new ArrayBuffer[Event] with mutable.SynchronizedBuffer[Event]
+  private var eventqueue : ArrayBuffer[Event] =
+    new ArrayBuffer[Event] with mutable.SynchronizedBuffer[Event]
   private var numPassedEvents = 0
 
   var startTime: Double = 0.0
@@ -39,6 +41,7 @@ object SimulationEngine extends Logging {
       numPassedEvents += 1
       eventqueue -= event
     }
+    logTrace("Finished all events")
   }
 
   def summary() {

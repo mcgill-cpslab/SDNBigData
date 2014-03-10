@@ -1,8 +1,8 @@
-package network.forwarding.dataplane
+package scalasem.network.forwarding.dataplane
 
-import network.topology._
-import network.traffic.{RunningFlow, ChangingRateFlow, FlowRateOrdering}
-import simengine.utils.Logging
+import scalasem.network.topology._
+import scalasem.network.traffic.{RunningFlow, ChangingRateFlow, FlowRateOrdering}
+import scalasem.util.Logging
 
 
 /**

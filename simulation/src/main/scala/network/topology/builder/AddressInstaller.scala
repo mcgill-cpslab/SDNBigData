@@ -1,7 +1,6 @@
-package scalasim.network.component.builder
+package scalasem.network.component.builder
 
-import org.openflow.util.HexString
-import network.topology.{NodeContainer, Node}
+import scalasem.network.topology.{NodeContainer, Node}
 
 object AddressInstaller {
 
@@ -15,6 +14,11 @@ object AddressInstaller {
     //node.assignMac(HexString.toHexString(node.globalDeviceId, 6))
   }
 
+  /**
+   * assign MAC to a single node
+   * @param node
+   * @param macaddr
+   */
   def assignMacAddress(node: Node, macaddr: String) {
     node.assignMac(macaddr)
   }

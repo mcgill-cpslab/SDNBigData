@@ -1,8 +1,8 @@
-package network.topology.builder
+package scalasem.network.topology.builder
 
-import network.topology._
-import scalasim.network.component.builder.AddressInstaller
-import simengine.utils.XmlParser
+import scalasem.network.topology._
+import scalasem.network.component.builder.AddressInstaller
+import scalasem.util.XmlParser
 
 class FatTreeBuilder (private val podnum: Int = 4,
                       private val linkspeed: Double = 1.0) {

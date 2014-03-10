@@ -1,74 +1,31 @@
-package network.forwarding.controlplane.openflow.flowtable
+package scalasem.network.forwarding.controlplane.openflow.flowtable
 
-import scala.collection.mutable.{ListBuffer, HashMap}
-import org.openflow.protocol._
-import org.openflow.protocol.action.{OFActionOutput, OFAction}
-import network.events.OFFlowTableEntryExpireEvent
+import scala.collection.mutable.{ListBuffer, HashMap, SynchronizedMap}
 import scala.collection.JavaConversions._
+
 import org.openflow.util.U32
-import scala.collection.mutable
-import simengine.utils.Logging
-import network.forwarding.controlplane.openflow._
-import simengine.SimulationEngine
-import network.traffic.Flow
+import org.openflow.protocol.{OFType, OFFlowMod, OFMatch}
+import org.openflow.protocol.action.OFActionOutput
 import org.openflow.protocol.statistics.{OFStatistics, OFFlowStatisticsReply, OFFlowStatisticsRequest, OFStatisticsType}
 import org.openflow.protocol.factory.BasicFactory
+
+import scalasem.network.forwarding.controlplane.openflow._
+import scalasem.simengine.SimulationEngine
+import scalasem.network.traffic.Flow
+import scalasem.util.{XmlParser, Logging, ReflectionUtil}
+
 import utils.IPAddressConvertor
 
 class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : OpenFlowControlPlane)
   extends Logging {
 
-  class OFFlowTableEntryAttaches (private [openflow] val table : OFFlowTable) {
-    private [openflow] var ofmatch : OFMatch = null
-    private [openflow] val counter : OFFlowCount = new OFFlowCount
-    private [controlplane] val actions : ListBuffer[OFAction] = new ListBuffer[OFAction]
-    private var lastAccessPoint : Int = SimulationEngine.currentTime.toInt
-    private [openflow] var flowHardExpireMoment : Int = 0
-    private [openflow] var flowIdleDuration : Int = 0
-    private [openflow] var priority : Short = 0
-    private [openflow] var expireEvent : OFFlowTableEntryExpireEvent = null
-
-    def getLastAccessPoint = lastAccessPoint
-
-    def refreshlastAccessPoint() {
-      lastAccessPoint = SimulationEngine.currentTime.toInt
-      determineEntryExpireMoment()
-    }
-
-    def Counters = counter
-
-    private def determineEntryExpireMoment () {
-      var expireMoment = 0
-      val idleDuration = flowIdleDuration
-      val idleexpireMoment = lastAccessPoint + flowIdleDuration
-      val hardexpireMoment = flowHardExpireMoment
-      if (
-        (hardexpireMoment != 0 && idleDuration == 0 && expireEvent == null) ||
-          (hardexpireMoment != 0 && idleexpireMoment != 0 && hardexpireMoment < idleexpireMoment)) {
-        expireMoment = hardexpireMoment
-      }
-      else {
-        if (
-          (hardexpireMoment == 0 && idleDuration != 0) ||
-          (hardexpireMoment != 0 && idleexpireMoment != 0 && idleexpireMoment < hardexpireMoment)) {
-          expireMoment = idleexpireMoment
-        }
-      }
-      if (expireMoment != 0) {
-        expireEvent = new OFFlowTableEntryExpireEvent(table,
-          OFFlowTable.createMatchFieldFromOFMatch(ofmatch),
-          expireMoment)
-        SimulationEngine.addEvent(expireEvent)
-      }
-    }
-  }
-
-  private [openflow] val entries : HashMap[OFMatchField, OFFlowTableEntryAttaches] =
-    new HashMap[OFMatchField, OFFlowTableEntryAttaches] with
-      mutable.SynchronizedMap[OFMatchField, OFFlowTableEntryAttaches]
+  private [openflow] val entries : HashMap[OFMatchField, OFFlowTableEntryBase] =
+    new HashMap[OFMatchField, OFFlowTableEntryBase] with
+      SynchronizedMap[OFMatchField, OFFlowTableEntryBase]
   private [openflow] val tableCounter : OFTableCount = new OFTableCount
-
   private val messageFactory = new BasicFactory
+  private val entryClzName = XmlParser.getString("scalasim.openflow.table.entryclass",
+    "scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableEntryBase")
 
   def TableCounter = tableCounter
 
@@ -77,9 +34,9 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
     entries.clear()
   }
 
-  def matchFlow(flowmatch : OFMatch, topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
+  def matchFlow(flowmatch : OFMatch, topk : Int = 1) : List[OFFlowTableEntryBase] = {
     assert(topk > 0)
-    var ret = List[OFFlowTableEntryAttaches]()
+    var ret = List[OFFlowTableEntryBase]()
     val matchfield = OFFlowTable.createMatchFieldFromOFMatch(flowmatch)
     logDebug("matching flow, entry length:" + entries.size)
     entries.foreach(entry => {
@@ -89,14 +46,14 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
     ret.sortWith(_.priority > _.priority).slice(0, topk)
   }
 
-  private def queryTable(matchrule : OFMatchField, topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
+  private def queryTable(matchrule : OFMatchField, topk : Int = 1) : List[OFFlowTableEntryBase] = {
     assert(topk > 0)
-    var ret = List[OFFlowTableEntryAttaches]()
+    var ret = List[OFFlowTableEntryBase]()
     entries.foreach(entry => {if (matchrule.matching(entry._1)) ret = ret :+ entry._2})
     ret.sortWith(_.priority > _.priority).slice(0, topk)
   }
 
-  def queryTableByMatch(ofmatch : OFMatch) : List[OFFlowTableEntryAttaches] = {
+  def queryTableByMatch(ofmatch : OFMatch) : List[OFFlowTableEntryBase] = {
     if (ofmatch.getWildcards == -1) {
       logDebug("return all flows: " + entries.values.toList.length)
       entries.values.toList
@@ -106,9 +63,9 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
   }
 
   def queryTableByMatchAndOutport (match_field : OFMatch, outport_num : Short,
-                                 topk : Int = 1) : List[OFFlowTableEntryAttaches] = {
+                                 topk : Int = 1) : List[OFFlowTableEntryBase] = {
 
-    def containsOutputAction (p : OFFlowTableEntryAttaches) : OFActionOutput = {
+    def containsOutputAction (p : OFFlowTableEntryBase) : OFActionOutput = {
       for (action <- p.actions) {
         if (action.isInstanceOf[OFActionOutput]) return action.asInstanceOf[OFActionOutput]
       }
@@ -133,6 +90,12 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
     entries -= matchfield
   }
 
+  private def getNewEntry: OFFlowTableEntryBase = {
+    val clz = Class.forName(entryClzName)
+    val clzCtor = clz.getConstructor(this.getClass)
+    clzCtor.newInstance(this).asInstanceOf[OFFlowTableEntryBase]
+  }
+
   /**
    *
    * @param flow_mod
@@ -141,20 +104,21 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
   def addFlowTableEntry (flow_mod : OFFlowMod) = {
     assert(flow_mod.getCommand == OFFlowMod.OFPFC_ADD)
     logDebug(ofcontrolplane.node.ip_addr(0) + " insert flow table entry with " + flow_mod.getMatch)
-    val entryAttach = new OFFlowTableEntryAttaches(this)
-    entryAttach.ofmatch = flow_mod.getMatch
-    entryAttach.priority = flow_mod.getPriority
-    flow_mod.getActions.toList.foreach(f => entryAttach.actions += f)
+    val newEntryValue = getNewEntry
+    newEntryValue.ofmatch = flow_mod.getMatch
+    newEntryValue.priority = flow_mod.getPriority
+    flow_mod.getActions.toList.foreach(f => newEntryValue.actions += f)
     //schedule matchfield entry clean event
-    entryAttach.flowHardExpireMoment = (SimulationEngine.currentTime + flow_mod.getHardTimeout).toInt
-    entryAttach.flowIdleDuration = flow_mod.getIdleTimeout
-    entryAttach.refreshlastAccessPoint()
-    entries += (OFFlowTable.createMatchFieldFromOFMatch(entryAttach.ofmatch, entryAttach.ofmatch.getWildcards)
-      -> entryAttach)
+    newEntryValue.flowHardExpireMoment =
+      (SimulationEngine.currentTime + flow_mod.getHardTimeout).toInt
+    newEntryValue.flowIdleDuration = flow_mod.getIdleTimeout
+    newEntryValue.refreshlastAccessPoint()
+    entries += (OFFlowTable.createMatchFieldFromOFMatch(newEntryValue.ofmatch,
+      newEntryValue.ofmatch.getWildcards) -> newEntryValue)
     entries
   }
 
-  private def generateFlowStatisticalReplyFromFlowEntryList (flowlist : List[OFFlowTableEntryAttaches]) = {
+  private def generateFlowStatisticalReplyFromFlowEntryList (flowlist: List[OFFlowTableEntryBase]) = {
     val replylist = new ListBuffer[OFStatistics]
     flowlist.foreach(flowentry => {
       val offlowstatreply = messageFactory.getStatistics(OFType.STATS_REPLY, OFStatisticsType.FLOW)
@@ -168,7 +132,8 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
       offlowstatreply.setPriority(0)
       offlowstatreply.setIdleTimeout((flowentry.flowIdleDuration -
         (SimulationEngine.currentTime - flowentry.getLastAccessPoint)).toShort)
-      offlowstatreply.setHardTimeout((flowentry.flowHardExpireMoment - SimulationEngine.currentTime).toShort)
+      offlowstatreply.setHardTimeout((flowentry.flowHardExpireMoment -
+        SimulationEngine.currentTime).toShort)
       offlowstatreply.setCookie(0)
       offlowstatreply.setPacketCount(flowentry.counter.receivedpacket)
       offlowstatreply.setByteCount(flowentry.counter.receivedbytes)
@@ -199,7 +164,8 @@ object OFFlowTable {
    * @param wcard
    * @return
    */
-  def createMatchField(flow : Flow, wcard : Int = OFMatch.OFPFW_ALL & OFMatch.OFPFW_IN_PORT) : OFMatchField = {
+  def createMatchField(flow: Flow,
+                       wcard: Int = OFMatch.OFPFW_ALL & OFMatch.OFPFW_IN_PORT) : OFMatchField = {
     val matchfield = new OFMatchField()
     matchfield.setWildcards(wcard)
     matchfield.setInputPort(flow.inport)

@@ -1,12 +1,11 @@
-package network.events
+package scalasem.network.events
 
-import org.openflow.protocol.OFMatch
-import network.traffic.{GlobalFlowStore, Flow}
-import simengine.{EventOfSingleEntity, SimulationEngine}
-import network.topology.GlobalDeviceManager
-import simengine.utils.Logging
-import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
-import network.utils.FlowReporter
+import scalasem.network.traffic.{GlobalFlowStore, Flow}
+import scalasem.simengine.{EventOfSingleEntity, SimulationEngine}
+import scalasem.network.topology.GlobalDeviceManager
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.utils.FlowReporter
+import scalasem.util.Logging
 
 /**
  *

@@ -1,7 +1,6 @@
-package simengine
+package scalasem.simengine
 
-import simengine.utils.Logging
-
+import scalasem.util.Logging
 
 abstract class Event (protected var timestamp : Double) extends Logging {
 

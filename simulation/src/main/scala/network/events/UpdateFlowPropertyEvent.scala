@@ -1,9 +1,9 @@
-package network.events
+package scalasem.network.events
 
-import simengine.Event
-import network.traffic.GlobalFlowStore
-import network.topology.GlobalDeviceManager
-import network.forwarding.controlplane.openflow.OpenFlowControlPlane
+import scalasem.simengine.Event
+import scalasem.network.traffic.GlobalFlowStore
+import scalasem.network.topology.GlobalDeviceManager
+import scalasem.network.forwarding.controlplane.openflow.OpenFlowControlPlane
 
 class UpdateFlowPropertyEvent (timestamp : Double) extends Event(timestamp) {
 

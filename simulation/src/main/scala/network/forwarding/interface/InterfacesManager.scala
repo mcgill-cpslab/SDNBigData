@@ -1,11 +1,15 @@
-package network.forwarding.interface
+package scalasem.network.forwarding.interface
 
-import network.topology.{Link, HostType, Node}
-import simengine.utils.XmlParser
 import scala.collection.mutable.HashMap
 
+import scalasem.network.topology.{Link, HostType, Node}
+import scalasem.util.{Logging, XmlParser}
 
-trait InterfacesManager {
+
+trait InterfacesManager extends Logging {
+
+  protected var serveNode: Node = null
+
   private [forwarding] val outlinks = new HashMap[String, Link] // key -> destination ip
 
   //if the other end is a host, then the key is the ip of the host,
@@ -16,10 +20,12 @@ trait InterfacesManager {
   def getInLinks (ip : String) = inlinks.get(ip)
 
   def registerOutgoingLink(l : Link) {
+    logDebug(serveNode.ip_addr(0) + " adds outlink:" + l)
     outlinks += (l.end_to.ip_addr(0) -> l)
   }
 
   def registerIncomeLink(l : Link) {
+    logDebug(serveNode.ip_addr(0) + " adds inlink:" + l)
     inlinks += l.end_from.ip_addr(0) -> l
   }
 
@@ -30,6 +36,7 @@ trait InterfacesManager {
   }
 
   def getfloodLinks(localnode: Node, inport: Link): List[Link] = {
+    logDebug("calculating floodlink in " + localnode)
     val alllink = {
       if (localnode.nodetype != HostType)
         inlinks.values.toList ::: outlinks.values.toList

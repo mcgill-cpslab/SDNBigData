@@ -1,8 +1,7 @@
-package network.topology
+package scalasem.dummyTopology
 
-import scalasim.network.component.builder.{AddressInstaller}
-import simengine.utils.XmlParser
-
+import scalasem.network.component.builder.AddressInstaller
+import scalasem.network.topology.{CoreRouterType, RouterContainer}
 
 class Core (private val coreRouterNumber : Int,
              pods : Pod *) {
@@ -20,7 +19,7 @@ class Core (private val coreRouterNumber : Int,
   }
 
   def assignIPtoCoreLayer() {
-    val cellsegment = pods.foldLeft(-1)((a, b) => Math.max(a, b.cellID)) + 1
+    val cellsegment = pods.foldLeft(-1)((a, b) => Math.max(a, b.podID)) + 1
     for (i <- 0 until coreContainer.size) {
       AddressInstaller.assignIPAddress(coreContainer(i), "10." + cellsegment + "."  + i + ".1")
       AddressInstaller.assignIPAddress(coreContainer(i).ip_addr(0),

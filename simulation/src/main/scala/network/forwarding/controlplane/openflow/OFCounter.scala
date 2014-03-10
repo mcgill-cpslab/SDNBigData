@@ -1,4 +1,4 @@
-package network.forwarding.controlplane.openflow
+package scalasem.network.forwarding.controlplane.openflow
 
 class OFCounter (private [openflow] val name : String) {
 }

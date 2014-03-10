@@ -1,11 +1,12 @@
-package network.forwarding.controlplane.openflow
+package scalasem.network.forwarding.controlplane.openflow
 
-import org.openflow.protocol.OFMatch
 import java.util
 import java.util.Arrays
+
+import org.openflow.protocol.OFMatch
 import org.openflow.util.HexString
+
 import utils.IPAddressConvertor
-import network.traffic.Flow
 
 class OFMatchField() extends OFMatch {
 

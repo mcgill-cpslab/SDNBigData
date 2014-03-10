@@ -1,9 +1,8 @@
-package floodlight
+package scalasem.simengine
+
+import scala.collection.mutable.ListBuffer
 
 import org.scalatest.FunSuite
-import scala.collection.mutable.ListBuffer
-import simengine.{SimulationEngine, EventOfSingleEntity}
-import root.SimulationRunner
 
 class SimEngineSuite extends FunSuite{
   class DummySingleEntity (entity : String, t : Double) extends EventOfSingleEntity[String] (entity, t) {

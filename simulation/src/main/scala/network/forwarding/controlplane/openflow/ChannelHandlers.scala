@@ -1,13 +1,14 @@
-package network.forwarding.controlplane.openflow
+package scalasem.network.forwarding.controlplane.openflow
+
+import scala.collection.immutable.ListSet
+import scala.collection.JavaConversions._
 
 import org.jboss.netty.handler.codec.frame.FrameDecoder
 import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
-import org.openflow.protocol._
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
+import org.openflow.protocol._
 import org.openflow.protocol.factory.BasicFactory
-import scala.collection.immutable.ListSet
-import scala.collection.JavaConversions._
 
 class OpenFlowMsgEncoder extends OneToOneEncoder {
 

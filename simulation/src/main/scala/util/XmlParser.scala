@@ -1,4 +1,4 @@
-package simengine.utils
+package scalasem.util
 
 import scala.xml.XML
 import scala.collection.mutable.HashMap
@@ -7,7 +7,7 @@ object XmlParser {
 
   private val properties = new HashMap[String, String]()
 
-  def addProperties(key : String, value : String) {
+  def set(key : String, value : String) {
     properties += key -> value
   }
 

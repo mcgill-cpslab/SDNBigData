@@ -1,16 +1,17 @@
-package floodlight
+package scalasem.application
 
 import org.scalatest.FunSuite
-import simengine.utils.XmlParser
-import simengine.SimulationEngine
-import network.topology.Pod
-import application.{PermuMatrixApp, ApplicationRunner}
+
+import scalasem.simengine.SimulationEngine
+import scalasem.util.XmlParser
+import scalasem.dummyTopology.Pod
 
 class AppSuite extends FunSuite {
 
   test ("PermuMatrixApp can build the matrix correctly") {
-    XmlParser.loadConf("config.xml")
+    XmlParser.set("application.application.names", "PermuMatrixApp")
     val cellnet = new Pod(1)
+
     SimulationEngine.reset()
     ApplicationRunner.reset()
     ApplicationRunner.setResource(cellnet.getAllHostsInPod)

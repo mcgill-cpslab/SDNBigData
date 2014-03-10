@@ -1,4 +1,4 @@
-package network.forwarding.controlplane.openflow
+package scalasem.network.forwarding.controlplane.openflow
 
 import org.jboss.netty.channel.{Channels, ChannelPipeline, ChannelPipelineFactory}
 

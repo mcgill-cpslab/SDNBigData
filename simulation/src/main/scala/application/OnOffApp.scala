@@ -1,12 +1,13 @@
-package application
+package scalasem.application
 
-import network.topology.{Host, HostContainer}
 import scala.util.Random
-import network.events.{FlowOffEvent, StartNewFlowEvent}
-import network.traffic.Flow
-import simengine.SimulationEngine
 import scala.collection.immutable.HashMap
-import simengine.utils.XmlParser
+
+import scalasem.network.topology.{Host, HostContainer}
+import scalasem.network.events.{FlowOffEvent, StartNewFlowEvent}
+import scalasem.network.traffic.Flow
+import scalasem.simengine.SimulationEngine
+import scalasem.util.XmlParser
 
 
 class OnOffApp (servers : HostContainer) extends ServerApp(servers) {

@@ -1,12 +1,12 @@
-package application
+package scalasem.application
 
-import network.topology.{Host, HostContainer}
-import scala.collection.mutable.{HashSet, MultiMap, Set, HashMap}
-import simengine.utils.XmlParser
-import network.events.{FlowOffEvent, StartNewFlowEvent}
-import network.traffic.Flow
-import simengine.SimulationEngine
 import scala.util.Random
+
+import scalasem.network.topology.HostContainer
+import scalasem.network.events.{FlowOffEvent, StartNewFlowEvent}
+import scalasem.network.traffic.Flow
+import scalasem.simengine.SimulationEngine
+import scalasem.util.XmlParser
 
 
 class MapReduceApp (servers : HostContainer) extends ServerApp (servers) {

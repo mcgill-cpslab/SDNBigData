@@ -1,13 +1,13 @@
-package network.events
+package scalasem.network.events
 
-import network.traffic.{CompletedFlow, Flow}
-import simengine.{SimulationEngine, EventOfSingleEntity}
-import application.OnOffApp
 import scala.util.Random
-import network.topology.GlobalDeviceManager
-import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
-import org.openflow.protocol.OFMatch
-import simengine.utils.Logging
+
+import scalasem.network.traffic.{CompletedFlow, Flow}
+import scalasem.simengine.{SimulationEngine, EventOfSingleEntity}
+import scalasem.application.OnOffApp
+import scalasem.network.topology.GlobalDeviceManager
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.util.Logging
 
 class FlowOffEvent (flow : Flow, timestamp : Double)
   extends EventOfSingleEntity[Flow] (flow, timestamp) with Logging {

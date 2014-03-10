@@ -1,29 +1,31 @@
-package network.forwarding.controlplane.openflow
+package scalasem.network.forwarding.controlplane.openflow
 
-import network.topology._
-import network.forwarding.controlplane.DefaultControlPlane
-import org.openflow.protocol._
-import scala.collection.JavaConversions._
-import simengine.utils.XmlParser
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
 import java.util.concurrent.Executors
-import org.jboss.netty.bootstrap.ClientBootstrap
 import java.net.InetSocketAddress
-import org.jboss.netty.channel.Channel
+
 import scala.collection.mutable
+import scala.collection.JavaConversions._
+import scala.concurrent.Lock
+import scala.collection.mutable.ListBuffer
+import scala.collection.JavaConverters._
+
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
+import org.jboss.netty.bootstrap.ClientBootstrap
+import org.jboss.netty.channel.Channel
+import org.openflow.protocol._
+import org.openflow.protocol.statistics._
 import org.slf4j.LoggerFactory
 import org.openflow.protocol.factory.BasicFactory
 import org.openflow.protocol.action.{OFActionType, OFAction, OFActionOutput}
-import network.traffic.Flow
-import network.forwarding.interface.OpenFlowPortManager
-import scala.concurrent.Lock
-import scala.collection.JavaConverters._
-import network.forwarding.controlplane.openflow.flowtable.OFFlowTable
-import org.openflow.protocol.statistics._
-import scala.collection.mutable.ListBuffer
+
 import packets._
-import java.net.ConnectException
-import simengine.SimulationEngine
+import scalasem.network.topology._
+import scalasem.network.forwarding.controlplane.DefaultControlPlane
+import scalasem.util.XmlParser
+import scalasem.network.traffic.Flow
+import scalasem.network.forwarding.interface.OpenFlowPortManager
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.simengine.SimulationEngine
 
 /**
  * this class implement the functions for routers to contact with
@@ -41,7 +43,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   private [network] var toControllerChannel : Channel = null
 
-  private [openflow] lazy val ofinterfacemanager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
+  private [openflow] lazy val ofinterfacemanager = node.interfacesManager.
+    asInstanceOf[OpenFlowPortManager]
   private [network] val ofmsgsender = new OpenFlowMsgSender
 
   private var config_flags : Short = 0
@@ -108,7 +111,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     val packetin_msg = generatePacketIn(bufferid,
       inport.getPortNumber, ethernetFramedata,
       OFPacketIn.OFPacketInReason.NO_MATCH)
-    logger.trace("send PACKET_IN " + packetin_msg.toString + "to controller for table missing at node " + node)
+    logger.debug("send PACKET_IN " + packetin_msg.toString +
+      "to controller for table missing at node " + node)
     logger.debug("buffering flow " + flow + " at buffer " + bufferid +
       " at node " + node)
     pendingFlows += (bufferid -> flow)
@@ -135,8 +139,6 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
     if (neighbor.nodetype != HostType)
       neighbor.controlplane.asInstanceOf[OpenFlowControlPlane].sendLLDPtoController(outlink, lldpdata)
   }
-
-
 
   //build channel to the controller
   def connectToController() {
@@ -268,21 +270,21 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
    */
   def processOFPacketOut (pktoutmsg : OFPacketOut) {
 
-    def isLLDP = {
-      val ethernet = new Ethernet
-      ethernet.deserialize(pktoutmsg.getPacketData, 0, pktoutmsg.getLength -
-        16 - pktoutmsg.getActionsLength)
+    /*def isLLDP: Boolean = {
+      val ethernet = pktoutmsg.getPacketData.asInstanceOf[Ethernet]
       ethernet.getPayload.isInstanceOf[LLDP]
-    }
+    }*/
 
-    if (isLLDP) {
+    if (pktoutmsg.getBufferId == -1) {
       //the packet data is included in the packoutmsg
+      //assume bufferid - 1 is LLDP packet
       replyLLDP(pktoutmsg)
     } else {
       //TODO: is there any difference if we are on packet-level simulation?
       if (!pendingFlows.contains(pktoutmsg.getBufferId)) {
         //in case of duplicate packet out message
-        logger.debug("receive non-existing bufid = " + pktoutmsg.getBufferId + " on " + node.ip_addr(0))
+        logger.debug("receive non-existing bufid = " + pktoutmsg.getBufferId +
+          " on " + node.ip_addr(0))
         return
       }
       val pendingflow = pendingFlows(pktoutmsg.getBufferId)
@@ -294,8 +296,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
             val matchfield = OFFlowTable.createMatchField(flow = pendingflow)
             val ilink = ofinterfacemanager.reverseSelection(pktoutmsg.getInPort)
             val olink = ofinterfacemanager.reverseSelection(outaction.getPort)
-            log.trace("removing flow " + pendingflow + " from pending buffer " + pktoutmsg.getBufferId +
-              " at node " + node)
+            log.trace("removing flow " + pendingflow + " from pending buffer " +
+              pktoutmsg.getBufferId + " at node " + node)
             pendingFlowLock.acquire()
             pendingFlows -= (pktoutmsg.getBufferId)
             pendingFlowLock.release()
@@ -306,11 +308,14 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
                 pendingflow.floodflag = false
                 floodoutFlow(node, pendingflow, matchfield, ilink)
                 floodedflows = floodedflows :+ pendingflow
+              } else {
+                logger.warn("duplicate flooded flow " + pendingflow + " at " + node.ip_addr(0))
               }
             } else {
               logTrace("forward the flow " + pendingflow + " through " + olink + " at node " + node)
-              logger.debug("receive PACKET_OUT:" + pktoutmsg + ", the output link is " + outaction.getPort +
-                ", " + olink.toString + ", at " + node.ip_addr(0) + " for " + pendingflow.toString())
+              logger.debug("receive PACKET_OUT:" + pktoutmsg + ", the output link is " +
+                outaction.getPort + ", " + olink.toString + ", at " + node.ip_addr(0) +
+                " for " + pendingflow.toString())
               if (ilink != olink) {
                 pendingflow.floodflag = false
                 forward(node, olink, ilink, pendingflow, matchfield)
@@ -505,9 +510,8 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
   //abstract methods
   override def selectNextHop(flow: Flow, matchfield: OFMatchField, inPort: Link): Link = {
-    if (floodedflows.contains(flow) || RIBIn.contains(matchfield)) {
+    if (flow.hasBindedCompleteEvent) {
       //TODO: should allow the duplicate flow
-      SimulationEngine.queueReadingLock.release()
       return null
     }
     if (!RIBOut.contains(matchfield)) {
@@ -515,10 +519,6 @@ class OpenFlowControlPlane (private [openflow] val node : Node)
 
       val debugstr = "miss the matchfield " + matchfield.toString + " with hashcode " + matchfield.hashCode
       logDebug(debugstr)
-      /*for (key <- RIBOut.keys) {
-        logDebug(key.toString + ", " + key.hashCode)
-      } */
-
       val dummypayload = new Array[Byte](1)
       dummypayload(0) = (0).toByte
       val ethernetFrame = new Ethernet

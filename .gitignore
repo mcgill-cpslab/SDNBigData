@@ -8,6 +8,7 @@ native/
 .settings
 .cache
 build/
+*.log
 /build/
 work/
 out/
