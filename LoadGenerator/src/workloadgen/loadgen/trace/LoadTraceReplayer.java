@@ -38,14 +38,14 @@ public class LoadTraceReplayer extends LoadTraceGenerator {
           for (int i = 0; i < Integer.parseInt(matcher.group(3)); i++) {
             LoadSubmissionPlan.LoadSubmissionPoint subPoint =
                     subPlan.new LoadSubmissionPoint(
-                            matcher.group(1),
-                            Integer.parseInt(matcher.group(2)),
-                            Integer.parseInt(matcher.group(3)),
-                            Integer.parseInt(matcher.group(4)),
-                            matcher.group(5),
-                            matcher.group(6),
-                            Integer.parseInt(matcher.group(7)),
-                            Long.parseLong(matcher.group(8)));
+                            matcher.group(1),//jobtype
+                            Integer.parseInt(matcher.group(2)),//submit time
+                            Integer.parseInt(matcher.group(3)),//num of jobs
+                            Integer.parseInt(matcher.group(4)),//num of reducers
+                            matcher.group(5),//input Size
+                            matcher.group(6),//queueName
+                            Integer.parseInt(matcher.group(7)),//reqtype
+                            Long.parseLong(matcher.group(8)));//reqvalue
             subPlan.addNewPoint(subPoint);
           }
         }
