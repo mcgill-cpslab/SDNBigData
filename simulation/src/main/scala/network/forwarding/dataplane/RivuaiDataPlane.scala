@@ -4,6 +4,7 @@ import scala.collection.mutable.HashMap
 
 import scalasem.network.forwarding.controlplane.openflow.flowtable.{OFFlowTable, OFRivuaiFlowTableEntry}
 import scalasem.network.forwarding.controlplane.openflow.RivuaiControlPlane
+import scalasem.network.forwarding.interface.OpenFlowPortManager
 import scalasem.network.topology.{Link, Node}
 import scalasem.network.traffic.GlobalFlowStore
 import scalasem.util.XmlParser
@@ -14,7 +15,7 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
 
   private val alpha = XmlParser.getDouble("scalasim.rivuai.alpha", 0.5)
   private val controlPlane = node.controlplane.asInstanceOf[RivuaiControlPlane]
-  private val interfaceManager = node.interfacesManager
+  private val interfaceManager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
 
   // port -> (jobid -> using bandwidth)
   private val jobidToCurrentRating = new HashMap[Short, HashMap[Int, Double]]
@@ -60,12 +61,17 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
       }
     }
 
-    // get C_i
+    // get C_i for weighted fair share flows
     // port number ->
-    val sumOfCapacity = new HashMap[Short, Double]
+    val assignedToWFS = new HashMap[Short, Double]
+
+    for (allocToMGEntry <- assignedToMinimumGuarantee) {
+      val capacity  = interfaceManager.getLinkByPortNum(allocToMGEntry._1).bandwidth
+      assignedToWFS += allocToMGEntry._1 -> (capacity - allocToMGEntry._2)
+    }
 
     for (perPortAllocation <- jobidToCurrentRating) {
-      val perPortRate
+
     }
 
     for (entry <- flowTable.entries.values) {

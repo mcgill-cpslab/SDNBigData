@@ -38,7 +38,7 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
    * @param portNum the port number
    * @return the link
    */
-  def reverseSelection (portNum : Short) : Link = {
+  def getLinkByPortNum (portNum : Short) : Link = {
     linkphysicalportsMap.find(link_port_pair => link_port_pair._2.getPortNumber == portNum) match {
       case Some(lppair) => lppair._1
       case None => null

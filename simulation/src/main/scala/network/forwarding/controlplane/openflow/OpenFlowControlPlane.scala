@@ -129,7 +129,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
   private def replyLLDP (pktoutMsg : OFPacketOut) {
     //send out through all ports
     val outport = pktoutMsg.getActions.get(0).asInstanceOf[OFActionOutput].getPort
-    val outlink = ofinterfacemanager.reverseSelection(outport)
+    val outlink = ofinterfacemanager.getLinkByPortNum(outport)
     val neighbor = Link.otherEnd(outlink, node)
     val lldpdata = pktoutMsg.getPacketData
     //TODO: only support the situation that all routers are openflow-enabled
@@ -246,7 +246,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
           RIBOut.synchronized{
             if (outport >= 0)
               insertOutPath(offlowmod.getMatch,
-                ofinterfacemanager.reverseSelection(outport.asInstanceOf[Short]))
+                ofinterfacemanager.getLinkByPortNum(outport.asInstanceOf[Short]))
             flowtables(0).addFlowTableEntry(offlowmod)
             logDebug("flowtable length:" + flowtables(0).entries.size + " at " + node.ip_addr(0))
           }
@@ -291,8 +291,8 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
           case OFActionType.OUTPUT => {
             val outaction = action.asInstanceOf[OFActionOutput]
             val matchfield = OFFlowTable.createMatchField(flow = pendingflow)
-            val ilink = ofinterfacemanager.reverseSelection(pktoutmsg.getInPort)
-            val olink = ofinterfacemanager.reverseSelection(outaction.getPort)
+            val ilink = ofinterfacemanager.getLinkByPortNum(pktoutmsg.getInPort)
+            val olink = ofinterfacemanager.getLinkByPortNum(outaction.getPort)
             log.trace("removing flow " + pendingflow + " from pending buffer " +
               pktoutmsg.getBufferId + " at node " + node)
             pendingFlowLock.acquire()

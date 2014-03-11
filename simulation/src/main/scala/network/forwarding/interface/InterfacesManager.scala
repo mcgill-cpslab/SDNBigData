@@ -29,12 +29,6 @@ trait InterfacesManager extends Logging {
     inlinks += l.end_from.ip_addr(0) -> l
   }
 
-  def getNeighbour(localnode : Node, l : Link) : Node = {
-    assert(l.end_from == localnode || l.end_to == localnode)
-    if (l.end_to == localnode) l.end_from
-    else l.end_to
-  }
-
   def getfloodLinks(localnode: Node, inport: Link): List[Link] = {
     logDebug("calculating floodlink in " + localnode)
     val alllink = {
