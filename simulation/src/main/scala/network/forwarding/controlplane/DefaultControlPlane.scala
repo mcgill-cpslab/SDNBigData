@@ -13,7 +13,7 @@ import scalasem.network.forwarding.controlplane.openflow.OFMatchField
  * routing path of packets/flow, that is depended on the symmetric dummyTopo
  * without support of any functions like VLAN, etc.
  */
-class DefaultControlPlane (node : Node) extends RoutingProtocol with Logging {
+class DefaultControlPlane(node : Node) extends RoutingProtocol with Logging {
 
 
   private var dstRange : String = null

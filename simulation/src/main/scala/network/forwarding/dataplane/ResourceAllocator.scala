@@ -162,8 +162,8 @@ object ResourceAllocator {
 
   def apply(node : Node) : ResourceAllocator = {
     XmlParser.getString("scalasim.simengine.model", "default") match {
-      case "default" => new DefaultDataPlane
-      case "openflow" => new DefaultDataPlane
+      case "default" => new DefaultDataPlane(node)
+      case "openflow" => new DefaultDataPlane(node)
       case _ => null
     }
   }

@@ -10,7 +10,7 @@ import scalasem.util.Logging
  * packets/flows as well as the congestion control, etc.
  * that is the maxmin allocation
  */
-class DefaultDataPlane extends ResourceAllocator with Logging {
+class DefaultDataPlane(node: Node) extends ResourceAllocator with Logging {
 
   /**
    * perform max min allocation on the link
