@@ -47,40 +47,60 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
       val rivuaiEntry = entry.asInstanceOf[OFRivuaiFlowTableEntry]
       val currentRate = GlobalFlowStore.getFlow(
         OFFlowTable.createMatchFieldFromOFMatch(rivuaiEntry.ofmatch)).rate
-      val actionsOnFlow = rivuaiEntry.actions.filter(p => p.isInstanceOf[OFActionOutput])
-      val flowIsAllowed = actionsOnFlow.size > 0
-      if (flowIsAllowed) {
-        val portNum = actionsOnFlow(0).asInstanceOf[OFActionOutput].getPort
-        val jobBucket = jobidToCurrentRating.getOrElseUpdate(portNum, new HashMap[Int, Double]())
+      val outportNum = rivuaiEntry.outportNum
+      if (outportNum >= 0) {
+        val jobBucket = jobidToCurrentRating.getOrElseUpdate(outportNum, new HashMap[Int, Double]())
         jobBucket.getOrElseUpdate(rivuaiEntry.jobid, 0.0)
         jobBucket(rivuaiEntry.jobid) += currentRate
         if (rivuaiEntry.reqtype == 0) {
-          val currentRate = assignedToMinimumGuarantee.getOrElseUpdate(portNum, 0.0)
-          assignedToMinimumGuarantee(portNum) += currentRate
+          val currentRate = assignedToMinimumGuarantee.getOrElseUpdate(outportNum, 0.0)
+          assignedToMinimumGuarantee(outportNum) += currentRate
         }
       }
     }
 
-    // get C_i for weighted fair share flows
+    // get capacity for weighted fair share flows
     // port number ->
     val assignedToWFS = new HashMap[Short, Double]
-
     for (allocToMGEntry <- assignedToMinimumGuarantee) {
       val capacity  = interfaceManager.getLinkByPortNum(allocToMGEntry._1).bandwidth
       assignedToWFS += allocToMGEntry._1 -> (capacity - allocToMGEntry._2)
     }
 
-    for (perPortAllocation <- jobidToCurrentRating) {
+    // get C_i for every job
+    // 1. get the sum of the priorities of jobs without minimum guarantee
+    var sum = 0
+    for (entry <- flowTable.entries.values
+         if entry.asInstanceOf[OFRivuaiFlowTableEntry].reqtype != 0) {
+      sum += entry.asInstanceOf[OFRivuaiFlowTableEntry].reqvalue
+    }
+    // 2. get C_i
+    for (entry <- flowTable.entries.values
+         if entry.asInstanceOf[OFRivuaiFlowTableEntry].reqtype != 0) {
+      val rivuaiEntry = entry.asInstanceOf[OFRivuaiFlowTableEntry]
+      val outportNum = rivuaiEntry.outportNum
+      if (outportNum >= 0) {
+        val jobBucket = jobidToVirtualCapacity.getOrElseUpdate(outportNum, new HashMap[Int, Double]())
+        jobBucket.getOrElseUpdate(rivuaiEntry.jobid, 0.0)
+        jobBucket += rivuaiEntry.jobid ->
+          ((rivuaiEntry.reqvalue.asInstanceOf[Double] / sum) * assignedToWFS(outportNum))
+      }
+    }
 
+    for (entry <- flowTable.entries.values) {
+      
     }
 
     for (entry <- flowTable.entries.values) {
 
     }
+    reset()
+  }
 
-    for (entry <- flowTable.entries.values) {
-
-    }
+  def reset() {
+    jobidToAllocation.clear()
     jobidToCurrentRating.clear()
+    jobidToFlowNum.clear()
+    jobidToVirtualCapacity.clear()
   }
 }
