@@ -34,8 +34,10 @@ import scalasem.simengine.SimulationEngine
 class OpenFlowControlPlane (private [openflow] val node : Router)
   extends DefaultControlPlane(node) with MessageListener {
 
-  private val controllerIP = XmlParser.getString("scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
-  private val controllerPort = XmlParser.getInt("scalasim.network.controlplane.openflow.controller.port", 6633)
+  private val controllerIP = XmlParser.getString(
+    "scalasim.network.controlplane.openflow.controller.host", "127.0.0.1")
+  private val controllerPort = XmlParser.getInt(
+    "scalasim.network.controlplane.openflow.controller.port", 6633)
   private var floodedflows = List[Flow]()
 
 
@@ -48,7 +50,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
   private var config_flags : Short = 0
   private var miss_send_len : Short = 1000
 
-  private [controlplane] val flowtables = new Array[OFFlowTable](
+  private[network] val flowtables = new Array[OFFlowTable](
     XmlParser.getInt("scalasim.openflow.flowtablenum", 1))
 
   //the flows waiting for PACKET_OUT
@@ -90,8 +92,6 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
     //logger.debug("frame size:" + payload.size + " total length of packet_in:" + packet_in_msg.getTotalLength)
     packet_in_msg
   }
-
-  def FlowTables = flowtables
 
   def sendPacketInToController(flow : Flow, inlink: Link, ethernetFramedata: Array[Byte]) {
 

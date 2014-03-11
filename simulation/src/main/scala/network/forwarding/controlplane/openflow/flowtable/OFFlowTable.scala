@@ -19,7 +19,7 @@ import utils.IPAddressConvertor
 class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : OpenFlowControlPlane)
   extends Logging {
 
-  private [openflow] val entries : HashMap[OFMatchField, OFFlowTableEntryBase] =
+  private [forwarding] val entries : HashMap[OFMatchField, OFFlowTableEntryBase] =
     new HashMap[OFMatchField, OFFlowTableEntryBase] with
       SynchronizedMap[OFMatchField, OFFlowTableEntryBase]
   private [openflow] val tableCounter : OFTableCount = new OFTableCount
@@ -186,7 +186,8 @@ object OFFlowTable {
    * @return
    */
   def createMatchFieldFromOFMatch(ofmatch : OFMatch,
-                                  wcard : Int = OFMatch.OFPFW_ALL & OFMatch.OFPFW_IN_PORT) : OFMatchField = {
+                                  wcard : Int = OFMatch.OFPFW_ALL &
+                                    OFMatch.OFPFW_IN_PORT): OFMatchField = {
     val matchfield = new OFMatchField
     matchfield.setWildcards(wcard)
     matchfield.setInputPort(ofmatch.getInputPort)

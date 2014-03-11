@@ -54,7 +54,7 @@ class Flow (
   def DstIP = dstIP
   def SrcIP = srcIP
 
-  private var rate : Double = 0.0
+  private[network] var rate : Double = 0.0
   private var tempRate : Double = Double.MaxValue
 
   def bindEvent(ce : CompleteFlowEvent) {
@@ -69,7 +69,7 @@ class Flow (
 
     def updateFlowCounter(node : Node) {
       if (node.nodetype != HostType) {
-        val oftables = node.controlplane.asInstanceOf[OpenFlowControlPlane].FlowTables
+        val oftables = node.controlplane.asInstanceOf[OpenFlowControlPlane].flowtables
         oftables.foreach(table => {
           val entries = table.matchFlow(OFFlowTable.createMatchField(this))
           if (entries != null) {

@@ -23,6 +23,6 @@ final class CompleteFlowEvent (flow : Flow, t : Double)
     val matchfield = OFFlowTable.createMatchField(flow = flow)
     GlobalDeviceManager.getNode(flow.dstIP).dataplane.finishFlow(
       GlobalDeviceManager.getNode(flow.dstIP), flow, matchfield)
-    GlobalFlowStore.removeFlow(flow)
+    GlobalFlowStore.removeFlow(matchfield)
   }
 }
