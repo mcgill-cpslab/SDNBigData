@@ -9,7 +9,7 @@ import org.openflow.protocol.action.{OFActionOutput, OFAction}
 class OFRivuaiFlowTableEntry(table: OFFlowTable) extends OFFlowTableEntryBase(table) {
   private[forwarding] var jobid: Int = -1
   private[forwarding] var reqtype: Int = -1
-  private[forwarding] var reqvalue: Int = -1
+  private[forwarding] var reqvalue: Double = -1.0
   private[forwarding] var ratelimit: Double = 0.0
 
   override private[forwarding] var ofmatch: OFMatch = null
