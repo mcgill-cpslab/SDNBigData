@@ -14,6 +14,8 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
 
   private val alpha = XmlParser.getDouble("scalasim.rivuai.alpha", 0.5)
   private val controlPlane = node.controlplane.asInstanceOf[RivuaiControlPlane]
+  private val interfaceManager = node.interfacesManager
+
   // port -> (jobid -> using bandwidth)
   private val jobidToCurrentRating = new HashMap[Short, HashMap[Int, Double]]
   // port -> (jobid -> using bandwidth)
@@ -36,7 +38,8 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
     val flowTable = controlPlane.flowtables(0)
 
     //TODO: assigned to Minimum guarantee
-    val assignedToMinimumGuarantee = 0.0
+    //port -> bandwidth allocated to minimum guaranteed flows
+    val assignedToMinimumGuarantee = new HashMap[Short, Double]
 
     //get the y_i on each port
     for (entry <- flowTable.entries.values) {
@@ -50,11 +53,21 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
         val jobBucket = jobidToCurrentRating.getOrElseUpdate(portNum, new HashMap[Int, Double]())
         jobBucket.getOrElseUpdate(rivuaiEntry.jobid, 0.0)
         jobBucket(rivuaiEntry.jobid) += currentRate
+        if (rivuaiEntry.reqtype == 0) {
+          val currentRate = assignedToMinimumGuarantee.getOrElseUpdate(portNum, 0.0)
+          assignedToMinimumGuarantee(portNum) += currentRate
+        }
       }
     }
 
-    //get C_i
-    val sumOfCapacity =
+    // get C_i
+    // port number ->
+    val sumOfCapacity = new HashMap[Short, Double]
+
+    for (perPortAllocation <- jobidToCurrentRating) {
+      val perPortRate
+    }
+
     for (entry <- flowTable.entries.values) {
 
     }
