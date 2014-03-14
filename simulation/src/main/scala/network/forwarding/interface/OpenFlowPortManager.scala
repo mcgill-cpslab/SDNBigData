@@ -86,7 +86,7 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
 
   override def registerIncomeLink(l : Link) {
     super.registerIncomeLink(l)
-    if (node.nodetype != HostType) {
+    if (node.nodeType != HostType) {
       addOFPhysicalPort(l, (outlinks.size + inlinks.size).toShort)
     }
   }

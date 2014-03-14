@@ -12,12 +12,12 @@ import scalasem.util.Logging
 class FlowOffEvent (flow : Flow, timestamp : Double)
   extends EventOfSingleEntity[Flow] (flow, timestamp) with Logging {
 
-  def process {
+  def process() {
     if (flow.getEgressLink == null) return//TODO:for duplicate flow, to be removed
     logTrace(flow + " is off")
     if (flow.status != CompletedFlow) {
       flow.changeRate(0)
-      if (flow.AppDataSize > 0) {
+      if (flow.remainingAppData > 0) {
         //SCHEDULE next ON event
         val nextOnMoment = Random.nextInt(OnOffApp.onLength)
         SimulationEngine.addEvent(new FlowOnEvent(flow,

@@ -18,7 +18,10 @@ import scalasem.util.{XmlParser, Logging}
  * @param dstMac
  * @param vlanID
  * @param prioritycode
- * @param remainingAppData
+ * @param srcPort
+ * @param dstPort
+ * @param totalSize
+ * @param floodflag
  */
 class Flow (
   private [network] val srcIP : String,
@@ -29,7 +32,7 @@ class Flow (
   private [network] val prioritycode: Byte = 0,
   private [network] val srcPort : Short = 0,
   private [network] val dstPort : Short = 0,//set to 0 to wildcarding src/dst ports
-  private var remainingAppData : Double,//in MB
+  private [network] val totalSize: Double,//in MB
   private [network] var floodflag : Boolean = false
   //to indicate this flow may be routed to the non-destination host
   ) extends Logging {
@@ -39,6 +42,8 @@ class Flow (
   private var bindedCompleteEvent : CompleteFlowEvent = null
   private var lastChangePoint  = 0.0
   private var egressLink : Link = null
+
+  private[network] var remainingAppData: Double = totalSize
 
   //this value is dynamic,
   //mainly used by the openflow protocol to match flowtable
@@ -68,7 +73,7 @@ class Flow (
                                       additionalDuration : Int) {
 
     def updateFlowCounter(node : Node) {
-      if (node.nodetype != HostType) {
+      if (node.nodeType != HostType) {
         val oftables = node.controlplane.asInstanceOf[OpenFlowControlPlane].flowtables
         oftables.foreach(table => {
           val entries = table.matchFlow(OFFlowTable.createMatchField(this))
@@ -89,7 +94,7 @@ class Flow (
     def updatePortCounters(link : Link, linkIdx : Int) {
       //linkIdx > hop / 2 because we traverse all links in reverse order
       if (linkIdx > hop / 2) {
-        if (link.end_from.nodetype != HostType) {
+        if (link.end_from.nodeType != HostType) {
           val portManager = link.end_from.interfacesManager.asInstanceOf[OpenFlowPortManager]
           val portnumber = portManager.getPortByLink(link).getPortNumber
           val portcounter = portManager.getPortCounter(portnumber)
@@ -168,8 +173,6 @@ class Flow (
   }
 
   def setTempRate(tr: Double) {tempRate = tr}
-
-  def AppDataSize = remainingAppData
 
   def getTempRate = tempRate
 
@@ -280,6 +283,6 @@ object Flow {
             sPort : Short = 1, dPort : Short = 1, vlanID : Short = 0xffff.asInstanceOf[Short],
             prioritycode : Byte = 0, appDataSize : Double, fflag : Boolean = false) : Flow = {
     new Flow(srcIP, dstIP, srcMac, dstMac, vlanID, prioritycode, srcPort = sPort, dstPort = dPort,
-      remainingAppData = appDataSize, floodflag = fflag)
+      totalSize = appDataSize, floodflag = fflag)
   }
 }

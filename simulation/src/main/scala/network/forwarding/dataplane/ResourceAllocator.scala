@@ -90,9 +90,9 @@ trait ResourceAllocator extends Logging {
     if (flow.status == NewStartFlow) {
       val completeEvent = new CompleteFlowEvent(
         flow,
-        SimulationEngine.currentTime + flow.AppDataSize / flow.getTempRate)
+        SimulationEngine.currentTime + flow.remainingAppData / flow.getTempRate)
       logTrace("schedule complete event " + completeEvent + " for " + flow + " at " +
-        (SimulationEngine.currentTime + flow.AppDataSize / flow.getTempRate))
+        (SimulationEngine.currentTime + flow.remainingAppData / flow.getTempRate))
       SimulationEngine.addEvent(completeEvent)
       flow.bindEvent(completeEvent)
       //has found the destination, change the property

@@ -13,7 +13,7 @@ case object ToRRouterType extends  NodeType
 case object CoreRouterType extends NodeType
 case object HostType extends NodeType
 
-class Node (val nodetype : NodeType,
+class Node (val nodeType : NodeType,
   val globalDeviceId : Int) {
 
   def id_gen(pid : Int, swid: Int, hostid: Int): Long = {

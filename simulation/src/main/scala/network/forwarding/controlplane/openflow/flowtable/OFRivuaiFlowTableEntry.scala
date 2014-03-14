@@ -12,8 +12,6 @@ class OFRivuaiFlowTableEntry(table: OFFlowTable) extends OFFlowTableEntryBase(ta
   private[forwarding] var reqvalue: Double = -1.0
   private[forwarding] var ratelimit: Double = 0.0
 
-  override private[forwarding] var ofmatch: OFMatch = null
-
   lazy val outportNum: Short = {
     val outAction = actions.filter(p => p.isInstanceOf[OFActionOutput])
     if (outAction.size <= 0) -1
@@ -21,6 +19,8 @@ class OFRivuaiFlowTableEntry(table: OFFlowTable) extends OFFlowTableEntryBase(ta
       outAction(0).asInstanceOf[OFActionOutput].getPort
     }
   }
+
+  lazy val inportNum: Short = ofmatch.getInputPort
 
   // last timestamp when the flow is checked by Rivuai
   private[forwarding] var lastCheckpoint: Double = 0.0

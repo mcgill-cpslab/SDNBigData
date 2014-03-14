@@ -32,7 +32,7 @@ trait InterfacesManager extends Logging {
   def getfloodLinks(localnode: Node, inport: Link): List[Link] = {
     logDebug("calculating floodlink in " + localnode)
     val alllink = {
-      if (localnode.nodetype != HostType)
+      if (localnode.nodeType != HostType)
         inlinks.values.toList ::: outlinks.values.toList
       else outlinks.values.toList
     }
@@ -47,7 +47,7 @@ object InterfacesManager {
   def apply(node : Node) = {
     XmlParser.getString("scalasim.simengine.model", "default") match {
       case "default" => new DefaultInterfacesManager(node)
-      case "openflow" => node.nodetype match {
+      case "openflow" => node.nodeType match {
         case HostType => new DefaultInterfacesManager(node)
         case _ => new OpenFlowPortManager(node)
       }

@@ -17,10 +17,10 @@ object GlobalDeviceManager {
   }
 
   def getAllRouters = {
-    globalNodeMap.values.filter(node => node.nodetype != HostType)
+    globalNodeMap.values.filter(node => node.nodeType != HostType)
   }
 
   def getAllHosts = {
-    globalNodeMap.values.filter(node => node.nodetype == HostType)
+    globalNodeMap.values.filter(node => node.nodeType == HostType)
   }
 }

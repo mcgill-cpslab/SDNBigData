@@ -42,10 +42,10 @@ class DefaultControlPlane(node : Node) extends RoutingProtocol with Logging {
   def selectNextHop(flow : Flow, matchfield : OFMatchField, inlink : Link): Link = {
     if (RIBOut.contains(matchfield)) return RIBOut(matchfield)
     var olink : Link = null
-    if (node.nodetype != HostType) {
+    if (node.nodeType != HostType) {
       getDstParameters(matchfield)
       val dstIP = IPAddressConvertor.IntToDecimalString(matchfield.getNetworkDestination)
-      node.nodetype match {
+      node.nodeType match {
         case ToRRouterType => {
           if (dstRange == localRange) {
             assert(node.interfacesManager.inlinks.contains(dstIP),

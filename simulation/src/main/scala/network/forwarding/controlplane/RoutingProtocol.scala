@@ -10,8 +10,7 @@ import scalasem.network.traffic.Flow
 import scalasem.util.{XmlParser, Logging}
 import scalasem.network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
 import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
-import scalasem.simengine.SimulationEngine
-import network.forwarding.controlplane.openflow.RivuaiControlPlane
+import scalasem.network.forwarding.controlplane.openflow.RivuaiControlPlane
 
 /**
  *  the trait representing the functionalities to calculate
@@ -127,7 +126,7 @@ trait RoutingProtocol extends Logging {
 
 
   private def wrongDistination(localnode: Node, flow : Flow) : Boolean = {
-    if (localnode.ip_addr(0) !=  flow.srcIP && localnode.ip_addr(0) != flow.dstIP && localnode.nodetype == HostType) {
+    if (localnode.ip_addr(0) !=  flow.srcIP && localnode.ip_addr(0) != flow.dstIP && localnode.nodeType == HostType) {
       logTrace("Discard flow " + flow + " on node " + localnode.toString)
       return true
     }
@@ -144,13 +143,13 @@ object RoutingProtocol {
     XmlParser.getString("scalasim.simengine.model", "default") match {
       case "default" => new DefaultControlPlane(node)
       case "openflow" => {
-        node.nodetype match {
+        node.nodeType match {
           case HostType => new DefaultControlPlane(node)
           case _ => new OpenFlowControlPlane(node.asInstanceOf[Router])
         }
       }
       case "rivuai" => {
-        node.nodetype match {
+        node.nodeType match {
           case HostType => new DefaultControlPlane(node)
           case _ => new RivuaiControlPlane(node.asInstanceOf[Router])
         }
