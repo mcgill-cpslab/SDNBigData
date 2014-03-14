@@ -25,7 +25,6 @@ import scalasem.util.XmlParser
 import scalasem.network.traffic.Flow
 import scalasem.network.forwarding.interface.OpenFlowPortManager
 import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
-import scalasem.simengine.SimulationEngine
 
 /**
  * this class implement the functions for routers to contact with

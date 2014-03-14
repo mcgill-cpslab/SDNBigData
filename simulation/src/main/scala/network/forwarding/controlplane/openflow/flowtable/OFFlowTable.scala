@@ -12,7 +12,7 @@ import org.openflow.protocol.factory.BasicFactory
 import scalasem.network.forwarding.controlplane.openflow._
 import scalasem.simengine.SimulationEngine
 import scalasem.network.traffic.Flow
-import scalasem.util.{XmlParser, Logging, ReflectionUtil}
+import scalasem.util.{XmlParser, Logging}
 
 import utils.IPAddressConvertor
 

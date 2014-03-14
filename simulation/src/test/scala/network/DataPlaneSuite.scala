@@ -8,7 +8,7 @@ import scalasem.network.events.StartNewFlowEvent
 import scalasem.dummyTopology.Pod
 import scalasem.network.traffic.Flow
 import scalasem.simengine.{SimulationEngine, SimulationRunner}
-import scalasem.util.{XmlParser, Logging}
+import scalasem.util.Logging
 
 class DataPlaneSuite extends FunSuite with Logging {
 

@@ -4,7 +4,7 @@ package scalasem.network
 import java.util
 
 import org.scalatest.FunSuite
-import org.openflow.util.{U32, HexString}
+import org.openflow.util.U32
 import org.openflow.protocol.factory.BasicFactory
 import org.openflow.protocol.{OFFlowMod, OFType, OFMatch}
 import org.openflow.protocol.action.{OFAction, OFActionOutput}

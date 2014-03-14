@@ -1,9 +1,7 @@
 package scalasem.network.forwarding.controlplane.openflow.flowtable
 
-import scala.collection.mutable.ListBuffer
 
-import org.openflow.protocol.OFMatch
-import org.openflow.protocol.action.{OFActionOutput, OFAction}
+import org.openflow.protocol.action.OFActionOutput
 
 
 class OFRivuaiFlowTableEntry(table: OFFlowTable) extends OFFlowTableEntryBase(table) {
