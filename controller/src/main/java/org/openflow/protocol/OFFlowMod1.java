@@ -2,7 +2,7 @@ package org.openflow.protocol;
 
 
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.openflow.protocol.action.OFAction;
+
 
 public class OFFlowMod1 extends OFFlowMod {
 

@@ -38,6 +38,7 @@ enum OFMessageType {
   STATS_REPLY = 17,
   BARRIER_REQUEST = 18,
   BARRIER_REPLY = 19,
+  FLOW_MOD_1=30,
 }
 
 /**

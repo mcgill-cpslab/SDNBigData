@@ -1,5 +1,11 @@
 package scalasem.network.forwarding.controlplane.openflow
 
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+
+import org.openflow.protocol.{OFMatch, OFFlowMod, OFType, OFMessage}
+import org.openflow.protocol.action.OFActionOutput
+
 import scalasem.network.events.RivuaiRateControlEvent
 import scalasem.network.forwarding.controlplane.openflow.flowtable.{OFRivuaiFlowTableEntry, OFFlowTable}
 import scalasem.network.forwarding.dataplane.RivuaiDataPlane
@@ -7,7 +13,6 @@ import scalasem.network.topology.{ToRRouterType, HostType, Router}
 import scalasem.network.traffic.Flow
 import scalasem.simengine.SimulationEngine
 import scalasem.util.XmlParser
-import org.openflow.protocol.{OFType, OFMessage}
 
 class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
 
@@ -43,11 +48,47 @@ class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
     }
   }
 
+  private def processFlowMod(offlowmod: OFFlowMod) {
+    offlowmod.getCommand match {
+      case OFFlowMod.OFPFC_DELETE => {
+        if (offlowmod.getMatch.getWildcards == OFMatch.OFPFW_ALL) {
+          //clear to initialize matchfield tables;
+          flowtables.foreach(table => table.clear())
+        }
+      }
+      case OFFlowMod.OFPFC_ADD => {
+        logTrace("receive OFPFC_ADD:" + offlowmod.toString + " at " + node.ip_addr(0))
+        //table(0) for openflow 1.0
+
+        if (offlowmod.getActions.size() > 0) {
+          var outport = -1
+          for (action <- offlowmod.getActions) {
+            if (action.isInstanceOf[OFActionOutput]) {
+              outport = action.asInstanceOf[OFActionOutput].getPort
+            }
+          }
+          RIBOut.synchronized{
+            if (outport >= 0)
+              insertOutPath(offlowmod.getMatch,
+                ofinterfacemanager.getLinkByPortNum(outport.asInstanceOf[Short]))
+            flowtables(0).addFlowTableEntry(offlowmod)
+            logDebug("flowtable length:" + flowtables(0).entries.size + " at " + node.ip_addr(0))
+          }
+        } else {
+          logDebug("clear buffer " + offlowmod.getBufferId)
+          pendingFlows -= offlowmod.getBufferId
+        }
+
+      }
+      case _ => throw new Exception("unrecognized OFFlowMod command type:" + offlowmod.getCommand)
+    }
+  }
+
   override def handleMessage(msg: OFMessage) {
     super.handleMessage(msg)
-    /*msg.getType match {
-      //case OFType.FLOW
-    }*/
+    msg.getType match {
+      case OFType.FLOW_MOD_1 => processFlowMod(msg.asInstanceOf[OFFlowMod])
+    }
   }
 
   startRateController()
