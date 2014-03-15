@@ -160,8 +160,8 @@ trait ResourceAllocator extends Logging {
 
 object ResourceAllocator {
 
-  def apply(node : Node) : ResourceAllocator = {
-    XmlParser.getString("scalasim.simengine.model", "default") match {
+  def apply(mode: String, node : Node) : ResourceAllocator = {
+    mode match {
       case "default" => new DefaultDataPlane(node)
       case "openflow" => new DefaultDataPlane(node)
       case "rivuai" => new RivuaiDataPlane(node)

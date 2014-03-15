@@ -41,8 +41,14 @@ class Node (val nodeType : NodeType,
       RoutingProtocol("default", this)
     }
   }
-  
-  val dataplane =  ResourceAllocator(this)
+
+  val dataplane = {
+    if (nodeType == ToRRouterType) {
+      ResourceAllocator("rivuai", this)
+    } else {
+      ResourceAllocator("default", this)
+    }
+  }
   val interfacesManager = InterfacesManager(this)
 
 
