@@ -139,8 +139,8 @@ trait RoutingProtocol extends Logging {
 
 object RoutingProtocol {
 
-  def apply(node : Node) : RoutingProtocol = {
-    XmlParser.getString("scalasim.simengine.model", "default") match {
+  def apply(mode: String, node : Node) : RoutingProtocol = {
+    mode match {
       case "default" => new DefaultControlPlane(node)
       case "openflow" => {
         node.nodeType match {

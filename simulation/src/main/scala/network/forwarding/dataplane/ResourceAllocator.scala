@@ -164,6 +164,7 @@ object ResourceAllocator {
     XmlParser.getString("scalasim.simengine.model", "default") match {
       case "default" => new DefaultDataPlane(node)
       case "openflow" => new DefaultDataPlane(node)
+      case "rivuai" => new RivuaiDataPlane(node)
       case _ => null
     }
   }

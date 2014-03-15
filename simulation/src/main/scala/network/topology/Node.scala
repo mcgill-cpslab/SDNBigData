@@ -34,7 +34,14 @@ class Node (val nodeType : NodeType,
   val mac_addr : ListBuffer[String] = new ListBuffer[String]
   val ip_addr : ListBuffer[String] = new ListBuffer[String]
 
-  val controlplane = RoutingProtocol(this)
+  val controlplane = {
+    if (nodeType == ToRRouterType) {
+      RoutingProtocol("rivuai", this)
+    } else {
+      RoutingProtocol("default", this)
+    }
+  }
+  
   val dataplane =  ResourceAllocator(this)
   val interfacesManager = InterfacesManager(this)
 
