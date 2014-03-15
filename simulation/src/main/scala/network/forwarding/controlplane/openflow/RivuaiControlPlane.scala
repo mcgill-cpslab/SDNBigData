@@ -7,6 +7,7 @@ import scalasem.network.topology.{ToRRouterType, HostType, Router}
 import scalasem.network.traffic.Flow
 import scalasem.simengine.SimulationEngine
 import scalasem.util.XmlParser
+import org.openflow.protocol.{OFType, OFMessage}
 
 class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
 
@@ -22,12 +23,13 @@ class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
         XmlParser.getDouble("scalasim.rivuai.baserate", 100.0)
       }
     } else {
-      //not ingress/egress switch
+      // not ingress/egress switch
       Double.MaxValue
     }
   }
 
   private def startRateController() {
+    // only start in edge
     if (router.nodeType == ToRRouterType) {
       val startTime = SimulationEngine.startTime
       val endTime = SimulationEngine.endTime
@@ -39,6 +41,13 @@ class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
         SimulationEngine.addEvent(rcEvent)
       }
     }
+  }
+
+  override def handleMessage(msg: OFMessage) {
+    super.handleMessage(msg)
+    /*msg.getType match {
+      //case OFType.FLOW
+    }*/
   }
 
   startRateController()

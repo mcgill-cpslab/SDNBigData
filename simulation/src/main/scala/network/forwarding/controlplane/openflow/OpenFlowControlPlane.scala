@@ -516,7 +516,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
       val debugstr = "miss the matchfield " + matchfield.toString + " with hashcode " + matchfield.hashCode
       logDebug(debugstr)
       val dummypayload = new Array[Byte](1)
-      dummypayload(0) = (0).toByte
+      dummypayload(0) = 0.toByte
       val ethernetFrame = new Ethernet
       ethernetFrame.setEtherType(Ethernet.TYPE_IPv4)
         .setSourceMACAddress(matchfield.getDataLayerSource)
