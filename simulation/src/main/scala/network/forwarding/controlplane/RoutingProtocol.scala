@@ -9,7 +9,7 @@ import scalasem.network.topology._
 import scalasem.network.traffic.Flow
 import scalasem.util.{XmlParser, Logging}
 import scalasem.network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
-import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 import scalasem.network.forwarding.controlplane.openflow.RivuaiControlPlane
 
 /**
@@ -26,7 +26,7 @@ trait RoutingProtocol extends Logging {
   protected var wildcard = ~OFMatch.OFPFW_ALL
 
   def fetchInRoutingEntry(ofmatch : OFMatch) : Link = {
-    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch)
+    val matchfield = OFFlowTableBase.createMatchFieldFromOFMatch(ofmatch)
     logDebug("quering matchfield: " + matchfield + "(" + matchfield.hashCode + ")" +
       " node:" + this)
     assert(RIBIn.contains(matchfield))
@@ -34,7 +34,7 @@ trait RoutingProtocol extends Logging {
   }
 
   def fetchOutRoutingEntry(ofmatch : OFMatch) : Link = {
-    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch)
+    val matchfield = OFFlowTableBase.createMatchFieldFromOFMatch(ofmatch)
     assert(RIBOut.contains(matchfield))
     RIBOut(matchfield)
   }
@@ -44,20 +44,20 @@ trait RoutingProtocol extends Logging {
       IPAddressConvertor.IntToDecimalString(ofmatch.getNetworkSource) + "->" +
       IPAddressConvertor.IntToDecimalString(ofmatch.getNetworkDestination) +
       " with the link " + link.toString)
-    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch = ofmatch)
+    val matchfield = OFFlowTableBase.createMatchFieldFromOFMatch(ofmatch = ofmatch)
     RIBOut += (matchfield -> link)
 
   }
 
   def insertInPath (ofmatch : OFMatch, link : Link) {
-    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch = ofmatch)
+    val matchfield = OFFlowTableBase.createMatchFieldFromOFMatch(ofmatch = ofmatch)
     RIBIn += (matchfield -> link)
     logTrace(this + " insert inRIB entry " + matchfield + "(" + matchfield.hashCode
       + ") -> " + link + " RIBIn Length:" + RIBIn.size)
   }
 
   def deleteEntry(ofmatch : OFMatch) {
-    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch)
+    val matchfield = OFFlowTableBase.createMatchFieldFromOFMatch(ofmatch)
     logTrace("delete entry:" + matchfield + " at node:" + this)
     RIBIn -= matchfield
     RIBOut -= matchfield

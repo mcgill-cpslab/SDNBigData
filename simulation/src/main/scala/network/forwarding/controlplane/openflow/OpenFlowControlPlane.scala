@@ -24,7 +24,7 @@ import scalasem.network.forwarding.controlplane.DefaultControlPlane
 import scalasem.util.XmlParser
 import scalasem.network.traffic.Flow
 import scalasem.network.forwarding.interface.OpenFlowPortManager
-import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 
 /**
  * this class implement the functions for routers to contact with
@@ -49,7 +49,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
   private var config_flags : Short = 0
   private var miss_send_len : Short = 1000
 
-  private[network] val flowtables = new Array[OFFlowTable](
+  private[network] val flowtables = new Array[OFFlowTableBase](
     XmlParser.getInt("scalasim.openflow.flowtablenum", 1))
 
   //the flows waiting for PACKET_OUT
@@ -74,7 +74,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
   }
 
   private def openflowInit() {
-    for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTable(i.toShort, this)
+    for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTableBase(i.toShort, this)
   }
 
   private def generatePacketIn(bufferid : Int, inPortnum : Short, payload: Array[Byte],
@@ -289,7 +289,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
           //only support output for now
           case OFActionType.OUTPUT => {
             val outaction = action.asInstanceOf[OFActionOutput]
-            val matchfield = OFFlowTable.createMatchField(flow = pendingflow)
+            val matchfield = OFFlowTableBase.createMatchField(flow = pendingflow)
             val ilink = ofinterfacemanager.getLinkByPortNum(pktoutmsg.getInPort)
             val olink = ofinterfacemanager.getLinkByPortNum(outaction.getPort)
             log.trace("removing flow " + pendingflow + " from pending buffer " +
@@ -498,7 +498,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
   }
 
   override def deleteEntry(ofmatch : OFMatch) {
-    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(ofmatch)
+    val matchfield = OFFlowTableBase.createMatchFieldFromOFMatch(ofmatch)
     logTrace("delete entry:" + matchfield + " at node:" + this)
     //RIBIn -= matchfield
     RIBOut -= matchfield

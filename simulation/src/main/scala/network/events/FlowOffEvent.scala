@@ -6,7 +6,7 @@ import scalasem.network.traffic.{CompletedFlow, Flow}
 import scalasem.simengine.{SimulationEngine, EventOfSingleEntity}
 import scalasem.application.OnOffApp
 import scalasem.network.topology.GlobalDeviceManager
-import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 import scalasem.util.Logging
 
 class FlowOffEvent (flow : Flow, timestamp : Double)
@@ -26,7 +26,7 @@ class FlowOffEvent (flow : Flow, timestamp : Double)
         GlobalDeviceManager.getNode(flow.srcIP).dataplane.reallocate(
           GlobalDeviceManager.getNode(flow.dstIP), //destination host
           flow, //offflow
-          OFFlowTable.createMatchField(flow = flow)) //matchfield
+          OFFlowTableBase.createMatchField(flow = flow)) //matchfield
       }
     }
   }

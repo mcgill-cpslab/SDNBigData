@@ -7,7 +7,7 @@ import org.openflow.protocol.{OFMatch, OFFlowMod, OFType, OFMessage}
 import org.openflow.protocol.action.OFActionOutput
 
 import scalasem.network.events.RivuaiRateControlEvent
-import scalasem.network.forwarding.controlplane.openflow.flowtable.{OFRivuaiFlowTableEntry, OFFlowTable}
+import scalasem.network.forwarding.controlplane.openflow.flowtable.{OFRivuaiFlowTableEntry, OFFlowTableBase}
 import scalasem.network.forwarding.dataplane.RivuaiDataPlane
 import scalasem.network.topology.{ToRRouterType, HostType, Router}
 import scalasem.network.traffic.Flow
@@ -18,7 +18,7 @@ class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
 
   def getAllowedRate(flow: Flow): Double =  {
     if (router.nodeType == ToRRouterType) {
-      val matchfield = OFFlowTable.createMatchField(flow)
+      val matchfield = OFFlowTableBase.createMatchField(flow)
       // should always return top 1 entry
       val entry = flowtables(0).queryTableByMatch(matchfield)
       if (entry.length > 0) {

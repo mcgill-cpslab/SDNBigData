@@ -2,7 +2,7 @@ package scalasem.network.forwarding.dataplane
 
 import scala.collection.mutable.HashMap
 
-import scalasem.network.forwarding.controlplane.openflow.flowtable.{OFFlowTable, OFRivuaiFlowTableEntry}
+import scalasem.network.forwarding.controlplane.openflow.flowtable.{OFFlowTableBase, OFRivuaiFlowTableEntry}
 import scalasem.network.forwarding.controlplane.openflow.RivuaiControlPlane
 import scalasem.network.forwarding.interface.OpenFlowPortManager
 import scalasem.network.topology.{GlobalDeviceManager, HostType, Link, Node}
@@ -113,7 +113,7 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
     for (entry <- flowTable.entries.values) {
       val rivuaiEntry = entry.asInstanceOf[OFRivuaiFlowTableEntry]
       val flow = GlobalFlowStore.getFlow(
-        OFFlowTable.createMatchFieldFromOFMatch(rivuaiEntry.ofmatch))
+        OFFlowTableBase.createMatchFieldFromOFMatch(rivuaiEntry.ofmatch))
       val currentRate = flow.totalSize - flow.remainingAppData
       val inPortNum = getInPortToHost(rivuaiEntry)
       if (inPortNum >= 0) {

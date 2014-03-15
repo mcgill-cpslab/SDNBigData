@@ -2,14 +2,14 @@ package scalasem.network.traffic
 
 import scala.collection.mutable.HashMap
 
-import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 import scalasem.network.forwarding.controlplane.openflow.OFMatchField
 
 object GlobalFlowStore {
   private val flowstore = new HashMap[OFMatchField, Flow]
 
   def addFlow(flow : Flow) {
-    val matchfield = OFFlowTable.createMatchField(flow)
+    val matchfield = OFFlowTableBase.createMatchField(flow)
     flowstore += matchfield -> flow
   }
 

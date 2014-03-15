@@ -10,7 +10,7 @@ import scalasem.network.events.OFFlowTableEntryExpireEvent
 import scalasem.network.forwarding.controlplane.openflow.OFFlowCount
 
 // implement OpenFlow 1.0 definition
-class OFFlowTableEntryBase (private[openflow] val table: OFFlowTable) {
+class OFFlowTableEntryBase (private[openflow] val table: OFFlowTableBase) {
   protected[forwarding] var ofmatch : OFMatch = null
   protected[openflow] val counter : OFFlowCount = new OFFlowCount
   protected[controlplane] val actions : ListBuffer[OFAction] = new ListBuffer[OFAction]
@@ -48,7 +48,7 @@ class OFFlowTableEntryBase (private[openflow] val table: OFFlowTable) {
     }
     if (expireMoment != 0) {
       expireEvent = new OFFlowTableEntryExpireEvent(table,
-        OFFlowTable.createMatchFieldFromOFMatch(ofmatch),
+        OFFlowTableBase.createMatchFieldFromOFMatch(ofmatch),
         expireMoment)
       SimulationEngine.addEvent(expireEvent)
     }

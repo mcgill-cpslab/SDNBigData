@@ -2,7 +2,7 @@ package scalasem.network.events
 
 import scalasem.network.traffic.{GlobalFlowStore, Flow}
 import scalasem.network.topology.Host
-import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 import scalasem.network.utils.FlowReporter
 import scalasem.simengine.{EventOfTwoEntities, SimulationEngine}
 
@@ -26,7 +26,7 @@ final class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
     logDebug("acquire lock at StartEvent")
     FlowReporter.registerFlowStart(flow)
     host.controlplane.routing(host, flow,
-      OFFlowTable.createMatchField(flow = flow),
+      OFFlowTableBase.createMatchField(flow = flow),
       null)
   }
 }

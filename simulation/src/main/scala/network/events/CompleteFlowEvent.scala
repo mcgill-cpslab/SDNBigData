@@ -3,7 +3,7 @@ package scalasem.network.events
 import scalasem.network.traffic.{GlobalFlowStore, Flow}
 import scalasem.simengine.{EventOfSingleEntity, SimulationEngine}
 import scalasem.network.topology.GlobalDeviceManager
-import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 import scalasem.network.utils.FlowReporter
 import scalasem.util.Logging
 
@@ -20,7 +20,7 @@ final class CompleteFlowEvent (flow : Flow, t : Double)
     flow.close()
     FlowReporter.registerFlowEnd(flow)
     //ends at the flow destination
-    val matchfield = OFFlowTable.createMatchField(flow = flow)
+    val matchfield = OFFlowTableBase.createMatchField(flow = flow)
     GlobalDeviceManager.getNode(flow.dstIP).dataplane.finishFlow(
       GlobalDeviceManager.getNode(flow.dstIP), flow, matchfield)
     GlobalFlowStore.removeFlow(matchfield)

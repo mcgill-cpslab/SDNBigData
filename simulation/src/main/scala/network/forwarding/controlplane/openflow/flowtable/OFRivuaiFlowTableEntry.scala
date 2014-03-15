@@ -1,7 +1,7 @@
 package scalasem.network.forwarding.controlplane.openflow.flowtable
 
 
-class OFRivuaiFlowTableEntry(table: OFFlowTable) extends OFFlowTableEntryBase(table) {
+class OFRivuaiFlowTableEntry(table: OFFlowTableBase) extends OFFlowTableEntryBase(table) {
   private[forwarding] var jobid: Int = -1
   private[forwarding] var reqtype: Int = -1
   private[forwarding] var reqvalue: Double = -1.0

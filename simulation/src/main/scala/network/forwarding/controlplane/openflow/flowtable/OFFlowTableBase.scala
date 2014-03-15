@@ -16,10 +16,10 @@ import scalasem.util.{XmlParser, Logging}
 
 import utils.IPAddressConvertor
 
-class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : OpenFlowControlPlane)
+class OFFlowTableBase (private [openflow] val tableid : Short, ofcontrolplane : OpenFlowControlPlane)
   extends Logging {
 
-  private [forwarding] val entries : HashMap[OFMatchField, OFFlowTableEntryBase] =
+  private[forwarding] val entries : HashMap[OFMatchField, OFFlowTableEntryBase] =
     new HashMap[OFMatchField, OFFlowTableEntryBase] with
       SynchronizedMap[OFMatchField, OFFlowTableEntryBase]
   private [openflow] val tableCounter : OFTableCount = new OFTableCount
@@ -37,7 +37,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
   def matchFlow(flowmatch : OFMatch, topk : Int = 1) : List[OFFlowTableEntryBase] = {
     assert(topk > 0)
     var ret = List[OFFlowTableEntryBase]()
-    val matchfield = OFFlowTable.createMatchFieldFromOFMatch(flowmatch)
+    val matchfield = OFFlowTableBase.createMatchFieldFromOFMatch(flowmatch)
     logDebug("matching flow, entry length:" + entries.size)
     entries.foreach(entry => {
     //  logDebug(entry._1.toCompleteString() + "\t" + matchfield.toCompleteString())
@@ -58,7 +58,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
       logDebug("return all flows: " + entries.values.toList.length)
       entries.values.toList
     } else {
-      queryTable(OFFlowTable.createMatchFieldFromOFMatch(ofmatch, ofmatch.getWildcards))
+      queryTable(OFFlowTableBase.createMatchFieldFromOFMatch(ofmatch, ofmatch.getWildcards))
     }
   }
 
@@ -122,7 +122,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
       (SimulationEngine.currentTime + flow_mod.getHardTimeout).toInt
     newEntryValue.flowIdleDuration = flow_mod.getIdleTimeout
     newEntryValue.refreshlastAccessPoint()
-    entries += (OFFlowTable.createMatchFieldFromOFMatch(newEntryValue.ofmatch,
+    entries += (OFFlowTableBase.createMatchFieldFromOFMatch(newEntryValue.ofmatch,
       newEntryValue.ofmatch.getWildcards) -> newEntryValue)
     entries
   }
@@ -165,7 +165,7 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
   }
 }
 
-object OFFlowTable {
+object OFFlowTableBase {
 
   /**
    *

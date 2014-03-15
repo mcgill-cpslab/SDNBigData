@@ -13,7 +13,7 @@ import _root_.utils.IPAddressConvertor
 import scalasem.dummyTopology.Pod
 import scalasem.network.component.builder.AddressInstaller
 import scalasem.network.events.StartNewFlowEvent
-import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 import scalasem.network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
 import scalasem.network.topology._
 import scalasem.network.traffic.{CompletedFlow, Flow}
@@ -50,7 +50,7 @@ class OpenFlowSuite extends FunSuite with Logging {
     AddressInstaller.assignIPAddress(node, "10.0.0.1")
     val ofroutingmodule = new OpenFlowControlPlane(node)
     val offactory = new BasicFactory
-    val table = new OFFlowTable(0, ofroutingmodule)
+    val table = new OFFlowTableBase(0, ofroutingmodule)
     val matchfield = new OFMatch
     val outaction  = new OFActionOutput
     val actionlist = new util.ArrayList[OFAction]
@@ -99,7 +99,7 @@ class OpenFlowSuite extends FunSuite with Logging {
     SimulationRunner.reset
     val matchfield = new OFMatchField
     val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", appDataSize = 1)
-    val generatedmatchfield = OFFlowTable.createMatchField(flow)
+    val generatedmatchfield = OFFlowTableBase.createMatchField(flow)
     //set matchfield
     matchfield.setInputPort(2)
     matchfield.setDataLayerDestination("00:00:00:00:00:22")
@@ -118,7 +118,7 @@ class OpenFlowSuite extends FunSuite with Logging {
     val matchfield = new OFMatchField
     val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11",
       "00:00:00:00:00:22", appDataSize = 1)
-    val generatedmatchfield = OFFlowTable.createMatchField(flow, 0)
+    val generatedmatchfield = OFFlowTableBase.createMatchField(flow, 0)
     //set matchfield
     matchfield.setInputPort(2)
     matchfield.setDataLayerDestination("00:00:00:00:00:22")
@@ -137,7 +137,7 @@ class OpenFlowSuite extends FunSuite with Logging {
     SimulationRunner.reset()
     val matchfield = new OFMatchField
     val flow = Flow("10.0.0.1", "10.0.0.2", "00:00:00:00:00:11", "00:00:00:00:00:22", appDataSize = 1)
-    val generatedmatchfield = OFFlowTable.createMatchField(flow, 0)
+    val generatedmatchfield = OFFlowTableBase.createMatchField(flow, 0)
     generatedmatchfield.setWildcards(OFMatch.OFPFW_ALL
       & ~(39 << OFMatch.OFPFW_NW_DST_SHIFT)
       & ~(39 << OFMatch.OFPFW_NW_SRC_SHIFT))

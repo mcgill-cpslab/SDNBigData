@@ -5,7 +5,7 @@ import scala.collection.mutable.ListBuffer
 import scalasem.network.topology.{HostType, Node, Link}
 import scalasem.network.events.CompleteFlowEvent
 import scalasem.network.forwarding.controlplane.openflow.OpenFlowControlPlane
-import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTable
+import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 import scalasem.network.forwarding.interface.OpenFlowPortManager
 import scalasem.simengine.SimulationEngine
 import scalasem.util.{XmlParser, Logging}
@@ -76,7 +76,7 @@ class Flow (
       if (node.nodeType != HostType) {
         val oftables = node.controlplane.asInstanceOf[OpenFlowControlPlane].flowtables
         oftables.foreach(table => {
-          val entries = table.matchFlow(OFFlowTable.createMatchField(this))
+          val entries = table.matchFlow(OFFlowTableBase.createMatchField(this))
           if (entries != null) {
             //increase table counter
             // for flow simulation, we only set 0 to packet counters
