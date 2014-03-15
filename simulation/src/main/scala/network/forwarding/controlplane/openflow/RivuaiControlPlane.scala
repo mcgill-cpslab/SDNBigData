@@ -88,6 +88,7 @@ class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
     super.handleMessage(msg)
     msg.getType match {
       case OFType.FLOW_MOD_1 => processFlowMod(msg.asInstanceOf[OFFlowMod])
+      case _ => {}
     }
   }
 

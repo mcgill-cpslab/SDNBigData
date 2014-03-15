@@ -40,7 +40,7 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
   private var floodedflows = List[Flow]()
 
 
-  private [network] var toControllerChannel : Channel = null
+  private [network] var toControllerChannel: Channel = null
 
   private [openflow] lazy val ofinterfacemanager = node.interfacesManager.
     asInstanceOf[OpenFlowPortManager]
@@ -61,20 +61,22 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
   private val logger = LoggerFactory.getLogger("OpenFlowControlPlane")
   private val factory = new BasicFactory
 
-  lazy val getSwitchDescription = {
-    /*if (node.ip_addr.size < 1) "no description"
-    else */
-    //if (node.ip_addr.size < 1) println("fuck your dirty ASS " + node.nodetype.toString)
-    node.ip_addr(0)
-  }
+  lazy val getSwitchDescription = node.ip_addr(0)
 
-  lazy val getMacAddress = {
-    /*if (node.mac_addr.size < 1) "no hardware addr"
-    else*/ node.mac_addr(0)
+  lazy val getMacAddress = node.mac_addr(0)
+
+  private val tableClzName = XmlParser.getString("scalasim.openflow.tableclass",
+    "scalasem.network.forwarding.controlplane.openflow.flowtable.OFRivuaiFlowTable")
+
+  private def createTableInstance(tableId: Int,
+                                  ofControlPlane: OpenFlowControlPlane): OFFlowTableBase = {
+    val clz = Class.forName(tableClzName)
+    val clzCtor = clz.getConstructor(this.getClass)
+    clzCtor.newInstance(tableId: java.lang.Integer, ofControlPlane).asInstanceOf[OFFlowTableBase]
   }
 
   private def openflowInit() {
-    for (i <- 0 until flowtables.length) flowtables(i) = new OFFlowTableBase(i.toShort, this)
+    for (i <- 0 until flowtables.length) flowtables(i) = createTableInstance(i, this)
   }
 
   private def generatePacketIn(bufferid : Int, inPortnum : Short, payload: Array[Byte],

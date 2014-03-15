@@ -16,7 +16,8 @@ import scalasem.util.{XmlParser, Logging}
 
 import utils.IPAddressConvertor
 
-class OFFlowTableBase (private [openflow] val tableid : Short, ofcontrolplane : OpenFlowControlPlane)
+// implement openflow 1.0 flow table
+class OFFlowTableBase (private [openflow] val tableid: Short, ofcontrolplane: OpenFlowControlPlane)
   extends Logging {
 
   private[forwarding] val entries : HashMap[OFMatchField, OFFlowTableEntryBase] =
@@ -99,7 +100,7 @@ class OFFlowTableBase (private [openflow] val tableid : Short, ofcontrolplane : 
     entries -= matchfield
   }
 
-  private def getNewEntry: OFFlowTableEntryBase = {
+  protected[flowtable] def getNewEntry: OFFlowTableEntryBase = {
     val clz = Class.forName(entryClzName)
     val clzCtor = clz.getConstructor(this.getClass)
     clzCtor.newInstance(this).asInstanceOf[OFFlowTableEntryBase]
