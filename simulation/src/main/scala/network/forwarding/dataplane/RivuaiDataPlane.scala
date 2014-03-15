@@ -14,6 +14,9 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
   private val alpha = XmlParser.getDouble("scalasim.rivuai.alpha", 0.5)
   private val controlPlane = node.controlplane.asInstanceOf[RivuaiControlPlane]
   private val interfaceManager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
+  // support only one flow table for now
+  private val flowTable = controlPlane.flowtables(0)
+
 
   // port -> (jobid -> using bandwidth)
   private val jobidToCurrentRating = new HashMap[Short, HashMap[Int, Double]]
@@ -69,7 +72,6 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
       //initialize for the new flow
       if (currentflow.getTempRate == Double.MaxValue)
         currentflow.setTempRate(link.bandwidth)
-
       //for paused flow, we keep the running Status but set its rate to 0
       //because if we remove it from the flow list, we may need to recalculate the
       //path for it
@@ -106,7 +108,7 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
     else -1
   }
 
-  private def measureFlowRateOnEachPort(flowTable: OFFlowTable) {
+  private def measureFlowRateOnEachPort() {
     // get the y_i on each port
     for (entry <- flowTable.entries.values) {
       val rivuaiEntry = entry.asInstanceOf[OFRivuaiFlowTableEntry]
@@ -119,9 +121,12 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
           new HashMap[Int, Double]())
         jobBucket.getOrElseUpdate(rivuaiEntry.jobid, 0.0)
         jobBucket(rivuaiEntry.jobid) += currentRate
-        jobidToFlowNum.getOrElseUpdate(inPortNum, new HashMap[Int, Int]).
-          getOrElseUpdate(rivuaiEntry.jobid, 0)
-        jobidToFlowNum(inPortNum)(rivuaiEntry.jobid) += 1
+        if (rivuaiEntry.reqtype != 0) {
+          //WFS flow
+          jobidToFlowNum.getOrElseUpdate(inPortNum, new HashMap[Int, Int]).
+            getOrElseUpdate(rivuaiEntry.jobid, 0)
+          jobidToFlowNum(inPortNum)(rivuaiEntry.jobid) += 1
+        }
         // save jobid -> vc for minimum guaranteed flows
         if (rivuaiEntry.reqtype == 0) {
           jobidToVirtualCapacity.getOrElseUpdate(inPortNum, new HashMap[Int, Double])
@@ -131,15 +136,25 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
     }
   }
 
-  private def getCapacityForEachFlow(flowTable: OFFlowTable) {
-    // get capacity for weighted fair share flows
+  private def calculateCapacityForEachFlow() {
+    // get capacity for weighted fair share flows on each port
     // port number -> allocation
     val totalCapacityToWFSFlow = new HashMap[Short, Double]
     for (allocToMGEntry <- jobidToVirtualCapacity) {
       val capacity  = interfaceManager.getLinkByPortNum(allocToMGEntry._1).bandwidth
-      val allocToMGPerPort = jobidToVirtualCapacity(allocToMGEntry._1).values
-      val allocSumToMGPerPort = allocToMGPerPort.reduceLeft(_ + _)
-      totalCapacityToWFSFlow += allocToMGEntry._1 -> (capacity - allocSumToMGPerPort)
+      //FIFO for MG flows
+      var totalMGRate = 0.0
+      for (entry <- jobidToVirtualCapacity(allocToMGEntry._1).values
+           if entry.asInstanceOf[OFRivuaiFlowTableEntry].reqtype == 0){
+        val rivuaiEntry = entry.asInstanceOf[OFRivuaiFlowTableEntry]
+        if (totalMGRate + rivuaiEntry.reqvalue <= capacity)
+          totalMGRate += rivuaiEntry.reqvalue
+        else {
+          //if cannot meet the requirement, then make the flow with 0 allowed rate
+          rivuaiEntry.ratelimit = 0
+        }
+      }
+      totalCapacityToWFSFlow += allocToMGEntry._1 -> (capacity - totalMGRate)
     }
 
     // get C_i for every job
@@ -152,7 +167,7 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
       sumPerPort.getOrElseUpdate(rivuaiEntry.inportNum, 0)
       sumPerPort(rivuaiEntry.inportNum) += rivuaiEntry.reqvalue
     }
-    // 2. get C_i
+    // 2. get C_i for WFS flows
     for (entry <- flowTable.entries.values
          if entry.asInstanceOf[OFRivuaiFlowTableEntry].reqtype != 0) {
       val rivuaiEntry = entry.asInstanceOf[OFRivuaiFlowTableEntry]
@@ -167,7 +182,7 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
     }
   }
 
-  private def allocateToEachFlow(flowTable: OFFlowTable) {
+  private def allocateToEachFlow() {
     // allocate R_i to each job
     for (allocPerPort <- jobidToAllocation; allocPerJob <- allocPerPort._2) {
       val jobid = allocPerJob._1
@@ -178,22 +193,19 @@ class RivuaiDataPlane(node: Node) extends ResourceAllocator {
       val jobAlloc = jobidToAllocation.getOrElseUpdate(allocPerPort._1, new HashMap[Int, Double])
       jobAlloc += jobid -> newAlloc
     }
-
     // allocate to each flow
     for (entry <- flowTable.entries.values) {
       val rivuaiEntry = entry.asInstanceOf[OFRivuaiFlowTableEntry]
-      val outport = rivuaiEntry.outportNum
-      rivuaiEntry.ratelimit = jobidToAllocation(outport)(rivuaiEntry.jobid) /
-        jobidToFlowNum(outport)(rivuaiEntry.jobid)
+      val inport = rivuaiEntry.inportNum
+      rivuaiEntry.ratelimit = jobidToAllocation(inport)(rivuaiEntry.jobid) /
+        jobidToFlowNum(inport)(rivuaiEntry.jobid)
     }
   }
 
   private[network] def regulateFlow() {
-    // support only one flow table for now
-    val flowTable = controlPlane.flowtables(0)
-    measureFlowRateOnEachPort(flowTable)
-    getCapacityForEachFlow(flowTable)
-    allocateToEachFlow(flowTable)
+    measureFlowRateOnEachPort()
+    calculateCapacityForEachFlow()
+    allocateToEachFlow()
     reset()
   }
 

@@ -10,12 +10,16 @@ class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
   def getAllowedRate(flow: Flow): Double =  {
     if (router.nodeType == ToRRouterType) {
       val matchfield = OFFlowTable.createMatchField(flow)
+      // should always return top 1 entry
       val entry = flowtables(0).queryTableByMatch(matchfield)
-      if (entry.length > 0)
+      if (entry.length > 0) {
         entry.asInstanceOf[OFRivuaiFlowTableEntry].ratelimit
-      else
+      }
+      else {
         XmlParser.getDouble("scalasim.rivuai.baserate", 100.0)
+      }
     } else {
+      //not ingress/egress switch
       Double.MaxValue
     }
   }
