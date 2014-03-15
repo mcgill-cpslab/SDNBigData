@@ -62,6 +62,15 @@ class OFFlowTable (private [openflow] val tableid : Short, ofcontrolplane : Open
     }
   }
 
+  def queryTableByMatch(ofmatch : OFMatchField) : List[OFFlowTableEntryBase] = {
+    if (ofmatch.getWildcards == -1) {
+      logDebug("return all flows: " + entries.values.toList.length)
+      entries.values.toList
+    } else {
+      queryTable(ofmatch)
+    }
+  }
+
   def queryTableByMatchAndOutport (match_field : OFMatch, outport_num : Short,
                                  topk : Int = 1) : List[OFFlowTableEntryBase] = {
 
