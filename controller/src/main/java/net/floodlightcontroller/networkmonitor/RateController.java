@@ -183,21 +183,23 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
                   !macTable.containsKey(match.getNetworkSource())) {
             macTable.put(match.getNetworkSource(), (int) pi.getInPort());
           }
-          if (macTable.containsKey(match.getNetworkDestination())) {
-            try {
-              //send out action out-port
-              OFPacketOut ofpktout = new OFPacketOut();
-              ofpktout.setBufferId(pi.getBufferId());
-              ofpktout.setInPort(pi.getInPort());
-              OFActionOutput outaction = new OFActionOutput();
+          try {
+            //send out action out-port
+            OFPacketOut ofpktout = new OFPacketOut();
+            ofpktout.setBufferId(pi.getBufferId());
+            ofpktout.setInPort(pi.getInPort());
+            OFActionOutput outaction = new OFActionOutput();
+            if (macTable.containsKey(match.getNetworkDestination())) {
               outaction.setPort(macTable.get(match.getNetworkDestination()).shortValue());
-              ArrayList<OFAction> list = new ArrayList<OFAction>();
-              list.add(outaction);
-              ofpktout.setActions(list);
-              sw.write(ofpktout, cntx);
-            } catch (Exception e) {
-              e.printStackTrace();
+            } else {
+              outaction.setPort(OFPort.OFPP_FLOOD.getValue());
             }
+            ArrayList<OFAction> list = new ArrayList<OFAction>();
+            list.add(outaction);
+            ofpktout.setActions(list);
+            sw.write(ofpktout, cntx);
+          } catch (Exception e) {
+            e.printStackTrace();
           }
         }
         break;
