@@ -196,6 +196,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
             }
             ArrayList<OFAction> list = new ArrayList<OFAction>();
             list.add(outaction);
+            ofpktout.setActionsLength(outaction.getLength());
             ofpktout.setActions(list);
             sw.write(ofpktout, cntx);
           } catch (Exception e) {
