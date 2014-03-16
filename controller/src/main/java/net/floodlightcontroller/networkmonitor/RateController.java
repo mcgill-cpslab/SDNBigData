@@ -125,8 +125,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     flowtoInstallList = new HashMap<IOFSwitch, ArrayList<FlowInstallRequest>>();
     initAppThreadPool();
     //start timer thread to send flowtoInstall List
-    Timer uploadCheckerTimer = new Timer(true);
-    uploadCheckerTimer.scheduleAtFixedRate(
+    new Timer(true).scheduleAtFixedRate(
             new TimerTask() {
               public void run() {
                 Iterator itr = flowtoInstallList.entrySet().iterator();
@@ -265,7 +264,6 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     return false;
   }
 
-  //TODO
   private boolean installFlowToSwitch(FlowInstallRequest request) {
     //get the ingress and egress switch
     String sourceIP = Utils.IntIPToString(request.getSourceIP());
@@ -277,7 +275,6 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     return true;
   }
 
-  //TODO
   private void processAppMessage(AppAgentMsg msg) {
     switch (msg.getType()) {
       case FLOW_INSTALL_REQUEST:
