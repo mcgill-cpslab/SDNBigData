@@ -190,6 +190,9 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
         OFSwitchRateLimitingState slsmsg = (OFSwitchRateLimitingState) msg;
         SwitchRateLimiterStatus obj = new SwitchRateLimiterStatus();
         obj.tablesize = slsmsg.getTablesize();
+        String swip = ((InetSocketAddress)
+                sw.getChannel().getRemoteAddress()).getAddress().getHostAddress();
+        switchMap.put(getIPRange(swip), sw);
         switchRateLimitMap.put(sw, obj);
         //install the flows
         for (FlowInstallRequest request: flowtoInstallList.get(sw)) {
