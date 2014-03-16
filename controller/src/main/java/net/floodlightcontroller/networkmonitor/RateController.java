@@ -178,19 +178,12 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
           break;
         } else {
           //must be in the same pod with the source ip
-          InetSocketAddress swip = (InetSocketAddress) sw.getChannel().getRemoteAddress();
-          String swipstring = swip.getAddress().toString().substring(1,
-                  swip.getAddress().toString().length());
-          String sourceIP = Utils.IntIPToString(match.getNetworkSource());
-          /*if (sameIPRange(swipstring, sourceIP)) {
+          if (sameIPRange(Utils.IntIPToString(match.getNetworkSource()),
+                  ((InetSocketAddress)
+                          sw.getChannel().getRemoteAddress()).getAddress().getHostAddress()) &&
+                  !mactable.containsKey(match.getNetworkSource())) {
             mactable.put(match.getNetworkSource(), (int) pi.getInPort());
-          } else {
-            mactable.put(
-                    Utils.StringIPToInteger(
-                      getIPRange(Utils.IntIPToString(match.getNetworkSource()))),
-                    (int) pi.getInPort());
-          }*/
-          mactable.put(match.getNetworkSource(), (int) pi.getInPort());
+          }
         }
         break;
       case SWITCH_RATE_LIMITING_STATE:
@@ -202,18 +195,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
         for (FlowInstallRequest request: flowtoInstallList.get(sw)) {
           //if (request)
           try {
-            String sourceIP = Utils.IntIPToString(request.getSourceIP());
-            String destIP = Utils.IntIPToString(request.getDestinationIP());
-            InetSocketAddress swip = (InetSocketAddress) sw.getChannel().getRemoteAddress();
-            String swipstring = swip.getAddress().toString().substring(1,
-                    swip.getAddress().toString().length());
-            OFFlowMod1 flowmodmsg;
-            /*if (sameIPRange(sourceIP, swipstring) && !sameIPRange(destIP, swipstring)) {
-              flowmodmsg = getFlowModFromInstallReq(request, false);
-            } else {
-              flowmodmsg = getFlowModFromInstallReq(request, true);
-            }*/
-            flowmodmsg = getFlowModFromInstallReq(request, true);
+            OFFlowMod1 flowmodmsg = getFlowModFromInstallReq(request, true);
             sw.write(flowmodmsg, cntx);
           } catch (Exception e) {
             e.printStackTrace();
