@@ -12,7 +12,6 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.floodlightcontroller.packet.Ethernet;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
@@ -92,13 +91,13 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   private AppAgentMsgFactory aamFactory = null;
   private AppAgentChannelHandler channelHandler = null;
   private int flowtablelimit = 200;
-  private HashMap<Integer, Integer> mactable = null;
+  private HashMap<Integer, Integer> macTable = null;
 
   private class SwitchRateLimiterStatus {
     private int tablesize;
   }
 
-  private void initAppPool() {
+  private void initAppThreadPool() {
     //bind to a new port to communicate with the application agents
     logger.info("starting Rivuai Rate Controller");
     ChannelFactory factory = new NioServerSocketChannelFactory(
@@ -116,13 +115,13 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   @Override
   public void init(FloodlightModuleContext context) throws FloodlightModuleException {
     floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
-    mactable = new HashMap<Integer, Integer>();
+    macTable = new HashMap<Integer, Integer>();
     logger = LoggerFactory.getLogger(RateController.class);
     switchRateLimitMap = new HashMap<IOFSwitch, SwitchRateLimiterStatus>();
     switchMap = new HashMap<String, IOFSwitch>();//switch IP segment => IOFSwitch
     channelHandler = new AppAgentChannelHandler(this);
     flowtoInstallList = new HashMap<IOFSwitch, ArrayList<FlowInstallRequest>>();
-    initAppPool();
+    initAppThreadPool();
   }
 
   //TODO
@@ -138,9 +137,9 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     ret.setMatch(match);
     OFActionOutput actionOutput = new OFActionOutput();
     if (exactIP) {
-      actionOutput.setPort(mactable.get(match.getNetworkDestination()).shortValue());
+      actionOutput.setPort(macTable.get(match.getNetworkDestination()).shortValue());
     } else {
-      String dstIP = Utils.IntIPToString(mactable.get(match.getNetworkDestination()));
+      String dstIP = Utils.IntIPToString(macTable.get(match.getNetworkDestination()));
       String dstIPrange = getIPRange(dstIP);
       actionOutput.setPort((short) Utils.StringIPToInteger(dstIPrange));
     }
@@ -181,8 +180,24 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
           if (sameIPRange(Utils.IntIPToString(match.getNetworkSource()),
                   ((InetSocketAddress)
                           sw.getChannel().getRemoteAddress()).getAddress().getHostAddress()) &&
-                  !mactable.containsKey(match.getNetworkSource())) {
-            mactable.put(match.getNetworkSource(), (int) pi.getInPort());
+                  !macTable.containsKey(match.getNetworkSource())) {
+            macTable.put(match.getNetworkSource(), (int) pi.getInPort());
+          }
+          if (macTable.containsKey(match.getNetworkDestination())) {
+            try {
+              //send out action out-port
+              OFPacketOut ofpktout = new OFPacketOut();
+              ofpktout.setBufferId(pi.getBufferId());
+              ofpktout.setInPort(pi.getInPort());
+              OFActionOutput outaction = new OFActionOutput();
+              outaction.setPort(macTable.get(match.getNetworkDestination()).shortValue());
+              ArrayList<OFAction> list = new ArrayList<OFAction>();
+              list.add(outaction);
+              ofpktout.setActions(list);
+              sw.write(ofpktout, cntx);
+            } catch (Exception e) {
+              e.printStackTrace();
+            }
           }
         }
         break;
@@ -227,16 +242,12 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   private boolean installFlowToSwitch(FlowInstallRequest request) {
     //get the ingress and egress switch
     String sourceIP = Utils.IntIPToString(request.getSourceIP());
-    //String dstIP = Utils.IntIPToString(request.getDestinationIP());
     String sourceRange = sourceIP.substring(0, sourceIP.lastIndexOf(".") + 1) + ".0";
-    //String dstRange = dstIP.substring(0, dstIP.lastIndexOf(".") + 1) + ".0";
     IOFSwitch ingressSwitch = switchMap.get(sourceRange);
-    //IOFSwitch egressSwitch = switchMap.get(dstRange);
     boolean canInstall =  canInstall(ingressSwitch, request); //&&canInstall(egressSwitch, request);
     if (canInstall) {
       synchronized (flowtoInstallList) {
         flowtoInstallList.get(ingressSwitch).add(request);
-        //flowtoInstallList.get(egressSwitch).add(request);
       }
     }
     return canInstall;
