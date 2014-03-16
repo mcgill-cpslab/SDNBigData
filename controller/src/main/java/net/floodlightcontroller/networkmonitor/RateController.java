@@ -143,7 +143,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
                   }
                 }
               }
-            }, 0, 500);
+            }, 0, 10);
   }
 
   //TODO
