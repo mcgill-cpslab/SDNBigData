@@ -88,6 +88,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   private HashMap<IOFSwitch, SwitchRateLimiterStatus> switchRateLimitMap = null;
   private HashMap<String, IOFSwitch> switchMap = null;
   private HashMap<IOFSwitch, ArrayList<FlowInstallRequest>> flowtoInstallList = null;
+  private HashMap<IOFSwitch, FloodlightContext> switchToContext = null;
   private AppAgentMsgFactory aamFactory = null;
   private AppAgentChannelHandler channelHandler = null;
   private int flowtablelimit = 200;
@@ -120,8 +121,29 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     switchRateLimitMap = new HashMap<IOFSwitch, SwitchRateLimiterStatus>();
     switchMap = new HashMap<String, IOFSwitch>();//switch IP segment => IOFSwitch
     channelHandler = new AppAgentChannelHandler(this);
+    switchToContext = new HashMap<IOFSwitch, FloodlightContext>();
     flowtoInstallList = new HashMap<IOFSwitch, ArrayList<FlowInstallRequest>>();
     initAppThreadPool();
+    //start timer thread to send flowtoInstall List
+    Timer uploadCheckerTimer = new Timer(true);
+    uploadCheckerTimer.scheduleAtFixedRate(
+            new TimerTask() {
+              public void run() {
+                Iterator itr = flowtoInstallList.entrySet().iterator();
+                while (itr.hasNext()) {
+                  Map.Entry entry = (Map.Entry) itr.next();
+                  IOFSwitch sw = (IOFSwitch) entry.getKey();
+                  for (FlowInstallRequest request: flowtoInstallList.get(sw)) {
+                    try {
+                      OFFlowMod1 flowmodmsg = getFlowModFromInstallReq(request, true);
+                      sw.write(flowmodmsg, switchToContext.get(sw));
+                    } catch (Exception e) {
+                      e.printStackTrace();
+                    }
+                  }
+                }
+              }
+            }, 0, 500);
   }
 
   //TODO
@@ -170,6 +192,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
     switch (msg.getType()) {
       case PACKET_IN:
+        switchToContext.put(sw, cntx);
         OFPacketIn pi = (OFPacketIn) msg;
         OFMatch match = new OFMatch();
         match.loadFromPacket(pi.getPacketData(), pi.getInPort());
@@ -204,7 +227,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
           }
         }
         break;
-      case SWITCH_RATE_LIMITING_STATE:
+      /*case SWITCH_RATE_LIMITING_STATE:
         OFSwitchRateLimitingState slsmsg = (OFSwitchRateLimitingState) msg;
         SwitchRateLimiterStatus obj = new SwitchRateLimiterStatus();
         obj.tablesize = slsmsg.getTablesize();
@@ -219,13 +242,14 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
             e.printStackTrace();
           }
         }
-        break;
+        break;*/
       case GET_CONFIG_REPLY:
         if (!flowtoInstallList.containsKey(sw)) {
           String swip = ((InetSocketAddress)
                   sw.getChannel().getRemoteAddress()).getAddress().getHostAddress();
           flowtoInstallList.put(sw, new ArrayList<FlowInstallRequest>());
           switchMap.put(getIPRange(swip), sw);
+          switchToContext.put(sw, cntx);
         }
         break;
     }
@@ -247,13 +271,10 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     String sourceIP = Utils.IntIPToString(request.getSourceIP());
     String sourceRange = sourceIP.substring(0, sourceIP.lastIndexOf(".") + 1) + ".0";
     IOFSwitch ingressSwitch = switchMap.get(sourceRange);
-    boolean canInstall =  canInstall(ingressSwitch, request); //&&canInstall(egressSwitch, request);
-    if (canInstall) {
-      synchronized (flowtoInstallList) {
-        flowtoInstallList.get(ingressSwitch).add(request);
-      }
+    synchronized (flowtoInstallList) {
+      flowtoInstallList.get(ingressSwitch).add(request);
     }
-    return canInstall;
+    return true;
   }
 
   //TODO
