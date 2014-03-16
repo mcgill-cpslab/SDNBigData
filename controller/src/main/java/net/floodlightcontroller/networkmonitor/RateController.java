@@ -129,15 +129,17 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
             new TimerTask() {
               public void run() {
                 Iterator itr = flowtoInstallList.entrySet().iterator();
-                while (itr.hasNext()) {
-                  Map.Entry entry = (Map.Entry) itr.next();
-                  IOFSwitch sw = (IOFSwitch) entry.getKey();
-                  for (FlowInstallRequest request: flowtoInstallList.get(sw)) {
-                    try {
-                      OFFlowMod1 flowmodmsg = getFlowModFromInstallReq(request, true);
-                      sw.write(flowmodmsg, switchToContext.get(sw));
-                    } catch (Exception e) {
-                      e.printStackTrace();
+                synchronized (flowtoInstallList) {
+                  while (itr.hasNext()) {
+                    Map.Entry entry = (Map.Entry) itr.next();
+                    IOFSwitch sw = (IOFSwitch) entry.getKey();
+                    for (FlowInstallRequest request : flowtoInstallList.get(sw)) {
+                      try {
+                        OFFlowMod1 flowmodmsg = getFlowModFromInstallReq(request, true);
+                        sw.write(flowmodmsg, switchToContext.get(sw));
+                      } catch (Exception e) {
+                        e.printStackTrace();
+                      }
                     }
                   }
                 }
@@ -246,7 +248,9 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
         if (!flowtoInstallList.containsKey(sw)) {
           String swip = ((InetSocketAddress)
                   sw.getChannel().getRemoteAddress()).getAddress().getHostAddress();
-          flowtoInstallList.put(sw, new ArrayList<FlowInstallRequest>());
+          synchronized (flowtoInstallList) {
+            flowtoInstallList.put(sw, new ArrayList<FlowInstallRequest>());
+          }
           switchMap.put(getIPRange(swip), sw);
           switchToContext.put(sw, cntx);
         }
