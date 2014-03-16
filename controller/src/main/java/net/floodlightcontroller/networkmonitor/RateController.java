@@ -125,7 +125,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     flowtoInstallList = new HashMap<IOFSwitch, ArrayList<FlowInstallRequest>>();
     initAppThreadPool();
     //start timer thread to send flowtoInstall List
-    new Timer(true).scheduleAtFixedRate(
+    new Timer(true).schedule(
             new TimerTask() {
               public void run() {
                 Iterator itr = flowtoInstallList.entrySet().iterator();
