@@ -31,12 +31,14 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
   private val rivuaiAppAgen = new RivuaiAppAgent
 
   private def digestTrace() {
+    logTrace("Loading Workload Trace")
     for(line <- Source.fromFile(fbTracePath).getLines()) {
       val record = line.split("\t")
       val newJob = new RivuaiJob
       newJob.startTime = record(1).toDouble
       newJob.inputSize = record(3).toDouble
       newJob.inputPath = record(6)
+      jobList += newJob
       //evenly distribute the path in the servers
       if (!pathToServers.contains(record(6))) {
         //1. get the block number

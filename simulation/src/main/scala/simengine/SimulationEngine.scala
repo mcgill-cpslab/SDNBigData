@@ -23,11 +23,11 @@ object SimulationEngine extends Logging {
 
   def run () {
     //setup periodical events
-    PeriodicalEventManager.run(startTime, endTime, 10)
     while (!eventqueue.isEmpty) {
       queueReadingLock.acquire()
       logDebug("acquire lock at SimulationEngine")
       val event = eventqueue.head
+      logDebug(event.toString)
       queueReadingLock.release()
       if (event.getTimeStamp() > endTime) return
       logDebug("release lock at SimulationEngine")

@@ -89,7 +89,6 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
       .setTotalLength(payload.size.toShort)
       .setLength((payload.size + 18).toShort)
       .setVersion(1)
-    //logger.debug("frame size:" + payload.size + " total length of packet_in:" + packet_in_msg.getTotalLength)
     packet_in_msg
   }
 
