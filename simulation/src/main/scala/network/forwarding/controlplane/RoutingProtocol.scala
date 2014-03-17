@@ -148,12 +148,7 @@ object RoutingProtocol {
           case _ => new OpenFlowControlPlane(node.asInstanceOf[Router])
         }
       }
-      case "rivuai" => {
-        node.nodeType match {
-          case HostType => new DefaultControlPlane(node)
-          case _ => new RivuaiControlPlane(node.asInstanceOf[Router])
-        }
-      }
+      case "rivuai" => new RivuaiControlPlane(node.asInstanceOf[Router])
       case _ => null
     }
   }

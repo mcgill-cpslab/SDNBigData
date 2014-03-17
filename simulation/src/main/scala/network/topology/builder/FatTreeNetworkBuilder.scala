@@ -2,7 +2,7 @@ package scalasem.network.topology.builder
 
 import scalasem.network.topology._
 import scalasem.network.component.builder.AddressInstaller
-import scalasem.util.XmlParser
+import scalasem.util.{Logging, XmlParser}
 
 class FatTreeBuilder (private val podnum: Int = 4,
                       private val linkspeed: Double = 1.0) {
@@ -86,7 +86,7 @@ class FatTreeBuilder (private val podnum: Int = 4,
 }
 
 
-object FatTreeNetworkBuilder {
+object FatTreeNetworkBuilder extends Logging {
 
   val coreRouters: RouterContainer = new RouterContainer
   val aggregateRouters: RouterContainer = new RouterContainer
@@ -96,10 +96,15 @@ object FatTreeNetworkBuilder {
   var k: Int = -1
 
   def initNetwork() {
+    println("Hello World")
     coreRouters.create(k * k / 4, CoreRouterType)
+    println("Hello World")
     aggregateRouters.create(k * k / 2 , AggregateRouterType)
+    println("Hello World")
     edgeRouters.create(k * k / 2, ToRRouterType)
+    println("Hello World")
     hosts.create(k * k / 2 * k / 2)
+    println("Hello World")
   }
 
   def buildFatTreeNetwork(linkspeed: Double) {
@@ -108,6 +113,7 @@ object FatTreeNetworkBuilder {
   }
 
   def initOFNetwork() {
+    logTrace("Initializing OpenFlow Network")
     if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
       val connectioninterval = XmlParser.getInt("scalasim.simengine.connectioninterval", 500)
       //CORE ROUTERS

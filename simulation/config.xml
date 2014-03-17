@@ -39,7 +39,7 @@
     </property>
     <property>
         <name>scalasim.topo.fatree.podnum</name>
-        <value>48</value>
+        <value>4</value>
     </property>
     <property>
         <name>scalasim.app.warmingtime</name>
