@@ -165,7 +165,7 @@ object ResourceAllocator {
       case "default" => new DefaultDataPlane(node)
       case "openflow" => new DefaultDataPlane(node)
       case "rivuai" => new RivuaiDataPlane(node)
-      case _ => null
+      case _ => throw new Exception("unrecognizable model")
     }
   }
 }

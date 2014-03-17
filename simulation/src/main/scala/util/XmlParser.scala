@@ -11,7 +11,7 @@ object XmlParser {
     properties += key -> value
   }
 
-  def loadConf(confPath:String) = {
+  def loadConf(confPath: String) = {
     val xmldata = XML.loadFile(confPath)
     for (ele <- xmldata \\ "property" ) {
       properties += ((ele \\ "name").text -> (ele \\ "value").text)
@@ -20,21 +20,21 @@ object XmlParser {
 
   def reset() = properties.clear()
 
-  def getBoolean(key:String, defaultValue : Boolean) : Boolean = {
+  def getBoolean(key: String, defaultValue: Boolean): Boolean = {
     properties.getOrElse(key, defaultValue.toString).toBoolean
   }
 
 
-  def getString(key:String, defaultValue:String) : String = {
+  def getString(key: String, defaultValue: String): String = {
     properties.getOrElse(key, defaultValue)
   }
 
   //TODO: can I do better?
-  def getInt(key:String, defaultValue:Int) : Int = {
+  def getInt(key: String, defaultValue: Int): Int = {
     properties.getOrElse(key, defaultValue.toString).toInt
   }
 
-  def getDouble(key:String, defaultValue:Double) : Double = {
+  def getDouble(key: String, defaultValue: Double): Double = {
     properties.getOrElse(key, defaultValue.toString).toDouble
   }
 }

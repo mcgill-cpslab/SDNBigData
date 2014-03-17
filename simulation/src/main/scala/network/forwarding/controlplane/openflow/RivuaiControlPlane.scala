@@ -37,11 +37,10 @@ class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
     if (router.nodeType == ToRRouterType) {
       val startTime = SimulationEngine.startTime
       val endTime = SimulationEngine.endTime
-      val frequency = XmlParser.getDouble("simengine.rivuai.frequency", 0.005)
+      val frequency = XmlParser.getDouble("simengine.rivuai.frequency", 1)
 
       for (s <- startTime until endTime by frequency) {
-        val rcEvent = new RivuaiRateControlEvent(
-          node.dataplane.asInstanceOf[RivuaiDataPlane], s)
+        val rcEvent = new RivuaiRateControlEvent(node, s)
         SimulationEngine.addEvent(rcEvent)
       }
     }

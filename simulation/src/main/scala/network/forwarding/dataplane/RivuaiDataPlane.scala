@@ -9,9 +9,9 @@ import scalasem.network.topology.{GlobalDeviceManager, HostType, Link, Node}
 import scalasem.network.traffic._
 import scalasem.util.XmlParser
 
-class RivuaiDataPlane(node: Node) extends ResourceAllocator {
+class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
 
-  private val alpha = XmlParser.getDouble("scalasim.rivuai.alpha", 0.5)
+  private val alpha: Double = XmlParser.getDouble("scalasim.rivuai.alpha", 0.5)
   private val controlPlane = node.controlplane.asInstanceOf[RivuaiControlPlane]
   private val interfaceManager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
   // support only one flow table for now

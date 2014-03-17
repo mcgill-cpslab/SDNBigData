@@ -35,7 +35,7 @@ object SimulationRunner {
     ApplicationRunner.installApplication()
     ApplicationRunner.run()
     SimulationEngine.startTime = 0.0
-    SimulationEngine.endTime = 10000.0
+    SimulationEngine.endTime = 1000.0
     SimulationEngine.reporter = FlowReporter
     SimulationEngine.run()
     SimulationEngine.summary()
