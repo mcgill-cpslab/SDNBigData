@@ -147,7 +147,6 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
             }, 0, 10);
   }
 
-  //TODO
   private OFFlowMod1 getFlowModFromInstallReq(FlowInstallRequest req, boolean exactIP) {
     OFFlowMod1 ret = new OFFlowMod1();
     OFMatch match = new OFMatch();

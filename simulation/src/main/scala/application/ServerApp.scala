@@ -2,6 +2,7 @@ package scalasem.application
 
 import scalasem.network.topology.HostContainer
 import scalasem.util.Logging
+import application.RivuaiApp
 
 abstract class ServerApp(protected val servers : HostContainer) extends Logging {
   def run()
@@ -14,6 +15,7 @@ object ServerApp {
       case "PermuMatrixApp" => new PermuMatrixApp(servers)
       case "OnOffApp" => new OnOffApp(servers)
       case "MapReduce" => new MapReduceApp(servers)
+      case "Rivuai" => new RivuaiApp(servers)
     }
   }
 }
