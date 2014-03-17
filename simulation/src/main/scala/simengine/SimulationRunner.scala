@@ -1,7 +1,7 @@
 package scalasem.simengine
 
 import scalasem.application.ApplicationRunner
-import scalasem.network.topology.builder.FatTreeNetworkBuilder
+import scalasem.network.topology.builder.{FatTreeNetworkBuilder, Pod}
 import scalasem.network.topology.GlobalDeviceManager
 import scalasem.network.utils.FlowReporter
 import scalasem.util.XmlParser
@@ -18,18 +18,18 @@ object SimulationRunner {
 
   def main(args:Array[String]) = {
     XmlParser.loadConf(args(0))
-
     val startime = System.currentTimeMillis()
 
     FatTreeNetworkBuilder.k = XmlParser.getInt("scalasim.topo.fatree.podnum", 4)
     println("Initializing Network...")
     FatTreeNetworkBuilder.initNetwork()
-    println("Initializing FatTree Network...")
+    println("Building FatTree Network...")
     FatTreeNetworkBuilder.buildFatTreeNetwork(1000.0)
     println("Finished Building Fat Tree Network...")
     FatTreeNetworkBuilder.initOFNetwork()
     println("Warming up...")
-    Thread.sleep(XmlParser.getInt("scalasim.app.warmingtime", 2))
+    Thread.sleep(XmlParser.getInt("scalasim.app.warmingtime", 20))
+
 
     ApplicationRunner.setResource(FatTreeNetworkBuilder.getAllHosts)
     ApplicationRunner.installApplication()

@@ -5,6 +5,7 @@ import scala.collection.mutable.ListBuffer
 import scalasem.network.forwarding.dataplane.ResourceAllocator
 import scalasem.network.forwarding.interface.InterfacesManager
 import scalasem.network.forwarding.controlplane.RoutingProtocol
+import scalasem.util.XmlParser
 
 abstract class NodeType
 
@@ -34,17 +35,30 @@ class Node (val nodeType : NodeType,
   val mac_addr : ListBuffer[String] = new ListBuffer[String]
   val ip_addr : ListBuffer[String] = new ListBuffer[String]
 
+  private val model = XmlParser.getString("scalasim.simengine.model", "tcp")
+
   val controlplane = {
-    if (nodeType == ToRRouterType) {
-      RoutingProtocol("rivuai", this)
+    if (model == "rivuai") {
+      if (nodeType == ToRRouterType) {
+        RoutingProtocol("rivuai", this)
+      } else {
+        RoutingProtocol("default", this)
+      }
     } else {
-      RoutingProtocol("default", this)
+      if (model == "tcp") RoutingProtocol("default", this)
+      else {
+        RoutingProtocol("openflow", this)
+      }
     }
   }
 
   val dataplane = {
-    if (nodeType == ToRRouterType) {
-      ResourceAllocator("rivuai", this)
+    if (model == "rivuai") {
+      if (nodeType == ToRRouterType) {
+        ResourceAllocator("rivuai", this)
+      } else {
+        ResourceAllocator("default", this)
+      }
     } else {
       ResourceAllocator("default", this)
     }

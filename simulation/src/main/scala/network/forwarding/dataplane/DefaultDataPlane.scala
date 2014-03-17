@@ -66,21 +66,23 @@ class DefaultDataPlane(node: Node) extends ResourceAllocator with Logging {
     if (linkFlowMap(link).size == 0) return
     var remainingBandwidth = link.bandwidth
     //TODO: fix ChangingRateFlow bug
-    val sensingflows = linkFlowMap(link).filter(f => f.Rate != 0)
-    var demandingflows = sensingflows.clone()
-    var avrRate = link.bandwidth / sensingflows.size
-    logDebug("avrRate on " + link + " is " + avrRate)
-    demandingflows.map(f => {f.status = ChangingRateFlow; f.setTempRate(avrRate)})
-    demandingflows = demandingflows.sorted(FlowRateOrdering)
-    while (demandingflows.size != 0 && remainingBandwidth != 0) {
-      //the flow with the minimum rate
-      val currentflow = demandingflows.head
-      val flowdest = GlobalDeviceManager.getNode(currentflow.dstIP)
-      //try to acquire the max-min rate starting from the dest of this flow, the following function
-      //recursively calls itself
-      flowdest.dataplane.allocate(flowdest, currentflow, currentflow.getEgressLink)
-      demandingflows.remove(0)
-      if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
+    val sendingFlows = linkFlowMap(link).filter(f => f.Rate != 0)
+    var demandingflows = sendingFlows.clone()
+    if (sendingFlows.size > 0) {
+      var avrRate = link.bandwidth / sendingFlows.size
+      logDebug("avrRate on " + link + " is " + avrRate)
+      demandingflows.map(f => {f.status = ChangingRateFlow; f.setTempRate(avrRate)})
+      demandingflows = demandingflows.sorted(FlowRateOrdering)
+      while (demandingflows.size != 0 && remainingBandwidth != 0) {
+        //the flow with the minimum rate
+        val currentflow = demandingflows.head
+        val flowdest = GlobalDeviceManager.getNode(currentflow.dstIP)
+        //try to acquire the max-min rate starting from the dest of this flow, the following function
+        //recursively calls itself
+        flowdest.dataplane.allocate(flowdest, currentflow, currentflow.getEgressLink)
+        demandingflows.remove(0)
+        if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
+      }
     }
   }
 }

@@ -96,15 +96,10 @@ object FatTreeNetworkBuilder extends Logging {
   var k: Int = -1
 
   def initNetwork() {
-    println("Hello World")
     coreRouters.create(k * k / 4, CoreRouterType)
-    println("Hello World")
     aggregateRouters.create(k * k / 2 , AggregateRouterType)
-    println("Hello World")
     edgeRouters.create(k * k / 2, ToRRouterType)
-    println("Hello World")
     hosts.create(k * k / 2 * k / 2)
-    println("Hello World")
   }
 
   def buildFatTreeNetwork(linkspeed: Double) {
@@ -114,7 +109,7 @@ object FatTreeNetworkBuilder extends Logging {
 
   def initOFNetwork() {
     logTrace("Initializing OpenFlow Network")
-    if (XmlParser.getString("scalasim.simengine.model", "tcp") == "openflow") {
+    if (XmlParser.getString("scalasim.simengine.model", "tcp") != "tcp") {
       val connectioninterval = XmlParser.getInt("scalasim.simengine.connectioninterval", 500)
       //CORE ROUTERS
       for (i <- 0 until coreRouters.size()) {

@@ -47,6 +47,10 @@ object InterfacesManager {
   def apply(node : Node) = {
     XmlParser.getString("scalasim.simengine.model", "default") match {
       case "default" => new DefaultInterfacesManager(node)
+      case "rivuai" => node.nodeType match {
+        case HostType => new DefaultInterfacesManager(node)
+        case _ => new OpenFlowPortManager(node)
+      }
       case "openflow" => node.nodeType match {
         case HostType => new DefaultInterfacesManager(node)
         case _ => new OpenFlowPortManager(node)

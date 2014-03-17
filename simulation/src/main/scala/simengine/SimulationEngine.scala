@@ -27,7 +27,6 @@ object SimulationEngine extends Logging {
       queueReadingLock.acquire()
       logDebug("acquire lock at SimulationEngine")
       val event = eventqueue.head
-      logDebug(event.toString)
       queueReadingLock.release()
       if (event.getTimeStamp() > endTime) return
       logDebug("release lock at SimulationEngine")

@@ -132,8 +132,11 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
     val neighbor = Link.otherEnd(outlink, node)
     val lldpdata = pktoutMsg.getPacketData
     //TODO: only support the situation that all routers are openflow-enabled
-    if (neighbor.nodeType != HostType)
-      neighbor.controlplane.asInstanceOf[OpenFlowControlPlane].sendLLDPtoController(outlink, lldpdata)
+    if (neighbor.nodeType != HostType &&
+      neighbor.controlplane.isInstanceOf[OpenFlowControlPlane]) {
+      neighbor.controlplane.asInstanceOf[OpenFlowControlPlane].
+        sendLLDPtoController(outlink, lldpdata)
+    }
   }
 
   //build channel to the controller

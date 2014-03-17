@@ -7,7 +7,7 @@ import org.openflow.protocol.{OFFlowMod1, OFFlowMod}
 import scalasem.network.forwarding.controlplane.openflow.{RivuaiControlPlane, OpenFlowControlPlane}
 import scalasem.simengine.SimulationEngine
 
-class OFRivualFlowTable(tableid: Short, ofcontrolplane: RivuaiControlPlane)
+class OFRivuaiFlowTable(tableid: Short, ofcontrolplane: RivuaiControlPlane)
   extends OFFlowTableBase(tableid, ofcontrolplane) {
 
   /**

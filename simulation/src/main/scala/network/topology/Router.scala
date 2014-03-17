@@ -24,7 +24,7 @@ class Router (nodetype : NodeType, globaldevid : Int)
 }
 
 class RouterContainer () extends NodeContainer {
-  def create(nodeN : Int, rtype : NodeType) {
+  def create(nodeN: Int, rtype: NodeType) {
     for (i <- 0 until nodeN) {
       nodecontainer += new Router(rtype, GlobalDeviceManager.globalDeviceCounter)
       GlobalDeviceManager.globalDeviceCounter += 1

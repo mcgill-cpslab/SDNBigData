@@ -160,6 +160,10 @@ class OpenFlowSuite extends FunSuite with Logging {
   test("flow can be routed within a rack (openflow)") {
     SimulationRunner.reset()
     XmlParser.set("scalasim.simengine.model", "openflow")
+    XmlParser.set("scalasim.openflow.tableclass",
+      "scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase")
+    XmlParser.set("scalasim.openflow.table.entryclass",
+      "scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableEntryBase")
     val pod = new Pod(1, 1, 1, 20)
     Thread.sleep(1000 * 20)
     val flow1 = Flow(pod.getHost(0, 0).toString, pod.getHost(0, 1).toString,
@@ -178,6 +182,10 @@ class OpenFlowSuite extends FunSuite with Logging {
     SimulationRunner.reset()
     logInfo("flow can be routed across racks (openflow)")
     XmlParser.set("scalasim.simengine.model", "openflow")
+    XmlParser.set("scalasim.openflow.tableclass",
+      "scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase")
+    XmlParser.set("scalasim.openflow.table.entryclass",
+      "scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableEntryBase")
     val pod = new Pod(1, 2, 4, 4)
     Thread.sleep(1000 * 20)
     val flow1 = Flow(pod.getHost(0, 1).toString, pod.getHost(1, 1).toString,

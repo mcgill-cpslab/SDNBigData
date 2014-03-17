@@ -43,7 +43,7 @@ class OpenFlowMessageDispatcher (private val ofcontrolplane : OpenFlowControlPla
     msglistenerList += ofcontrolplane.ofinterfacemanager
   }
 
-  override def channelConnected(ctx : ChannelHandlerContext, e : ChannelStateEvent) {
+  override def channelConnected(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
     //save the channel for sending packet
     ofcontrolplane.toControllerChannel = e.getChannel
   }

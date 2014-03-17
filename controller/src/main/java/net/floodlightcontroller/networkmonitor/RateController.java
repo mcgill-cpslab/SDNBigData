@@ -12,6 +12,10 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.counter.ICounterStoreService;
+import net.floodlightcontroller.devicemanager.IDeviceService;
+import net.floodlightcontroller.routing.IRoutingService;
+import net.floodlightcontroller.topology.ITopologyService;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
@@ -192,6 +196,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
     switch (msg.getType()) {
       case PACKET_IN:
+        logger.debug("receive PACKET_IN:" + msg.toString());
         switchToContext.put(sw, cntx);
         OFPacketIn pi = (OFPacketIn) msg;
         OFMatch match = new OFMatch();
@@ -219,30 +224,15 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
             }
             ArrayList<OFAction> list = new ArrayList<OFAction>();
             list.add(outaction);
-            ofpktout.setActionsLength(outaction.getLength());
+            ofpktout.setActionsLength((short)OFActionOutput.MINIMUM_LENGTH);
             ofpktout.setActions(list);
+            ofpktout.setLength((short)(OFPacketOut.MINIMUM_LENGTH + outaction.getLength()));
             sw.write(ofpktout, cntx);
           } catch (Exception e) {
             e.printStackTrace();
           }
         }
         break;
-      /*case SWITCH_RATE_LIMITING_STATE:
-        OFSwitchRateLimitingState slsmsg = (OFSwitchRateLimitingState) msg;
-        SwitchRateLimiterStatus obj = new SwitchRateLimiterStatus();
-        obj.tablesize = slsmsg.getTablesize();
-        switchRateLimitMap.put(sw, obj);
-        //install the flows
-        for (FlowInstallRequest request: flowtoInstallList.get(sw)) {
-          //if (request)
-          try {
-            OFFlowMod1 flowmodmsg = getFlowModFromInstallReq(request, true);
-            sw.write(flowmodmsg, cntx);
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
-        }
-        break;*/
       case GET_CONFIG_REPLY:
         if (!flowtoInstallList.containsKey(sw)) {
           String swip = ((InetSocketAddress)
@@ -281,6 +271,7 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
   private void processAppMessage(AppAgentMsg msg) {
     switch (msg.getType()) {
       case FLOW_INSTALL_REQUEST:
+        logger.debug("RECEIVE FLOW_INSTALL_REQUEST");
         FlowInstallRequest req = (FlowInstallRequest) msg;
         boolean installSuccess = installFlowToSwitch(req);
         byte installSuccessByte = 0;
@@ -325,7 +316,6 @@ public class RateController implements IOFMessageListener, IFloodlightModule {
     Collection<Class<? extends IFloodlightService>> l =
             new ArrayList<Class<? extends IFloodlightService>>();
     l.add(IFloodlightProviderService.class);
-  //  l.add(IDeviceService.class);
     return l;
   }
 

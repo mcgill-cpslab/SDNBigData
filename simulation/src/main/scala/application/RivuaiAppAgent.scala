@@ -48,6 +48,13 @@ class RivuaiAppAgent extends Logging {
         }
       }
     }
+
+    override def channelConnected(ctx : ChannelHandlerContext, e : ChannelStateEvent) {
+      //save the channel for sending packet
+      logTrace("save the toControllerChannel handler")
+      toControllerChannel = e.getChannel
+    }
+
     new Thread(this).start()
   }
 

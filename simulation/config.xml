@@ -11,7 +11,7 @@
     </property>
     <property>
         <name>scalasim.simengine.model</name>
-        <value>openflow</value>
+        <value>rivuai</value>
     </property>
     <property>
         <name>scalasim.application.names</name>
@@ -47,11 +47,11 @@
     </property>
     <property>
         <name>scalasim.network.controlplane.openflow.controller.host</name>
-        <value>192.168.55.150</value>
+        <value>127.0.0.1</value>
     </property>
     <property>
         <name>scalasim.simengine.connectioninterval</name>
-        <value>1000</value>
+        <value>1</value>
     </property>
     <property>
         <name>scalasim.app.appsize</name>
@@ -75,6 +75,6 @@
     </property>
     <property>
         <name>scalasim.openflow.tableclass</name>
-        <value>scalasem.network.forwarding.controlplane.openflow.flowtable.OFRivualFlowTable</value>
+        <value>scalasem.network.forwarding.controlplane.openflow.flowtable.OFRivuaiFlowTable</value>
     </property>
 </configuration>
