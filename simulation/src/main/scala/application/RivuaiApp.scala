@@ -1,8 +1,9 @@
-package application
+package scalasem.application
 
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
+import scala.util.Random
 
 import scalasem.application.{OnOffApp, ServerApp}
 import scalasem.network.events.{FlowOffEvent, StartNewFlowEvent}
@@ -10,7 +11,9 @@ import scalasem.network.topology.{Host, GlobalDeviceManager, HostContainer}
 import scalasem.network.traffic.Flow
 import scalasem.simengine.SimulationEngine
 import scalasem.util.XmlParser
-import scala.util.Random
+import message.FlowInstallRequest
+import utils.IPAddressConvertor
+
 
 class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
 
@@ -25,6 +28,7 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
   private val pathToServers = new HashMap[String, ArrayBuffer[String]]
   private val blockSize = XmlParser.getInt("scalasim.app.blocksize", 1024 * 1024 * 128)
   private var currentCursor = 0
+  private val rivuaiAppAgen = new RivuaiAppAgent
 
   private def digestTrace() {
     for(line <- Source.fromFile(fbTracePath).getLines()) {
@@ -70,6 +74,20 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
     selectedDestinationServers
   }
 
+  def constructFlowInstallReq(newflow: Flow) = {
+    val flowInstallReq = new FlowInstallRequest
+    flowInstallReq.setSourceIP(IPAddressConvertor.DecimalStringToInt(newflow.srcIP).toInt)
+    flowInstallReq.setDestinationIP(
+      IPAddressConvertor.DecimalStringToInt(newflow.dstIP).toInt)
+    flowInstallReq.setSourcePort(newflow.srcPort)
+    flowInstallReq.setDestinationPort(newflow.dstPort)
+    flowInstallReq.setSourcePort(newflow.srcPort)
+    flowInstallReq.setDestinationPort(newflow.dstPort)
+    flowInstallReq.setReqtype(1)
+    flowInstallReq.setValue(1)
+    flowInstallReq
+  }
+
   override def run(){
     for (job <- jobList) {
       if (job.startTime > SimulationEngine.endTime) return
@@ -98,10 +116,14 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
           //start a off
           SimulationEngine.addEvent(new FlowOffEvent(newflow,
             job.startTime + Random.nextInt(OnOffApp.offLength)))
+          //add request to the connlist
+          val flowInstallReq = constructFlowInstallReq(newflow)
+          rivuaiAppAgen.addFlowInstallRequest(flowInstallReq)
         }
       }
     }
   }
 
   digestTrace()
+  rivuaiAppAgen.connectToController()
 }

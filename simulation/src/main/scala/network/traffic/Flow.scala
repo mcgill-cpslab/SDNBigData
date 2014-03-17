@@ -24,16 +24,16 @@ import scalasem.util.{XmlParser, Logging}
  * @param floodflag
  */
 class Flow (
-  private [network] val srcIP : String,
-  private [network] val dstIP : String,
-  private [network] val srcMac : String,
-  private [network] val dstMac : String,
-  private [network] val vlanID : Short = 0xffff.asInstanceOf[Short],
-  private [network] val prioritycode: Byte = 0,
-  private [network] val srcPort : Short = 0,
-  private [network] val dstPort : Short = 0,//set to 0 to wildcarding src/dst ports
-  private [network] val totalSize: Double,//in MB
-  private [network] var floodflag : Boolean = false
+  val srcIP : String,
+  val dstIP : String,
+  val srcMac : String,
+  val dstMac : String,
+  val vlanID : Short = 0xffff.asInstanceOf[Short],
+  val prioritycode: Byte = 0,
+  val srcPort : Short = 0,
+  val dstPort : Short = 0,//set to 0 to wildcarding src/dst ports
+  val totalSize: Double,//in MB
+  var floodflag : Boolean = false
   //to indicate this flow may be routed to the non-destination host
   ) extends Logging {
 
