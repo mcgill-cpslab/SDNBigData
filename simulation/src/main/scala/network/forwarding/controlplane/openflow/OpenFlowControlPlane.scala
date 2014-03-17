@@ -66,17 +66,16 @@ class OpenFlowControlPlane (private [openflow] val node : Router)
   lazy val getMacAddress = node.mac_addr(0)
 
   private val tableClzName = XmlParser.getString("scalasim.openflow.tableclass",
-    "scalasem.network.forwarding.controlplane.openflow.flowtable.OFRivuaiFlowTable")
+    "scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase")
 
-  private def createTableInstance(tableId: Int,
-                                  ofControlPlane: OpenFlowControlPlane): OFFlowTableBase = {
+  private def createTableInstance(tableId: Short): OFFlowTableBase = {
     val clz = Class.forName(tableClzName)
-    val clzCtor = clz.getConstructor(this.getClass)
-    clzCtor.newInstance(tableId: java.lang.Integer, ofControlPlane).asInstanceOf[OFFlowTableBase]
+    val clzCtor = clz.getConstructor(tableId.getClass, this.getClass)
+    clzCtor.newInstance(tableId: java.lang.Short, this).asInstanceOf[OFFlowTableBase]
   }
 
   private def openflowInit() {
-    for (i <- 0 until flowtables.length) flowtables(i) = createTableInstance(i, this)
+    for (i <- 0 until flowtables.length) flowtables(i) = createTableInstance(i.toShort)
   }
 
   private def generatePacketIn(bufferid : Int, inPortnum : Short, payload: Array[Byte],

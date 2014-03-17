@@ -7,7 +7,7 @@ import org.openflow.protocol.OFMatch
 import utils.IPAddressConvertor
 import scalasem.network.topology._
 import scalasem.network.traffic.Flow
-import scalasem.util.{XmlParser, Logging}
+import scalasem.util.Logging
 import scalasem.network.forwarding.controlplane.openflow.{OFMatchField, OpenFlowControlPlane}
 import scalasem.network.forwarding.controlplane.openflow.flowtable.OFFlowTableBase
 import scalasem.network.forwarding.controlplane.openflow.RivuaiControlPlane

@@ -4,10 +4,10 @@ import scala.collection.JavaConversions._
 
 import org.openflow.protocol.{OFFlowMod1, OFFlowMod}
 
-import scalasem.network.forwarding.controlplane.openflow.OpenFlowControlPlane
+import scalasem.network.forwarding.controlplane.openflow.{RivuaiControlPlane, OpenFlowControlPlane}
 import scalasem.simengine.SimulationEngine
 
-class OFRivualFlowTable(tableid: Short, ofcontrolplane: OpenFlowControlPlane)
+class OFRivualFlowTable(tableid: Short, ofcontrolplane: RivuaiControlPlane)
   extends OFFlowTableBase(tableid, ofcontrolplane) {
 
   /**

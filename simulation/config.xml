@@ -18,6 +18,10 @@
         <value>Rivuai</value>
     </property>
     <property>
+        <name>scalasim.app.tracepath</name>
+        <value>trace/example.tsv</value>
+    </property>
+    <property>
         <name>scalasim.topology.locallinkrate</name>
         <value>1000</value>
     </property>
@@ -68,5 +72,9 @@
     <property>
         <name>scalasim.app.mapreduce.maxreducenum</name>
         <value>4</value>
+    </property>
+    <property>
+        <name>scalasim.openflow.tableclass</name>
+        <value>scalasem.network.forwarding.controlplane.openflow.flowtable.OFRivualFlowTable</value>
     </property>
 </configuration>

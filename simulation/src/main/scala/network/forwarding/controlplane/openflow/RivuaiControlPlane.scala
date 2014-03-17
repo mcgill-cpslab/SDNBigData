@@ -1,7 +1,6 @@
 package scalasem.network.forwarding.controlplane.openflow
 
 import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
 
 import org.openflow.protocol.{OFMatch, OFFlowMod, OFType, OFMessage}
 import org.openflow.protocol.action.OFActionOutput
@@ -9,7 +8,7 @@ import org.openflow.protocol.action.OFActionOutput
 import scalasem.network.events.RivuaiRateControlEvent
 import scalasem.network.forwarding.controlplane.openflow.flowtable.{OFRivuaiFlowTableEntry, OFFlowTableBase}
 import scalasem.network.forwarding.dataplane.RivuaiDataPlane
-import scalasem.network.topology.{ToRRouterType, HostType, Router}
+import scalasem.network.topology.{ToRRouterType, Router}
 import scalasem.network.traffic.Flow
 import scalasem.simengine.SimulationEngine
 import scalasem.util.XmlParser

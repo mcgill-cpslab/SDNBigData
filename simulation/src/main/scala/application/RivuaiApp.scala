@@ -5,14 +5,14 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.util.Random
 
-import scalasem.application.{OnOffApp, ServerApp}
+import message.FlowInstallRequest
+import utils.IPAddressConvertor
+
 import scalasem.network.events.{FlowOffEvent, StartNewFlowEvent}
 import scalasem.network.topology.{Host, GlobalDeviceManager, HostContainer}
 import scalasem.network.traffic.Flow
 import scalasem.simengine.SimulationEngine
 import scalasem.util.XmlParser
-import message.FlowInstallRequest
-import utils.IPAddressConvertor
 
 
 class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
@@ -40,7 +40,7 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
       //evenly distribute the path in the servers
       if (!pathToServers.contains(record(6))) {
         //1. get the block number
-        val blockNum = math.max(newJob.inputSize / blockSize, 1)
+        val blockNum = math.max(math.ceil(newJob.inputSize / blockSize).toInt, 1)
         val serverList = new ArrayBuffer[String]
         //2. evenly distribute the blocks
         for (bIdx <- 0 until blockNum) {

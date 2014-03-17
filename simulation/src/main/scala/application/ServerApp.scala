@@ -2,7 +2,6 @@ package scalasem.application
 
 import scalasem.network.topology.HostContainer
 import scalasem.util.Logging
-import application.RivuaiApp
 
 abstract class ServerApp(protected val servers : HostContainer) extends Logging {
   def run()

@@ -7,7 +7,7 @@ import org.openflow.protocol.OFMatch
 
 import scalasem.network.topology.{Node, Link}
 import scalasem.network.traffic._
-import scalasem.util.{Logging, XmlParser}
+import scalasem.util.Logging
 import scalasem.network.events.CompleteFlowEvent
 import scalasem.simengine.SimulationEngine
 
