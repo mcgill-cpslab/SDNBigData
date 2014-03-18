@@ -43,16 +43,17 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
       newJob.inputSize = record(3).toDouble
       newJob.inputPath = record(6)
       jobList += newJob
+      logTrace("created new job " + newJob.jobId)
       //evenly distribute the path in the servers
       if (!pathToServers.contains(record(6))) {
-        logTrace("assigning %d blocks to servers".format(
-          math.ceil(newJob.inputSize / (blockSize * 1024 * 1024)).toInt))
         //1. get the block number
         val blockNum = math.max(math.ceil(newJob.inputSize / (blockSize * 1024 * 1024)).toInt, 1)
         val serverList = new ArrayBuffer[String]
         //2. evenly distribute the blocks
         for (bIdx <- 0 until blockNum) {
           serverList += servers(currentCursor).ip_addr(0)
+          logTrace("assigned the block of %s to server %s".format(record(6),
+            servers(currentCursor).ip_addr(0)))
           if (currentCursor == servers.size() - 1) {
             currentCursor = 0
           } else {
@@ -105,15 +106,17 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
       //3. start the flows
       var currentIdx = 0
       for (serverIdx <- destServers) {
-        if (servers(currentIdx).ip_addr(0) != blockServers.get(currentIdx)) {
+        if (servers(serverIdx).ip_addr(0) != blockServers.get(currentIdx)) {
           //generate new flow
-          val newflow = Flow(blockServers.get(currentIdx),
+          val newflow = Flow(
+            blockServers.get(currentIdx),
             servers(serverIdx).ip_addr(0),
             GlobalDeviceManager.getNode(blockServers.get(currentIdx)).mac_addr(0),
             servers(serverIdx).mac_addr(0),
             sPort = Random.nextInt(65536).toShort,
             dPort = Random.nextInt(65536).toShort,
             appDataSize = blockSize)
+          logDebug("created new flow" + newflow.toString())
           val newflowevent = new StartNewFlowEvent(
             newflow,
             GlobalDeviceManager.getNode(blockServers.get(currentIdx)).asInstanceOf[Host],
@@ -123,7 +126,7 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
           SimulationEngine.addEvent(new FlowOffEvent(newflow,
             job.startTime + Random.nextInt(OnOffApp.offLength)))
           //add request to the connlist
-          val flowInstallReq = constructFlowInstallReq(newflow, 1, job.jobId % 2)
+          val flowInstallReq = constructFlowInstallReq(newflow, 1, job.jobId % 2 + 1)
           rivuaiAppAgen.addFlowInstallRequest(flowInstallReq)
           currentIdx = currentIdx + 1
         }
