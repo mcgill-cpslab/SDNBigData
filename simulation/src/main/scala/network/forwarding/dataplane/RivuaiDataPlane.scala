@@ -12,7 +12,7 @@ import scalasem.util.XmlParser
 class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
 
   private val alpha: Double = XmlParser.getDouble("scalasim.rivuai.alpha", 0.5)
-  private val interfaceManager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
+  private lazy val interfaceManager = node.interfacesManager.asInstanceOf[OpenFlowPortManager]
 
   // port -> (jobid -> using bandwidth)
   private val jobidToCurrentRating = new HashMap[Short, HashMap[Int, Double]]
@@ -97,6 +97,8 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
   }
 
   private def getInPortToHost(link: Link): Short =  {
+    if (interfaceManager == null)
+      throw new Exception("INTERFACE NULL " + node.ip_addr(0))
     val inportNum = interfaceManager.getPortByLink(link).getPortNumber
     val isIngressSwitch = inportNum >= 0 &&
       Link.otherEnd(interfaceManager.getLinkByPortNum(inportNum), node).nodeType == HostType

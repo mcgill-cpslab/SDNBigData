@@ -23,7 +23,8 @@ object FlowReporter extends  Reporter {
   def report() {
     val str = new StringBuffer()
     flowStore.foreach(flowrecord => {
-      str.append(flowrecord._1.toString() + "\t" + flowrecord._2._1 + "\t" + flowrecord._2._2 + "\n")
+      str.append(flowrecord._1.toString() + "\t" + flowrecord._2._1 + "\t" + flowrecord._2._2 +
+        "\t" + (flowrecord._2._2 - flowrecord._2._1) + "\n")
     })
     println(str.toString)
   }

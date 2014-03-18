@@ -7,7 +7,6 @@ import org.openflow.protocol.action.OFActionOutput
 
 import scalasem.network.events.RivuaiRateControlEvent
 import scalasem.network.forwarding.controlplane.openflow.flowtable.{OFRivuaiFlowTableEntry, OFFlowTableBase}
-import scalasem.network.forwarding.dataplane.RivuaiDataPlane
 import scalasem.network.topology.{ToRRouterType, Router}
 import scalasem.network.traffic.Flow
 import scalasem.simengine.SimulationEngine
@@ -37,7 +36,7 @@ class RivuaiControlPlane(router: Router) extends OpenFlowControlPlane(router) {
     if (router.nodeType == ToRRouterType) {
       val startTime = SimulationEngine.startTime
       val endTime = SimulationEngine.endTime
-      val frequency = XmlParser.getDouble("simengine.rivuai.frequency", 1)
+      val frequency = XmlParser.getDouble("simengine.rivuai.frequency", 0.2)
 
       for (s <- startTime until endTime by frequency) {
         val rcEvent = new RivuaiRateControlEvent(node, s)

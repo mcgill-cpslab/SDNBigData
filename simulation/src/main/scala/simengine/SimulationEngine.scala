@@ -19,7 +19,7 @@ object SimulationEngine extends Logging {
   private var numPassedEvents = 0
 
   var startTime: Double = 0.0
-  var endTime: Double = 1000.0
+  var endTime: Double = 2.0
 
   def run () {
     //setup periodical events
