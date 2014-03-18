@@ -20,7 +20,7 @@ trait ResourceAllocator extends Logging {
   /**
    * the data structure recording the flows on certain links
    */
-  protected val linkFlowMap = new mutable.HashMap[Link, ListBuffer[Flow]]
+  protected[dataplane] val linkFlowMap = new mutable.HashMap[Link, ListBuffer[Flow]]
 
   def insertNewLinkFlowPair(link : Link, flow : Flow) {
     linkFlowMap.getOrElseUpdate(link, new ListBuffer[Flow]) += flow

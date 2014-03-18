@@ -8,8 +8,7 @@ class RivuaiRateControlEvent(node: Node, ts: Double )
   extends EventOfSingleEntity[Node](node, ts) {
 
   override def process() {
-    if (node.dataplane == null)
-      println(node.ip_addr(0))
+    logTrace("RivuaiRateControlEvent at " + node.ip_addr(0))
     node.dataplane.asInstanceOf[RivuaiDataPlane].regulateFlow()
   }
 }

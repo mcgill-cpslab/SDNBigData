@@ -29,24 +29,27 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
    * @param link on the involved link
    */
   override def reallocate(link: Link) {
-    if (linkFlowMap(link).size == 0) return
+    val inCallDataPlane = link.end_from.dataplane
     var remainingBandwidth = link.bandwidth
     //TODO: fix ChangingRateFlow bug
-    val sendingFlows = linkFlowMap(link).filter(f => f.Rate != 0)
+    if (!inCallDataPlane.linkFlowMap.contains(link)) return
+    val sendingFlows = inCallDataPlane.linkFlowMap(link).filter(f => f.Rate != 0)
     var demandingflows = sendingFlows.clone()
-    var avrRate = link.bandwidth / sendingFlows.size
-    logDebug("avrRate on " + link + " is " + avrRate)
-    demandingflows.map(f => {f.status = ChangingRateFlow; f.setTempRate(avrRate)})
-    demandingflows = demandingflows.sorted(FlowRateOrdering)
-    while (demandingflows.size != 0 && remainingBandwidth != 0) {
-      //the flow with the minimum rate
-      val currentflow = demandingflows.head
-      val flowdest = GlobalDeviceManager.getNode(currentflow.dstIP)
-      //try to acquire the max-min rate starting from the dest of this flow, the following function
-      //recursively calls itself
-      flowdest.dataplane.allocate(flowdest, currentflow, currentflow.getEgressLink)
-      demandingflows.remove(0)
-      if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
+    if (demandingflows.size != 0) {
+      var avrRate = link.bandwidth / sendingFlows.size
+      logDebug("avrRate on " + link + " is " + avrRate)
+      demandingflows.map(f => {f.status = ChangingRateFlow; f.setTempRate(avrRate)})
+      demandingflows = demandingflows.sorted(FlowRateOrdering)
+      while (demandingflows.size != 0 && remainingBandwidth != 0) {
+        //the flow with the minimum rate
+        val currentflow = demandingflows.head
+        val flowdest = GlobalDeviceManager.getNode(currentflow.dstIP)
+        //try to acquire the max-min rate starting from the dest of this flow, the following function
+        //recursively calls itself
+        flowdest.dataplane.allocate(flowdest, currentflow, currentflow.getEgressLink)
+        demandingflows.remove(0)
+        if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
+      }
     }
   }
 
@@ -60,76 +63,83 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
     if (linkFlowMap(link).size == 0) return
     var demandingflows = linkFlowMap(link).clone()
     var remainingBandwidth = link.bandwidth
-    var avrRate = link.bandwidth / linkFlowMap(link).size
-    logDebug("avrRate on " + link + " is " + avrRate)
-    demandingflows = demandingflows.sorted(FlowRateOrdering)
-    while (demandingflows.size != 0 && remainingBandwidth != 0) {
-      val currentflow = demandingflows.head
-      //initialize for the new flow
-      if (currentflow.getTempRate == Double.MaxValue)
-        currentflow.setTempRate(link.bandwidth)
-      //for paused flow, we keep the running Status but set its rate to 0
-      //because if we remove it from the flow list, we may need to recalculate the
-      //path for it
-      val allowedRate = currentflow.ratelimit
-      var demand = {
-        if (currentflow.status != RunningFlow) math.min(currentflow.getTempRate, allowedRate)
-        else math.min(currentflow.Rate, allowedRate)
-      }
-      logDebug("rate demand of flow " + currentflow + " is " + demand + ", status:" +
-        currentflow.status)
-      if (demand <= avrRate) {
-        remainingBandwidth -= demand
-      } else {
-        if (currentflow.status == RunningFlow) {
-          //TODO: if avrRate < currentflow.rate trigger the change on its path
-          currentflow.changeRate(avrRate)
-          logDebug("change flow " + currentflow + " rate to " + currentflow.Rate)
-        } else {
-          currentflow.setTempRate(avrRate) //set to avrRate
-          logDebug("change flow " + currentflow + " temprate to " + currentflow.getTempRate)
+    if (demandingflows.size != 0) {
+      var avrRate = link.bandwidth / linkFlowMap(link).size
+      logDebug("avrRate on " + link + " is " + avrRate)
+      demandingflows = demandingflows.sorted(FlowRateOrdering)
+      while (demandingflows.size != 0 && remainingBandwidth != 0) {
+        val currentflow = demandingflows.head
+        //initialize for the new flow
+        if (currentflow.getTempRate == Double.MaxValue)
+          currentflow.setTempRate(link.bandwidth)
+        //for paused flow, we keep the running Status but set its rate to 0
+        //because if we remove it from the flow list, we may need to recalculate the
+        //path for it
+        val allowedRate = currentflow.ratelimit
+        var demand = {
+          if (currentflow.status != RunningFlow) math.min(currentflow.getTempRate, allowedRate)
+          else math.min(currentflow.Rate, allowedRate)
         }
-        remainingBandwidth -= avrRate
+        logDebug("rate demand of flow " + currentflow + " is " + demand + ", status:" +
+          currentflow.status)
+        if (demand <= avrRate) {
+          remainingBandwidth -= demand
+        } else {
+          if (currentflow.status == RunningFlow) {
+            //TODO: if avrRate < currentflow.rate trigger the change on its path
+            currentflow.changeRate(avrRate)
+            logDebug("change flow " + currentflow + " rate to " + currentflow.Rate)
+          } else {
+            currentflow.setTempRate(avrRate) //set to avrRate
+            logDebug("change flow " + currentflow + " temprate to " + currentflow.getTempRate)
+          }
+          remainingBandwidth -= avrRate
+        }
+        demandingflows.remove(0)
+        if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
       }
-      demandingflows.remove(0)
-      if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
     }
   }
 
   private def getInPortToHost(link: Link): Short =  {
-    if (interfaceManager == null)
-      throw new Exception("INTERFACE NULL " + node.ip_addr(0))
     val inportNum = interfaceManager.getPortByLink(link).getPortNumber
     val isIngressSwitch = inportNum >= 0 &&
-      Link.otherEnd(interfaceManager.getLinkByPortNum(inportNum), node).nodeType == HostType
+      Link.otherEnd(link, node).nodeType == HostType
+    logDebug(Link.otherEnd(link, node).nodeType.toString)
     if (isIngressSwitch) inportNum
     else -1
   }
 
   private def measureFlowRateOnEachPort() {
     // get the y_i on each port
-    for (entry <- linkFlowMap; flow <- entry._2) {
-      val currentRate = {
-        val runDuration = SimulationEngine.currentTime - flow.startTime
-        if (runDuration == 0) 0
-        else (flow.totalSize - flow.remainingAppData) / runDuration
-      }
-      val inPortNum = getInPortToHost(entry._1)
-      if (inPortNum >= 0) {
-        val jobBucket = jobidToCurrentRating.getOrElseUpdate(inPortNum,
-          new HashMap[Int, Double]())
-        jobBucket.getOrElseUpdate(flow.jobid, 0.0)
-        jobBucket(flow.jobid) += currentRate
-        if (flow.reqtype != 0) {
-          //WFS flow
-          jobidToFlowNum.getOrElseUpdate(inPortNum, new HashMap[Int, Int]).
-            getOrElseUpdate(flow.jobid, 0)
-          jobidToFlowNum(inPortNum)(flow.jobid) += 1
-        }
-        // save jobid -> vc for minimum guaranteed flows
-        if (flow.reqtype == 0) {
-          jobidToVirtualCapacity.getOrElseUpdate(inPortNum, new HashMap[Int, Double])
-          jobidToVirtualCapacity(inPortNum) += flow.jobid -> flow.reqvalue
+    for (link <- interfaceManager.linkphysicalportsMap.keySet
+         if Link.otherEnd(link, node).nodeType == HostType) {
+      val host = Link.otherEnd(link, node)
+      val inPortNum = interfaceManager.getPortByLink(link).getPortNumber
+      if (host.dataplane.linkFlowMap.get(link) != None) {
+        for (flow <- host.dataplane.linkFlowMap.get(link).get) {
+          val currentRate = {
+            val runDuration = SimulationEngine.currentTime - flow.startTime
+            flow.updateTransferredData()
+            if (runDuration == 0) 0
+            else (flow.totalSize - flow.remainingAppData) / runDuration
+          }
+          logTrace("flow " + flow + " currentRate is " + currentRate)
+          val jobBucket = jobidToCurrentRating.getOrElseUpdate(inPortNum,
+            new HashMap[Int, Double]())
+          jobBucket.getOrElseUpdate(flow.jobid, 0.0)
+          jobBucket(flow.jobid) += currentRate
+          if (flow.reqtype != 0) {
+            //WFS flow
+            jobidToFlowNum.getOrElseUpdate(inPortNum, new HashMap[Int, Int]).
+              getOrElseUpdate(flow.jobid, 0)
+            jobidToFlowNum(inPortNum)(flow.jobid) += 1
+          }
+          // save jobid -> vc for minimum guaranteed flows
+          if (flow.reqtype == 0) {
+            jobidToVirtualCapacity.getOrElseUpdate(inPortNum, new HashMap[Int, Double])
+            jobidToVirtualCapacity(inPortNum) += flow.jobid -> flow.reqvalue
+          }
         }
       }
     }
@@ -139,16 +149,25 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
     // get capacity for weighted fair share flows on each port
     // port number -> allocation
     val totalCapacityToWFSFlow = new HashMap[Short, Double]
+    //initialize
+    for (link <- interfaceManager.linkphysicalportsMap.keySet
+         if Link.otherEnd(link, node).nodeType == HostType) {
+      totalCapacityToWFSFlow +=
+        interfaceManager.getPortByLink(link).getPortNumber -> link.bandwidth
+    }
     for (allocToMGEntry <- jobidToVirtualCapacity) {
       val link = interfaceManager.getLinkByPortNum(allocToMGEntry._1)
       val capacity  = link.bandwidth
+      val host = Link.otherEnd(link, node)
       //FIFO for MG flows
       var totalMGRate = 0.0
-      for (flow <- linkFlowMap.get(link).get) {
-        if (totalMGRate + flow.reqvalue <= capacity) {
-          totalMGRate += flow.reqvalue
-        } else {
-          flow.ratelimit = 0
+      if (host.dataplane.linkFlowMap.get(link) != None) {
+        for (flow <- host.dataplane.linkFlowMap(link) if flow.reqtype == 0) {
+          if (totalMGRate + flow.reqvalue <= capacity) {
+            totalMGRate += flow.reqvalue
+          } else {
+            flow.ratelimit = 0
+          }
         }
       }
       totalCapacityToWFSFlow += allocToMGEntry._1 -> (capacity - totalMGRate)
@@ -158,29 +177,41 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
     // 1. get the sum of the priorities of jobs without minimum guarantee
     //  on each port
     val sumPerPort = new HashMap[Short, Double]
-    val selectedJob = new HashSet[Int]
-    for (entry <- linkFlowMap; flow <- entry._2 if flow.reqtype != 0) {
-      val portNum = interfaceManager.getPortByLink(entry._1).getPortNumber
-      sumPerPort.getOrElseUpdate(portNum, 0)
-      if (!selectedJob.contains(flow.reqtype))
-        sumPerPort(portNum) += flow.reqvalue
+    for (link <- interfaceManager.linkphysicalportsMap.keySet
+         if Link.otherEnd(link, node).nodeType == HostType) {
+      val host = Link.otherEnd(link, node)
+      val portNum = interfaceManager.getPortByLink(link).getPortNumber
+      val selectedJob = new HashSet[Int]
+      if (host.dataplane.linkFlowMap.get(link) != None) {
+        for (flow <- host.dataplane.linkFlowMap(link) if flow.reqtype != 0) {
+          sumPerPort.getOrElseUpdate(portNum, 0)
+          if (!selectedJob.contains(flow.jobid))
+            sumPerPort(portNum) += flow.reqvalue
+        }
+      }
     }
     // 2. get C_i for WFS flows
-    for (entry <- linkFlowMap; flow <- entry._2 if flow.reqtype != 0) {
-      val inPortNum = getInPortToHost(entry._1)
-      if (inPortNum >= 0) {
-        val jobBucket = jobidToVirtualCapacity.getOrElseUpdate(inPortNum,
-          new HashMap[Int, Double]())
-        jobBucket.getOrElseUpdate(flow.jobid, 0.0)
-        jobBucket += flow.jobid ->
-          ((flow.reqvalue / sumPerPort(inPortNum)) * totalCapacityToWFSFlow(inPortNum))
+    for (link <- interfaceManager.linkphysicalportsMap.keySet
+         if Link.otherEnd(link, node).nodeType == HostType) {
+      val host = Link.otherEnd(link, node)
+      val inPortNum = interfaceManager.getPortByLink(link).getPortNumber
+      if (host.dataplane.linkFlowMap.get(link) != None) {
+        for (flow <- host.dataplane.linkFlowMap(link) if flow.reqtype != 0) {
+          if (inPortNum >= 0) {
+            val jobBucket = jobidToVirtualCapacity.getOrElseUpdate(inPortNum,
+              new HashMap[Int, Double]())
+            jobBucket.getOrElseUpdate(flow.jobid, 0.0)
+            jobBucket += flow.jobid ->
+              ((flow.reqvalue / sumPerPort(inPortNum)) * totalCapacityToWFSFlow(inPortNum))
+          }
+        }
       }
     }
   }
 
   private def allocateToEachFlow() {
     // allocate R_i to each job
-    for (allocPerPort <- jobidToAllocation; allocPerJob <- allocPerPort._2) {
+    for (allocPerPort <- jobidToCurrentRating; allocPerJob <- allocPerPort._2) {
       val jobid = allocPerJob._1
       val oldAlloc = allocPerJob._2
       val newJobCapacity = jobidToVirtualCapacity(allocPerPort._1)(jobid)
@@ -190,12 +221,18 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
       jobAlloc += jobid -> newAlloc
     }
     // allocate to each flow
-    for (entry <- linkFlowMap; flow <- entry._2 if flow.reqtype != 0) {
-      val inport = getInPortToHost(entry._1)
-      if (inport >= 0) {
-        flow.ratelimit = jobidToAllocation(inport)(flow.jobid) /
-          jobidToFlowNum(inport)(flow.jobid)
+    for (link <- interfaceManager.linkphysicalportsMap.keySet
+         if Link.otherEnd(link, node).nodeType == HostType) {
+      val host = Link.otherEnd(link, node)
+      val inPort = interfaceManager.getPortByLink(link).getPortNumber
+      if (host.dataplane.linkFlowMap.get(link) != None) {
+        for (flow <- host.dataplane.linkFlowMap(link) if flow.reqtype != 0) {
+          flow.ratelimit = jobidToAllocation(inPort)(flow.jobid) /
+            jobidToFlowNum(inPort)(flow.jobid)
+          logDebug("adjust flow " + flow + " allowed rate to " + flow.ratelimit)
+        }
       }
+      reallocate(link)
     }
   }
 

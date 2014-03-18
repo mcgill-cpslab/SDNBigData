@@ -19,17 +19,18 @@ import scalasem.util.Logging
 class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
   with MessageListener with Logging {
 
-  private [forwarding] val linkphysicalportsMap = new HashMap[Link, OFPhysicalPort]
-  private [forwarding] val physicalportsMap = new HashMap[Short, OFPhysicalPort]//port number -> port
+  private[forwarding] val linkphysicalportsMap = new HashMap[Link, OFPhysicalPort]
+  private[forwarding] val physicalportsMap = new HashMap[Short, OFPhysicalPort]//port number -> port
 
-  private [forwarding] val portcounters = new HashMap[Short, OFPortCount]//portnum -> counter
+  private[forwarding] val portcounters = new HashMap[Short, OFPortCount]//portnum -> counter
 
   private val factory = new BasicFactory
 
   def getPhysicalPort(portNum : Short) = physicalportsMap.getOrElse(portNum, null)
 
-  def getPortByLink (l : Link) = {
-    assert(linkphysicalportsMap.contains(l))
+  def getPortByLink (l: Link) = {
+    require(linkphysicalportsMap.contains(l),
+      "the node " + node + " does not contain " + l)
     linkphysicalportsMap(l)
   }
 
@@ -47,7 +48,7 @@ class OpenFlowPortManager(node: Node) extends DefaultInterfacesManager(node)
 
   def getPortCounter(portnum : Short) = portcounters(portnum)
 
-  private def addOFPhysicalPort(l : Link, portID : Short) {
+  private def addOFPhysicalPort(l: Link, portID: Short) {
     val port = new OFPhysicalPort
     GlobalDeviceManager.globalDeviceCounter += 1
     //port number

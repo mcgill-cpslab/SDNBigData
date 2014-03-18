@@ -50,6 +50,10 @@
         <value>127.0.0.1</value>
     </property>
     <property>
+        <name>scalasim.app.rivuai.blocksize</name>
+        <value>128</value>
+    </property>
+    <property>
         <name>scalasim.simengine.connectioninterval</name>
         <value>1</value>
     </property>

@@ -29,7 +29,7 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
   private val fbTracePath = XmlParser.getString("scalasim.app.tracepath", "trace/trace.tsv")
   private val jobList = new ArrayBuffer[RivuaiJob]
   private val pathToServers = new HashMap[String, ArrayBuffer[String]]
-  private val blockSize = XmlParser.getInt("scalasim.app.blocksize", 128)//in MB
+  private val blockSize = XmlParser.getInt("scalasim.app.rivuai.blocksize", 128)//in MB
   private var currentCursor = 0
   private val rivuaiAppAgen = new RivuaiAppAgent
 
@@ -123,8 +123,8 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
             job.startTime)
           SimulationEngine.addEvent(newflowevent)
           //start a off
-          SimulationEngine.addEvent(new FlowOffEvent(newflow,
-            job.startTime + Random.nextInt(OnOffApp.offLength)))
+          //SimulationEngine.addEvent(new FlowOffEvent(newflow,
+            //job.startTime + Random.nextInt(OnOffApp.offLength)))
           //add request to the connlist
           val reqtype = 1
           val reqvalue = job.jobId % 2 + 1
