@@ -269,7 +269,7 @@ class Flow (
   var reqtype: Int = -1
   var reqvalue: Int = -1
   var startTime: Double = -1
-  var ratelimit: Double = -1
+  var ratelimit: Double = Double.MaxValue
 }
 
 object Flow {
