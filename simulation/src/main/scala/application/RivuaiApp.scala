@@ -126,7 +126,12 @@ class RivuaiApp(servers : HostContainer) extends ServerApp (servers) {
           SimulationEngine.addEvent(new FlowOffEvent(newflow,
             job.startTime + Random.nextInt(OnOffApp.offLength)))
           //add request to the connlist
-          val flowInstallReq = constructFlowInstallReq(newflow, 1, job.jobId % 2 + 1)
+          val reqtype = 1
+          val reqvalue = job.jobId % 2 + 1
+          newflow.jobid = job.jobId
+          newflow.reqtype = reqtype
+          newflow.reqvalue = reqvalue
+          val flowInstallReq = constructFlowInstallReq(newflow, reqtype, reqvalue)
           rivuaiAppAgen.addFlowInstallRequest(flowInstallReq)
           currentIdx = currentIdx + 1
         }

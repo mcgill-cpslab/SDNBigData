@@ -74,16 +74,16 @@ trait ResourceAllocator extends Logging {
    */
   private def allocateOnCurrentHop(localnode: Node, changingflow : Flow, link : Link) {
     val otherEnd = Link.otherEnd(link, localnode)
-    val incalldataplane = {
+    val inCallDataPlane = {
       if (link.end_from == localnode) localnode.dataplane
       else otherEnd.dataplane
     }
     //if it's a new flow, first insert it into the newlinkflowpair
     if (changingflow.status == NewStartFlow) {
-      incalldataplane.insertNewLinkFlowPair(link, changingflow)
+      inCallDataPlane.insertNewLinkFlowPair(link, changingflow)
     }
     //decide all flows' rate in the link
-    incalldataplane.allocate(link)
+    inCallDataPlane.allocate(link)
   }
 
   private def startFlow (flow : Flow) {

@@ -24,6 +24,7 @@ final class StartNewFlowEvent (flow : Flow, host : Host, timestamp : Double)
     GlobalFlowStore.addFlow(flow)
     logDebug("global flow num:" + GlobalFlowStore.size)
     logDebug("acquire lock at StartEvent")
+    flow.startTime = timestamp
     FlowReporter.registerFlowStart(flow)
     host.controlplane.routing(host, flow,
       OFFlowTableBase.createMatchField(flow = flow),

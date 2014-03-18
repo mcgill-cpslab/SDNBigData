@@ -25,11 +25,11 @@ object SimulationEngine extends Logging {
     //setup periodical events
     while (!eventqueue.isEmpty) {
       queueReadingLock.acquire()
-      logDebug("acquire lock at SimulationEngine")
+      //logDebug("acquire lock at SimulationEngine")
       val event = eventqueue.head
       queueReadingLock.release()
       if (event.getTimeStamp() > endTime) return
-      logDebug("release lock at SimulationEngine")
+      //logDebug("release lock at SimulationEngine")
       if (event.getTimeStamp < currentTime) {
         throw new Exception("cannot execute an event happened before, event timestamp: " +
           event.getTimeStamp + ", currentTime:" + currentTime)
@@ -54,6 +54,7 @@ object SimulationEngine extends Logging {
 
   def addEvent(e : Event) {
     this.synchronized {
+      logDebug("Schedule " + e.toString + " at " + e.getTimeStamp())
       eventqueue += e
       eventqueue = eventqueue.sortWith(_.getTimeStamp < _.getTimeStamp)
     }

@@ -262,6 +262,14 @@ class Flow (
   def getEgressLink = egressLink
 
   def getIngressLink = trace(0)
+
+
+  //for Rivuai
+  var jobid: Int = -1
+  var reqtype: Int = -1
+  var reqvalue: Int = -1
+  var startTime: Double = -1
+  var ratelimit: Double = -1
 }
 
 object Flow {
