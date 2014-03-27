@@ -29,6 +29,8 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
    * @param link on the involved link
    */
   override def reallocate(link: Link) {
+    // assuming the up layer are congestion free
+    if (link.end_from.nodeType != HostType) return
     val inCallDataPlane = link.end_from.dataplane
     var remainingBandwidth = link.bandwidth
     //TODO: fix ChangingRateFlow bug
@@ -60,6 +62,9 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
    * @param link the input link
    */
   override def allocate(link: Link) {
+    // we have to check if the flow is in upper layer than the edge,
+    // then we create congestion-free resources
+    if (link.end_from.nodeType != HostType) return
     if (linkFlowMap(link).size == 0) return
     var demandingflows = linkFlowMap(link).clone()
     var remainingBandwidth = link.bandwidth
@@ -99,15 +104,6 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
         if (demandingflows.size != 0) avrRate = remainingBandwidth / demandingflows.size
       }
     }
-  }
-
-  private def getInPortToHost(link: Link): Short =  {
-    val inportNum = interfaceManager.getPortByLink(link).getPortNumber
-    val isIngressSwitch = inportNum >= 0 &&
-      Link.otherEnd(link, node).nodeType == HostType
-    logDebug(Link.otherEnd(link, node).nodeType.toString)
-    if (isIngressSwitch) inportNum
-    else -1
   }
 
   private def measureFlowRateOnEachPort() {
@@ -229,7 +225,8 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
         for (flow <- host.dataplane.linkFlowMap(link) if flow.reqtype != 0) {
           flow.ratelimit = jobidToAllocation(inPort)(flow.jobid) /
             jobidToFlowNum(inPort)(flow.jobid)
-          logDebug("adjust flow " + flow + " allowed rate to " + flow.ratelimit)
+          logDebug("adjust flow " + flow + " allowed rate to " + flow.ratelimit +
+            " at " + SimulationEngine.currentTime)
         }
       }
       reallocate(link)

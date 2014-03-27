@@ -257,7 +257,9 @@ class Flow (
 
   def LastCheckPoint : Double = lastChangePoint
 
-  override def toString() : String = ("Flow-" + srcIP + "-" + dstIP)
+  override def toString() : String = {
+    ("Flow-" + srcIP + "-" + dstIP + "-" + jobid + "-" + reqvalue)
+  }
 
   def getEgressLink = egressLink
 
