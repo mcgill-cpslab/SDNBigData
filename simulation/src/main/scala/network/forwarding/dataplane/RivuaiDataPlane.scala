@@ -126,16 +126,16 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
           jobBucket.getOrElseUpdate(flow.jobid, 0.0)
           jobBucket(flow.jobid) += currentRate
           if (flow.reqtype != 0) {
-            //WFS flow
+            // WFS flow
             jobidToFlowNum.getOrElseUpdate(inPortNum, new HashMap[Int, Int]).
               getOrElseUpdate(flow.jobid, 0)
             jobidToFlowNum(inPortNum)(flow.jobid) += 1
           }
           // save jobid -> vc for minimum guaranteed flows
-          if (flow.reqtype == 0) {
+         /* if (flow.reqtype == 0) {
             jobidToVirtualCapacity.getOrElseUpdate(inPortNum, new HashMap[Int, Double])
             jobidToVirtualCapacity(inPortNum) += flow.jobid -> flow.reqvalue
-          }
+          }*/
         }
       }
     }
@@ -151,11 +151,11 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
       totalCapacityToWFSFlow +=
         interfaceManager.getPortByLink(link).getPortNumber -> link.bandwidth
     }
-    for (allocToMGEntry <- jobidToVirtualCapacity) {
+   /* for (allocToMGEntry <- jobidToVirtualCapacity) {
       val link = interfaceManager.getLinkByPortNum(allocToMGEntry._1)
       val capacity  = link.bandwidth
       val host = Link.otherEnd(link, node)
-      //FIFO for MG flows
+      // FIFO for MG flows
       var totalMGRate = 0.0
       if (host.dataplane.linkFlowMap.get(link) != None) {
         for (flow <- host.dataplane.linkFlowMap(link) if flow.reqtype == 0) {
@@ -167,7 +167,7 @@ class RivuaiDataPlane(val node: Node) extends ResourceAllocator {
         }
       }
       totalCapacityToWFSFlow += allocToMGEntry._1 -> (capacity - totalMGRate)
-    }
+    }*/
 
     // get C_i for every job
     // 1. get the sum of the priorities of jobs without minimum guarantee

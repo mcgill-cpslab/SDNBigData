@@ -19,7 +19,7 @@ class DefaultDataPlane(node: Node) extends ResourceAllocator with Logging {
    * @param link the input link
    */
   override def allocate (link: Link) {
-    if (linkFlowMap(link).size == 0) return
+    if (!linkFlowMap.contains(link) || linkFlowMap(link).size == 0) return
     var demandingflows = linkFlowMap(link).clone()
     var remainingBandwidth = link.bandwidth
     var avrRate = link.bandwidth / linkFlowMap(link).size
@@ -63,7 +63,7 @@ class DefaultDataPlane(node: Node) extends ResourceAllocator with Logging {
    * @param link on the involved link
    */
   override def reallocate(link: Link) {
-    if (linkFlowMap(link).size == 0) return
+    if (!linkFlowMap.contains(link) || linkFlowMap(link).size == 0) return
     var remainingBandwidth = link.bandwidth
     //TODO: fix ChangingRateFlow bug
     val sendingFlows = linkFlowMap(link).filter(f => f.Rate != 0)

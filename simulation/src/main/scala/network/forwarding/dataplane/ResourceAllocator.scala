@@ -5,7 +5,7 @@ import scala.collection.mutable.ListBuffer
 
 import org.openflow.protocol.OFMatch
 
-import scalasem.network.topology.{Node, Link}
+import scalasem.network.topology.{HostType, Node, Link}
 import scalasem.network.traffic._
 import scalasem.util.Logging
 import scalasem.network.events.CompleteFlowEvent
@@ -58,9 +58,12 @@ trait ResourceAllocator extends Logging {
         else flow.getLastHop(startinglink)
       }
       val nextnode = Link.otherEnd(laststep, localnode)
-      logTrace("allocate for flow " + flow.toString() +
-        " on " + laststep + " at node " + localnode)
-      allocateOnCurrentHop(localnode, flow, laststep)
+      // assume congestion-free up-layer
+      if (laststep.end_from.nodeType == HostType) {
+        logTrace("allocate for flow " + flow.toString() +
+          " on " + laststep + " at node " + localnode)
+        allocateOnCurrentHop(localnode, flow, laststep)
+      }
       //continue the allocate process on the last hop
       nextnode.dataplane.allocate(nextnode, flow, laststep)
     }
@@ -146,9 +149,12 @@ trait ResourceAllocator extends Logging {
       }
       //recursively to call the function
       nextnode.dataplane.reallocate(nextnode, flow, ofmatch, nextlink)
-      //reallocate resource to other flows
-      logTrace("reallocate resource on " + localnode.toString)
-      node.dataplane.reallocate(nextlink)
+      // assume congestion free uplayer
+      // reallocate resource to other flows
+      if (nextlink.end_from.nodeType == HostType) {
+        logTrace("reallocate resource on " + localnode.toString)
+        node.dataplane.reallocate(nextlink)
+      }
     }
   }
 
