@@ -64,8 +64,8 @@ trait ResourceAllocator extends Logging {
           " on " + laststep + " at node " + localnode)
         allocateOnCurrentHop(localnode, flow, laststep)
       }
-      //continue the allocate process on the last hop
-      nextnode.dataplane.allocate(nextnode, flow, laststep)
+      // continue the allocate process on the last hop
+      nextnode.dataplane.allocate(nextnode, flow, startinglink = laststep)
     }
   }
 
